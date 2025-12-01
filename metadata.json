@@ -1,0 +1,8 @@
+{
+  "name": "co-writter",
+  "description": "co-writter: Where Thought Becomes Literature. The universal platform for creating and selling books with AI, powered by the Cogito Core neural engine.",
+  "requestFramePermissions": [
+    "microphone"
+  ],
+  "prompt": ""
+}
