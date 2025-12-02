@@ -9,9 +9,9 @@ import { UserType } from '../types';
 const { useNavigate } = ReactRouterDOM as any;
 
 declare global {
-  interface Window {
-    Razorpay: any;
-  }
+    interface Window {
+        Razorpay: any;
+    }
 }
 
 const PricingPage: React.FC = () => {
@@ -50,7 +50,7 @@ const PricingPage: React.FC = () => {
         setIsProcessing(true);
 
         const amount = billingCycle === 'monthly' ? 499 : 4999;
-        
+
         const options = {
             key: RAZORPAY_KEY_ID,
             amount: amount * 100, // Amount in paise
@@ -89,11 +89,11 @@ const PricingPage: React.FC = () => {
 
     return (
         <div className="min-h-screen w-full relative bg-black selection:bg-white/20 font-sans">
-            
+
             {/* === Background Effects (Matching Login Page) === */}
             <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px]"></div>
-                 <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[120px]"></div>
+                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20"></div>
             </div>
 
             <div className="container mx-auto px-4 sm:px-6 pt-24 pb-20 animate-fade-in max-w-7xl relative z-10">
@@ -109,13 +109,13 @@ const PricingPage: React.FC = () => {
                     {/* Billing Toggle */}
                     <div className="flex items-center justify-center mt-8 relative z-10">
                         <div className="bg-white/5 p-1 rounded-full border border-white/10 flex relative">
-                            <button 
+                            <button
                                 onClick={() => setBillingCycle('monthly')}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${billingCycle === 'monthly' ? 'bg-white text-black shadow-glow-white' : 'text-neutral-500 hover:text-white'}`}
                             >
                                 Monthly
                             </button>
-                            <button 
+                            <button
                                 onClick={() => setBillingCycle('yearly')}
                                 className={`px-6 py-2 rounded-full text-sm font-bold transition-all duration-300 ${billingCycle === 'yearly' ? 'bg-white text-black shadow-glow-white' : 'text-neutral-500 hover:text-white'}`}
                             >
@@ -127,7 +127,7 @@ const PricingPage: React.FC = () => {
 
                 {/* Pricing Cards */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                    
+
                     {/* 1. Reader Plan */}
                     <div className="bg-black border border-white/10 p-8 md:p-10 rounded-[32px] relative group shadow-2xl overflow-hidden">
                         {/* Hover Glow */}
@@ -139,7 +139,7 @@ const PricingPage: React.FC = () => {
                             </div>
                             <h3 className="text-xl font-bold text-white">Reader</h3>
                         </div>
-                        
+
                         <div className="mb-6">
                             <span className="text-4xl font-black text-white">Free</span>
                             <span className="text-neutral-500 ml-2">/ forever</span>
@@ -149,8 +149,8 @@ const PricingPage: React.FC = () => {
                             Read free books and build your personal collection.
                         </p>
 
-                        <button 
-                            onClick={() => navigate('/store')}
+                        <button
+                            onClick={() => navigate('/')}
                             className="w-full py-4 rounded-full border border-white/20 text-white font-bold hover:bg-white/10 transition-colors mb-8 uppercase tracking-widest text-xs"
                         >
                             Browse Books
@@ -176,7 +176,7 @@ const PricingPage: React.FC = () => {
                     <div className="bg-black border border-white/10 p-8 md:p-10 rounded-[32px] relative shadow-2xl overflow-hidden">
                         {/* Top Gradient Highlight */}
                         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-google-blue to-transparent opacity-50"></div>
-                        
+
                         <div className="absolute top-6 right-6 px-3 py-1 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-full shadow-glow-white">
                             Recommended
                         </div>
@@ -187,7 +187,7 @@ const PricingPage: React.FC = () => {
                             </div>
                             <h3 className="text-xl font-bold text-white">Writer</h3>
                         </div>
-                        
+
                         <div className="mb-6 relative z-10">
                             <span className="text-4xl font-black text-white">₹{billingCycle === 'monthly' ? '499' : '4,999'}</span>
                             <span className="text-neutral-500 ml-2">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
@@ -198,14 +198,14 @@ const PricingPage: React.FC = () => {
                         </p>
 
                         {userType === UserType.SELLER ? (
-                             <button 
+                            <button
                                 disabled
                                 className="w-full py-4 rounded-full bg-green-500/10 text-green-400 font-bold border border-green-500/50 mb-8 cursor-default flex items-center justify-center gap-2 uppercase tracking-widest text-xs"
                             >
                                 <IconCheck className="w-5 h-5" /> Current Plan
                             </button>
                         ) : (
-                            <button 
+                            <button
                                 onClick={handleSubscribe}
                                 disabled={isProcessing}
                                 className="w-full py-4 rounded-full bg-white text-black font-bold hover:bg-neutral-200 transition-colors shadow-glow-white mb-8 flex items-center justify-center gap-2 relative z-10 uppercase tracking-widest text-xs"
@@ -249,11 +249,11 @@ const PricingPage: React.FC = () => {
                             <span>Trusted by 10,000+ Creators</span>
                         </div>
                         <div className="flex items-center justify-center gap-3">
-                             <svg className="w-5 h-5 text-google-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+                            <svg className="w-5 h-5 text-google-green" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
                             <span>Secure Payments</span>
                         </div>
                         <div className="flex items-center justify-center gap-3">
-                             <svg className="w-5 h-5 text-google-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                            <svg className="w-5 h-5 text-google-blue" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
                             <span>Cancel Anytime</span>
                         </div>
                     </div>

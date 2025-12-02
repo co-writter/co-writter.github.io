@@ -1,7 +1,7 @@
 
 
 import React from 'react';
-import { HashRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -33,9 +33,9 @@ const AnimatedRoutes = () => {
     // Key is vital for triggering the animation on route change
     <div key={location.pathname} className="flex-grow flex flex-col animate-page-enter">
       <Routes location={location}>
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<StorePage />} />
+        <Route path="/about" element={<HomePage />} />
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/store" element={<StorePage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
@@ -62,7 +62,7 @@ const AnimatedRoutes = () => {
 const App: React.FC = () => {
   return (
     <AppProvider>
-      <HashRouter>
+      <BrowserRouter>
         <div className="flex flex-col min-h-screen bg-black font-sans text-foreground overflow-x-hidden relative">
 
           {/* === GLOBAL ANTIGRAVITY THEME BACKGROUND === */}
@@ -90,7 +90,7 @@ const App: React.FC = () => {
           </div>
 
         </div>
-      </HashRouter>
+      </BrowserRouter>
     </AppProvider>
   );
 };

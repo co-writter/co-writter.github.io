@@ -6,6 +6,7 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', '');
   return {
     base: './',
+    publicDir: 'public',
     build: {
       outDir: 'dist',
       emptyOutDir: true,

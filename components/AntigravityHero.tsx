@@ -170,7 +170,7 @@ const AntigravityHero: React.FC = () => {
                 {/* Buttons - Google Style */}
                 <Link
                     ref={btn1Ref}
-                    to="/store"
+                    to="/"
                     className="absolute top-0 left-0 -translate-x-1/2 -translate-y-1/2 w-[160px] h-[46px] bg-gray-100 text-gray-700 font-medium rounded-md text-sm hover:bg-gray-200 hover:text-black transition-colors flex items-center justify-center gap-2 pointer-events-auto border border-transparent hover:border-gray-300 hover:shadow-sm"
                 >
                     Google Search
