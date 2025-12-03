@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { suggestBookPrice } from '../../services/geminiService';
 import Spinner from '../Spinner';
 import { EBook } from '../../types';
-import { IconSparkles, BORDER_CLASS } from '../../constants';
+import { IconTrendingUp, IconCheck, IconSparkles } from '../../constants';
 
 interface AIPricingOptimizerProps {
   bookDetails: Pick<EBook, 'title' | 'genre' | 'description'>;
@@ -16,58 +16,65 @@ const AIPricingOptimizer: React.FC<AIPricingOptimizerProps> = ({ bookDetails, on
   const [error, setError] = useState<string | null>(null);
 
   const handleSuggestPrice = async () => {
-    if (!bookDetails.title || !bookDetails.genre || !bookDetails.description) {
-        setError("Please provide book title, genre, and description before suggesting a price.");
+    if (!bookDetails.title) {
+        setError("Enter a title first.");
         return;
     }
     setIsLoading(true);
     setError(null);
-    setSuggestedPrice(null);
     try {
       const price = await suggestBookPrice(bookDetails);
-      // Check if the AI returned a valid number string, not an error message
       if (price.match(/^\d+(\.\d{1,2})?$/)) { 
-        setSuggestedPrice(price); // price is already a string
+        setSuggestedPrice(price); 
         onPriceSuggested(price); 
       } else {
-        // AI returned an error message (like "API Key not configured." or "Error connecting...")
-        // or an unparseable price
-        setError(price.startsWith("AI could not") || price.startsWith("Error connecting") || price.startsWith("API Key") ? price : 'AI returned an invalid price format. Please try again.');
-        setSuggestedPrice(null); 
+        setError('Could not calculate.');
       }
     } catch (err) {
-      setError('Failed to suggest price. The AI service might be unavailable.');
-      console.error(err);
+      setError('Service unavailable.');
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className={`my-6 p-5 bg-neutral-800/60 rounded-md border ${BORDER_CLASS} shadow-md`}>
-      <h4 className="text-lg font-semibold text-white mb-3 flex items-center">
-        <IconSparkles className="w-5 h-5 mr-2.5 text-brand-accent" />
-        AI Pricing Suggestion (INR)
-      </h4>
-      <button
-        onClick={handleSuggestPrice}
-        disabled={isLoading || !bookDetails.title || !bookDetails.genre || !bookDetails.description}
-        className="bg-brand-accent text-black font-semibold py-2.5 px-5 rounded-full hover:bg-brand-accent-darker transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-accent-darker focus:ring-offset-2 focus:ring-offset-neutral-800 text-xs uppercase tracking-widest"
-      >
-        {isLoading ? <Spinner size="sm" color="text-black"/> : 'Suggest Price with AI'}
-      </button>
-      {error && <p className="text-red-400 mt-2.5 text-sm p-2 bg-red-900/30 rounded-sm border border-red-700/50">{error}</p>}
-      {suggestedPrice && !error && (
-        <div className="mt-3 p-3 bg-brand-accent/10 rounded-sm border border-brand-accent/30">
-            <p className="text-brand-accent text-xl font-bold">
-            AI Suggested Price: <span className="text-2xl">₹{parseFloat(suggestedPrice).toFixed(2)}</span>
-            </p>
-            <p className="text-xs text-brand-accent/70 mt-0.5">You can adjust this price manually.</p>
+    <div className="bg-[#151515] border border-white/5 rounded-2xl p-5 mt-4 flex flex-col md:flex-row items-center justify-between gap-4 group hover:border-white/10 transition-colors">
+      <div className="flex items-center gap-4">
+        <div className="relative">
+            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500/20 to-teal-900/20 border border-emerald-500/30 flex items-center justify-center text-emerald-400 shadow-[0_0_20px_rgba(16,185,129,0.15)] group-hover:shadow-[0_0_30px_rgba(16,185,129,0.25)] transition-shadow duration-500">
+                <IconTrendingUp className="w-6 h-6" />
+            </div>
+            <div className="absolute -top-1 -right-1 bg-white text-black text-[8px] font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5 border border-white shadow-sm">
+                AI <IconSparkles className="w-2 h-2" />
+            </div>
         </div>
-      )}
-      {(!bookDetails.title || !bookDetails.genre || !bookDetails.description) && !error && (
-        <p className="text-xs text-neutral-400/80 mt-2">Fill in title, genre, and description to enable AI pricing.</p>
-      )}
+        <div>
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                Smart Pricing Model
+            </h4>
+            <p className="text-[10px] text-neutral-500 max-w-[200px]">Analyze market trends & genre data to predict the optimal revenue point.</p>
+        </div>
+      </div>
+
+      <div className="flex items-center gap-4">
+          {suggestedPrice && (
+               <div className="flex flex-col items-end mr-2 animate-fade-in">
+                   <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Target Price</span>
+                   <div className="flex items-center gap-2 text-emerald-400">
+                        <span className="text-xl font-black tracking-tighter">₹{parseFloat(suggestedPrice).toFixed(0)}</span>
+                        <IconCheck className="w-4 h-4 bg-emerald-500/20 rounded-full p-0.5" />
+                   </div>
+               </div>
+          )}
+          <button
+            onClick={handleSuggestPrice}
+            disabled={isLoading}
+            className="px-6 py-3 rounded-full bg-white text-black hover:bg-neutral-200 border border-transparent hover:border-white/50 transition-all font-bold text-[10px] uppercase tracking-widest disabled:opacity-50 shadow-glow-white hover:scale-105 active:scale-95 flex items-center gap-2"
+          >
+            {isLoading ? <Spinner size="sm" color="text-black"/> : 'Optimize'}
+          </button>
+      </div>
+      {error && <span className="text-red-400 text-xs font-bold bg-red-500/10 px-3 py-1 rounded-full border border-red-500/20">{error}</span>}
     </div>
   );
 };

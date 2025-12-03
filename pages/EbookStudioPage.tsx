@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAppContext } from '../contexts/AppContext';
 import { EBook, EBookPage } from '../types';
@@ -9,10 +8,10 @@ import {
     IconSend, IconPlus, IconArrowLeft, 
     IconRocket, IconX, 
     IconPenTip, IconBulb, IconImage,
-    IconMenu, IconCheck, IconWand, IconBrain, IconVolume, IconStop, IconMic
+    IconMenu, IconCheck, IconWand, IconBrain, IconMic, IconStop
 } from '../constants';
 import { 
-    createStudioSession, generateBookCover, generateSpeech, transcribeAudio
+    createStudioSession, generateBookCover, generateSpeech
 } from '../services/geminiService';
 import { Chat } from '@google/genai';
 import MorphicEye from '../components/MorphicEye';
@@ -90,15 +89,20 @@ const EbookStudioPage: React.FC = () => {
   const [isBusy, setIsBusy] = useState(false);
   const [currentAction, setCurrentAction] = useState("Ready");
   const [progress, setProgress] = useState(0);
-  const [isListening, setIsListening] = useState(false);
   
   // --- Audio State ---
   const audioContextRef = useRef<AudioContext | null>(null);
   const currentSourceRef = useRef<AudioBufferSourceNode | null>(null);
   const [activeSpeakerId, setActiveSpeakerId] = useState<string | null>(null);
 
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioChunksRef = useRef<Blob[]>([]);
+  // Streaming Audio Queue
+  const audioQueueRef = useRef<string[]>([]);
+  const isPlayingAudioRef = useRef(false);
+
+  // Speech Recognition State
+  const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
+  const textBeforeListening = useRef<string>('');
 
   const chatSessionRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -111,12 +115,19 @@ const EbookStudioPage: React.FC = () => {
         const session = createStudioSession(initialContext);
         if (session) {
             chatSessionRef.current = session;
+            const initMsg = "I'm online. Elite Ghostwriter active. What are we writing today?";
+            const initMsgId = 'sys-init';
             setMessages([{
-                id: 'sys-init',
+                id: initMsgId,
                 role: 'ai',
-                text: "I'm ready. I can help you write, plan chapters, and create images."
+                text: initMsg
             }]);
             
+            // Auto-speak init message
+            setTimeout(() => {
+                queueTTS(initMsg, initMsgId);
+            }, 500);
+
             if (initialPrompt) {
                setTimeout(() => handleSendMessage(undefined, initialPrompt), 500);
             }
@@ -132,16 +143,71 @@ const EbookStudioPage: React.FC = () => {
   // Handle Audio Stop on Unmount
   useEffect(() => {
       return () => {
-          if (currentSourceRef.current) {
-              currentSourceRef.current.stop();
-          }
+          stopAudio();
           if (audioContextRef.current) {
               audioContextRef.current.close();
           }
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-              mediaRecorderRef.current.stop();
+          if (recognitionRef.current) {
+              recognitionRef.current.stop();
           }
       };
+  }, []);
+
+  // Ensure AudioContext is ready on first interaction
+  useEffect(() => {
+    const unlockAudio = () => {
+        if (!audioContextRef.current) {
+            audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+        }
+        if (audioContextRef.current.state === 'suspended') {
+            audioContextRef.current.resume();
+        }
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+    window.addEventListener('touchstart', unlockAudio);
+    
+    return () => {
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+        window.removeEventListener('touchstart', unlockAudio);
+    };
+  }, []);
+
+  // Initialize Speech Recognition
+  useEffect(() => {
+      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+          const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+          recognitionRef.current = new SpeechRecognition();
+          recognitionRef.current.continuous = true;
+          recognitionRef.current.interimResults = true;
+          recognitionRef.current.lang = 'en-US';
+
+          recognitionRef.current.onresult = (event: any) => {
+              const sessionTranscript = Array.from(event.results)
+                  .map((result: any) => result[0].transcript)
+                  .join('');
+              
+              const baseText = textBeforeListening.current ? textBeforeListening.current + ' ' : '';
+              setInput(baseText + sessionTranscript);
+          };
+
+          recognitionRef.current.onerror = (event: any) => {
+              console.error('Speech recognition error', event.error);
+              if (event.error === 'not-allowed') {
+                  alert("Microphone access denied.");
+              }
+              setIsListening(false);
+          };
+
+          recognitionRef.current.onend = () => {
+              setIsListening(false);
+          };
+      }
   }, []);
 
   const stopAudio = () => {
@@ -151,154 +217,139 @@ const EbookStudioPage: React.FC = () => {
           } catch(e) {}
           currentSourceRef.current = null;
       }
+      audioQueueRef.current = []; // Clear queue
+      isPlayingAudioRef.current = false;
       setActiveSpeakerId(null);
   };
 
-  const playTTS = async (text: string, messageId: string) => {
-      // Stop any existing audio
-      stopAudio();
-
-      // Initialize Audio Context if needed
-      if (!audioContextRef.current) {
-          audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
-      }
+  // --- SEQUENTIAL TTS QUEUE ---
+  const queueTTS = (text: string, messageId: string) => {
+      if (!text || !text.trim()) return;
       
-      setActiveSpeakerId(messageId);
+      // Add to queue
+      audioQueueRef.current.push(text);
       
-      const cleanText = text.replace(/[*_#`]/g, ''); // Strip markdown for better speech
-      const base64Audio = await generateSpeech(cleanText);
-      
-      if (base64Audio && audioContextRef.current) {
-          try {
-             const audioBuffer = await decodeAudioData(
-                 decode(base64Audio),
-                 audioContextRef.current,
-                 24000,
-                 1
-             );
-             
-             const source = audioContextRef.current.createBufferSource();
-             source.buffer = audioBuffer;
-             source.connect(audioContextRef.current.destination);
-             
-             source.onended = () => {
-                 setActiveSpeakerId(null);
-                 currentSourceRef.current = null;
-             };
-             
-             currentSourceRef.current = source;
-             source.start(0);
-
-          } catch (e) {
-              console.error("Audio playback error", e);
-              setActiveSpeakerId(null);
-          }
-      } else {
-          setActiveSpeakerId(null);
+      // Trigger processor if not already playing
+      if (!isPlayingAudioRef.current) {
+          processAudioQueue(messageId);
       }
   };
 
-  const handleMicClick = async () => {
-    // Stop recording if already active
-    if (isListening) {
-        if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-            mediaRecorderRef.current.stop();
-        }
-        setIsListening(false);
+  const processAudioQueue = async (messageId: string) => {
+      if (audioQueueRef.current.length === 0) {
+          isPlayingAudioRef.current = false;
+          setActiveSpeakerId(null);
+          return;
+      }
+
+      isPlayingAudioRef.current = true;
+      setActiveSpeakerId(messageId);
+      
+      const nextText = audioQueueRef.current.shift()!;
+      
+      // Clean markdown
+      const cleanText = nextText.replace(/[*_#`]/g, '').replace(/!\[.*?\]\(.*?\)/g, ''); 
+      
+      if (!cleanText.trim()) {
+          processAudioQueue(messageId);
+          return;
+      }
+
+      try {
+          // Initialize Context if missing
+          if (!audioContextRef.current) {
+              audioContextRef.current = new (window.AudioContext || (window as any).webkitAudioContext)({sampleRate: 24000});
+          }
+
+          const base64Audio = await generateSpeech(cleanText);
+          
+          if (base64Audio && audioContextRef.current) {
+               const audioBuffer = await decodeAudioData(
+                   decode(base64Audio),
+                   audioContextRef.current,
+                   24000,
+                   1
+               );
+               
+               const source = audioContextRef.current.createBufferSource();
+               source.buffer = audioBuffer;
+               source.connect(audioContextRef.current.destination);
+               
+               source.onended = () => {
+                   processAudioQueue(messageId); // Play next chunk
+               };
+               
+               currentSourceRef.current = source;
+               source.start(0);
+          } else {
+              processAudioQueue(messageId); // Skip if failed
+          }
+
+      } catch (e) {
+          console.error("TTS playback error", e);
+          processAudioQueue(messageId); // Skip error
+      }
+  };
+
+
+  const handleMicClick = () => {
+    if (!recognitionRef.current) {
+        alert("Speech recognition is not supported in this browser. Please use Chrome.");
         return;
     }
 
-    // Start recording
-    try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    if (isListening) {
+        recognitionRef.current.stop();
+        setIsListening(false);
+    } else {
+        // Stop any playing TTS audio so we don't record the AI
+        stopAudio();
         
-        let mimeType = 'audio/webm';
-        if (MediaRecorder.isTypeSupported('audio/webm')) {
-            mimeType = 'audio/webm';
-        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
-            mimeType = 'audio/mp4';
-        }
-        
-        const mediaRecorder = new MediaRecorder(stream, { mimeType });
-        mediaRecorderRef.current = mediaRecorder;
-        audioChunksRef.current = [];
-
-        mediaRecorder.ondataavailable = (event) => {
-            if (event.data.size > 0) {
-                audioChunksRef.current.push(event.data);
-            }
-        };
-
-        mediaRecorder.onstop = async () => {
-            const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
-            
-            // Convert Blob to Base64
-            const reader = new FileReader();
-            reader.readAsDataURL(audioBlob);
-            reader.onloadend = async () => {
-                const base64String = (reader.result as string).split(',')[1];
-                
-                // Transcribe
-                setIsBusy(true);
-                setCurrentAction("Transcribing...");
-                try {
-                    const text = await transcribeAudio(base64String, mimeType);
-                    if (text) {
-                        setInput(prev => prev ? `${prev} ${text}` : text);
-                    }
-                } catch (e) {
-                    console.error("Transcription error", e);
-                } finally {
-                    setIsBusy(false);
-                    setCurrentAction("Ready");
-                    
-                    // Release microphone
-                    stream.getTracks().forEach(track => track.stop());
-                }
-            };
-        };
-
-        mediaRecorder.start();
+        textBeforeListening.current = input; // Capture existing text
+        recognitionRef.current.start();
         setIsListening(true);
-        
-    } catch (err) {
-        console.error("Microphone access error:", err);
-        alert("Could not access microphone. Please check permissions.");
     }
   };
 
   const handleImageGeneration = async (prompt: string) => {
       setIsBusy(true);
-      setCurrentAction("Creating Image...");
+      setCurrentAction("Generating Visuals...");
       setProgress(30);
       
       const msgId = Date.now().toString() + '_img';
       setMessages(prev => [...prev, { 
           id: msgId, 
           role: 'ai', 
-          text: `Generating image for: "${prompt}"...`, 
+          text: `Creating visual asset: "${prompt}"...`, 
           isStreaming: true 
       }]);
 
       try {
-          const result = await generateBookCover(prompt, "Cinematic", activePage.title, currentUser?.name);
+          // Detect Diagram intent
+          const isDiagram = /diagram|chart|graph|map|schematic|structure|flow|infographic/i.test(prompt);
+          const style = isDiagram ? "Technical Diagram, clean, precise, labeled" : "Cinematic Illustration";
+
+          const result = await generateBookCover(prompt, style, activePage.title, currentUser?.name);
           
           if ('imageBytes' in result) {
               const markdownImage = `\n\n![${prompt}](data:image/jpeg;base64,${result.imageBytes})\n\n`;
-              
-              lastGeneratedImageRef.current = markdownImage; // Save to ref for potential blueprint injection
+              lastGeneratedImageRef.current = markdownImage; 
               
               setPages(prev => prev.map(p => p.id === activePageId ? { ...p, content: p.content + markdownImage } : p));
+              
+              const successText = isDiagram ? `Diagram generated and inserted.` : `Illustration generated and inserted.`;
               setMessages(prev => prev.map(m => m.id === msgId ? { 
                   ...m, 
-                  text: `Generated visual for "${prompt}". Added to editor.`,
+                  text: successText,
                   isStreaming: false
               } : m));
+              
+              queueTTS(successText, msgId);
               setMobileView('editor');
           } else {
               setMessages(prev => prev.map(m => m.id === msgId ? { 
                   ...m, 
-                  text: `Failed to generate image. ${result.error}`,
+                  text: `Failed to generate visual.`,
                   isStreaming: false
               } : m));
           }
@@ -311,31 +362,36 @@ const EbookStudioPage: React.FC = () => {
       }
   };
 
-  // --- CORE AI LOGIC ---
+  // --- CORE AI LOGIC (STREAMING + INSTANT AUDIO) ---
   const handleSendMessage = async (e?: React.FormEvent, overrideInput?: string) => {
       e?.preventDefault();
       const text = overrideInput || input;
       if (!text.trim() || isBusy) return;
       
+      if (isListening) {
+          recognitionRef.current.stop();
+          setIsListening(false);
+      }
+
+      stopAudio(); // Stop previous TTS immediately
       setInput('');
       setMessages(prev => [...prev, { id: Date.now().toString(), role: 'user', text }]);
       setIsBusy(true);
       setCurrentAction("Thinking...");
-      setProgress(10);
+      setProgress(20);
 
       const msgId = Date.now().toString() + '_ai';
       setMessages(prev => [...prev, { id: msgId, role: 'ai', text: '', isStreaming: true }]);
 
+      let speechBuffer = "";
+
       try {
           if (chatSessionRef.current) {
               const contextPayload = `
-[SYSTEM_CONTEXT_UPDATE]
-Current Chapter Title: "${activePage.title}"
-Current Editor Content:
-"""
-${activePage.content}
-"""
-User Request: ${text}
+[SYSTEM_CONTEXT]
+Chapter: "${activePage.title}"
+Content Length: ${activePage.content.length} chars.
+User Input: ${text}
 `;
 
               const resultStream = await chatSessionRef.current.sendMessageStream({ message: contextPayload });
@@ -346,41 +402,61 @@ User Request: ${text}
                   const chunkText = chunk.text;
                   if (chunkText) {
                       fullText += chunkText;
+                      // Real-time Visual Update
                       setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: fullText } : m));
+                      
+                      // Real-time Audio Streaming (Sentence Buffering)
+                      speechBuffer += chunkText;
+                      
+                      // Check for sentence terminators (. ? ! \n)
+                      // We look for a terminator followed by a space or end of string
+                      const sentenceMatch = speechBuffer.match(/([.?!:\n]+)\s/);
+                      if (sentenceMatch && sentenceMatch.index !== undefined) {
+                          const separatorIndex = sentenceMatch.index + sentenceMatch[0].length;
+                          const sentenceToSpeak = speechBuffer.substring(0, separatorIndex);
+                          
+                          // Queue this sentence immediately
+                          queueTTS(sentenceToSpeak, msgId);
+                          
+                          // Remove spoken part from buffer
+                          speechBuffer = speechBuffer.substring(separatorIndex);
+                          
+                          // Update UI state to show speaking
+                          setCurrentAction("Speaking...");
+                      }
                   }
                   
                   if (chunk.functionCalls) {
                       for (const call of chunk.functionCalls) {
                           if (call.name === 'write_content') {
                               const args = call.args as any;
-                              setCurrentAction(args.summary || "Updating content...");
-                              setProgress(50);
+                              setCurrentAction(args.summary || "Writing to Editor...");
+                              setProgress(60);
+                              
+                              // Update Editor content
                               setPages(prev => prev.map(p => p.id === activePageId ? { ...p, content: args.content } : p));
+                              
+                              const updateMsg = `\n\n_Updated Editor Content_`;
                               setMessages(prev => prev.map(m => m.id === msgId ? { 
                                   ...m, 
-                                  text: fullText + `\n\n_Updated content for "${activePage.title}"_`,
+                                  text: fullText + updateMsg,
                               } : m));
-                              // Switch to editor on mobile so they see the change
+                              
                               setMobileView('editor');
 
                           } else if (call.name === 'generate_image') {
                               const args = call.args as any;
+                              // Async visual generation
                               await handleImageGeneration(args.prompt);
-                              setMessages(prev => prev.map(m => m.id === msgId ? { 
-                                  ...m, 
-                                  text: fullText + `\n\n_Generated image for "${args.prompt}"_`,
-                              } : m));
 
                           } else if (call.name === 'propose_blueprint') {
                               const args = call.args as any;
-                              setCurrentAction("Creating Structure...");
+                              setCurrentAction("Structuring Book...");
                               
-                              // Check if we just generated a cover image, preserve it in the first chapter
                               const existingCover = lastGeneratedImageRef.current || '';
-                              lastGeneratedImageRef.current = null; // consume it
+                              lastGeneratedImageRef.current = null; 
 
                               setPages(prev => {
-                                  // Create new outline structure
                                   const newPages = args.outline.map((ch: any, i: number) => ({
                                       id: `p-${i}`,
                                       title: ch.title,
@@ -393,20 +469,24 @@ User Request: ${text}
                               setActivePageId(`p-0`);
                               setMessages(prev => prev.map(m => m.id === msgId ? { 
                                   ...m, 
-                                  text: fullText + `\n\n**Blueprint Created:** ${args.title}`,
+                                  text: fullText + `\n\n**Created Blueprint:** ${args.title}`,
                               } : m));
-                              // Switch to outline view so they see it
                               setLeftTab('outline');
                               setMobileView('tools');
-                              
                           }
                       }
                   }
               }
               setMessages(prev => prev.map(m => m.id === msgId ? { ...m, isStreaming: false } : m));
+              
+              // Flush remaining buffer to TTS
+              if (speechBuffer.trim()) {
+                  queueTTS(speechBuffer, msgId);
+              }
           }
       } catch (e) {
           console.error(e);
+          setMessages(prev => prev.map(m => m.id === msgId ? { ...m, text: "Error connecting to neural engine.", isStreaming: false } : m));
       } finally {
           setIsBusy(false);
           setProgress(100);
@@ -421,14 +501,7 @@ User Request: ${text}
       if (!apTopic) return;
       setIsLaunching(true);
       
-      // Simulation of a launch sequence
-      const steps = [
-          "Starting Co-Author...",
-          "Understanding topic...",
-          "Setting style...",
-          "Writing Book..."
-      ];
-      
+      const steps = ["Initializing...", "Market Analysis...", "Drafting Structure..."];
       for (const step of steps) {
           setLaunchStatus(step);
           await new Promise(r => setTimeout(r, 600));
@@ -438,17 +511,10 @@ User Request: ${text}
       setIsLaunching(false);
       setLaunchStatus("Standing By");
 
-      const prompt = `Auto-Pilot Protocol Activated. 
-      Directive: Create a comprehensive book blueprint.
-      Topic: "${apTopic}"
-      Archetype: ${apType}
-      Tone: ${apTone}
-      
-      Requirements:
-      1. First, call 'generate_image' to create a cinematic cover art for this book.
-      2. Then, call 'propose_blueprint' to create a 6-chapter outline.
-      
-      Execute sequence immediately.`;
+      const prompt = `Auto-Pilot: Create a bestseller blueprint for "${apTopic}" (${apType}, ${apTone} tone). 
+      1. Create a cover visual. 
+      2. Propose outline. 
+      3. Write the first chapter.`;
       
       handleSendMessage(undefined, prompt);
   };
@@ -528,13 +594,13 @@ User Request: ${text}
                         onClick={() => setLeftTab('chat')}
                         className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${leftTab === 'chat' ? 'text-white bg-white/5 border-b-2 border-white' : 'text-neutral-500 hover:text-neutral-300'}`}
                     >
-                        Chat
+                        Co-Author
                     </button>
                     <button 
                          onClick={() => setLeftTab('outline')}
                          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-widest transition-colors ${leftTab === 'outline' ? 'text-white bg-white/5 border-b-2 border-white' : 'text-neutral-500 hover:text-neutral-300'}`}
                     >
-                        Chapters
+                        Outline
                     </button>
                 </div>
 
@@ -555,20 +621,12 @@ User Request: ${text}
                                                             <MorphicEye className="w-4 h-4 rounded-full border border-white/10 bg-black" isActive={activeSpeakerId === msg.id} />
                                                             <span className="text-[11px] font-bold uppercase tracking-widest text-google-blue">Co-Author</span>
                                                         </div>
-                                                        {activeSpeakerId === msg.id ? (
-                                                             <button 
-                                                                onClick={stopAudio}
-                                                                className="w-5 h-5 flex items-center justify-center text-red-400 hover:text-white transition-colors"
-                                                             >
-                                                                 <IconStop className="w-3 h-3" />
-                                                             </button>
-                                                        ) : (
-                                                             <button 
-                                                                onClick={() => playTTS(msg.text, msg.id)}
-                                                                className="w-5 h-5 flex items-center justify-center text-neutral-500 hover:text-white transition-colors"
-                                                             >
-                                                                 <IconVolume className="w-3 h-3" />
-                                                             </button>
+                                                        {activeSpeakerId === msg.id && (
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="w-0.5 h-2 bg-google-blue animate-[pulse_0.5s_infinite]"></span>
+                                                                <span className="w-0.5 h-3 bg-google-blue animate-[pulse_0.7s_infinite]"></span>
+                                                                <span className="w-0.5 h-2 bg-google-blue animate-[pulse_0.6s_infinite]"></span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 )}
@@ -591,7 +649,7 @@ User Request: ${text}
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 pr-20 text-xs text-white outline-none focus:border-white/30 focus:bg-black/70 transition-all placeholder-neutral-600 font-mono shadow-inner"
-                                        placeholder="Ask Co-Author..."
+                                        placeholder={isListening ? "Listening..." : "Speak or type to Co-Author..."}
                                         disabled={isBusy}
                                     />
                                     
@@ -600,9 +658,9 @@ User Request: ${text}
                                             type="button"
                                             onClick={handleMicClick}
                                             className={`p-2 transition-colors hover:scale-110 active:scale-95 ${isListening ? 'text-red-500 animate-pulse' : 'text-neutral-500 hover:text-white'}`}
-                                            title="Speak"
+                                            title={isListening ? "Stop Listening" : "Start Listening"}
                                         >
-                                            <IconMic className="w-4 h-4" />
+                                            {isListening ? <IconStop className="w-4 h-4" /> : <IconMic className="w-4 h-4" />}
                                         </button>
                                         <button 
                                             type="submit"
@@ -692,7 +750,7 @@ User Request: ${text}
                 </div>
 
                 {/* --- EDITOR CANVAS --- */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center pt-24 md:pt-28 pb-20">
+                <div className="flex-1 overflow-y-auto custom-scrollbar flex justify-center pt-24 md:pt-28 pb-10 px-4 md:px-0">
                     <NovelEditor 
                         title={activePage.title}
                         onTitleChange={(newTitle) => setPages(prev => prev.map(p => p.id === activePageId ? { ...p, title: newTitle } : p))}

@@ -1,5 +1,4 @@
 
-
 import React, { useState, useRef, useEffect } from 'react';
 import { IconSparkles, IconImage } from '../constants';
 
@@ -24,6 +23,8 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const LINE_HEIGHT = 36; // px - Controls spacing of the lines
 
   // Auto-resize textarea
   useEffect(() => {
@@ -73,10 +74,23 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
           onTriggerAI("Continue writing from here...");
           onContentChange(textBefore + textAfter);
       } else if (cmd.id === 'image') {
-          const imagePrompt = window.prompt("Describe the image you want to generate:");
+          // Context Intelligence: Grab the preceding paragraph to use as default prompt
+          const lines = textBefore.trim().split('\n');
+          const lastLine = lines[lines.length - 1]?.trim() || "";
+          // Provide a helpful default. If paragraph is long, truncate for display, but logic below handles full text.
+          const defaultPrompt = lastLine.length > 0 ? (lastLine.length > 100 ? lastLine.substring(0, 100) + "..." : lastLine) : "Illustration of...";
+          
+          const imagePrompt = window.prompt("Describe the image or diagram:", defaultPrompt);
+          
           if (imagePrompt) {
-              onTriggerImageGen(imagePrompt);
-              onContentChange(textBefore + `\n![Generating: ${imagePrompt}...]()\n` + textAfter);
+              // If user kept the default (which might have '...'), try to use the full lastLine if it matches start
+              let finalPrompt = imagePrompt;
+              if (defaultPrompt.endsWith("...") && imagePrompt === defaultPrompt) {
+                  finalPrompt = lastLine; 
+              }
+              
+              onTriggerImageGen(finalPrompt);
+              onContentChange(textBefore + `\n![Generating Visual: ${finalPrompt.substring(0, 25)}...]()\n` + textAfter);
           } else {
                onContentChange(textBefore + textAfter);
           }
@@ -98,60 +112,74 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
   ];
 
   return (
-    <div className="w-full max-w-4xl mx-auto min-h-screen bg-transparent text-white p-4 md:p-8 relative font-sans selection:bg-white/20">
+    <div className="w-full max-w-4xl mx-auto min-h-screen p-4 md:p-8 relative font-sans">
         
-        {/* Title Area */}
-        <div className="group mb-8 md:mb-12 relative">
-             <input 
-                type="text" 
-                value={title}
-                onChange={(e) => onTitleChange(e.target.value)}
-                className="w-full bg-transparent text-4xl md:text-6xl font-black text-white border-none outline-none placeholder-neutral-700 tracking-tighter leading-none"
-                placeholder="Book Title"
-            />
-        </div>
+        {/* Notebook Container */}
+        <div className="relative bg-[#121212] rounded-lg shadow-2xl min-h-[85vh] overflow-hidden border border-[#222]">
+            
+            {/* Title Area - Top of page */}
+            <div className="p-8 md:px-12 md:pt-12 md:pb-4 border-b border-[#222] bg-[#121212] relative z-10">
+                 <input 
+                    type="text" 
+                    value={title}
+                    onChange={(e) => onTitleChange(e.target.value)}
+                    className="w-full bg-transparent text-4xl md:text-5xl font-black text-white border-none outline-none placeholder-neutral-700 tracking-tighter leading-none"
+                    placeholder="Untitled Book"
+                />
+            </div>
 
-        {/* Editor Area */}
-        <div className="relative pb-32">
-            <textarea 
-                ref={textareaRef}
-                value={content}
-                onChange={handleInput}
-                onKeyDown={handleKeyDown}
-                className="w-full bg-transparent resize-none border-none outline-none text-base md:text-xl leading-loose text-neutral-200 placeholder-neutral-700 min-h-[60vh] font-serif"
-                placeholder="Start writing here... Type '/' for AI tools."
-                spellCheck={false}
-                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
-            />
+            {/* Editor Area with Lines */}
+            <div className="relative w-full h-full pb-20">
+                {/* Visual Margin Line */}
+                <div className="absolute top-0 bottom-0 left-8 md:left-12 w-px bg-red-900/30 z-0 pointer-events-none h-full"></div>
 
-            {/* Slash Command Menu */}
-            {showSlashMenu && (
-                <div 
-                    ref={menuRef}
-                    className="absolute top-20 left-0 z-50 w-64 max-w-[80vw] bg-black/90 backdrop-blur-xl border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up rounded-xl"
-                >
-                    <div className="px-3 py-2 text-[9px] font-bold uppercase text-neutral-500 tracking-widest border-b border-white/10 bg-white/5">
-                        Tools
+                <textarea 
+                    ref={textareaRef}
+                    value={content}
+                    onChange={handleInput}
+                    onKeyDown={handleKeyDown}
+                    className="w-full bg-transparent resize-none border-none outline-none text-lg text-neutral-300 placeholder-neutral-700 min-h-[70vh] font-serif relative z-10 pl-12 pr-8 md:pl-16 md:pr-16"
+                    placeholder="Start writing..."
+                    spellCheck={false}
+                    style={{ 
+                        lineHeight: `${LINE_HEIGHT}px`,
+                        // Dark Paper (#121212) with Black Lines (#000000)
+                        backgroundImage: `linear-gradient(transparent ${LINE_HEIGHT - 1}px, #000000 ${LINE_HEIGHT}px)`,
+                        backgroundSize: `100% ${LINE_HEIGHT}px`,
+                        backgroundAttachment: 'local',
+                        paddingTop: '6px' // Fine tune to sit on line
+                    }}
+                />
+
+                {/* Slash Command Menu */}
+                {showSlashMenu && (
+                    <div 
+                        ref={menuRef}
+                        className="absolute top-20 left-16 z-50 w-64 max-w-[80vw] bg-black/90 backdrop-blur-xl border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up rounded-xl"
+                    >
+                        <div className="px-3 py-2 text-[9px] font-bold uppercase text-neutral-500 tracking-widest border-b border-white/10 bg-white/5">
+                            Tools
+                        </div>
+                        {slashCommands.map((cmd, idx) => (
+                            <button
+                                key={cmd.id}
+                                onClick={() => executeCommand(cmd)}
+                                className={`w-full flex items-center gap-3 px-3 py-3 text-xs transition-colors ${idx === slashMenuIndex ? 'bg-white text-black' : 'text-neutral-300 hover:bg-white/5'}`}
+                            >
+                                <div className={`w-6 h-6 flex items-center justify-center font-bold text-[10px] rounded border ${idx === slashMenuIndex ? 'border-black/20 bg-black/5' : 'border-white/10 bg-white/5'}`}>
+                                    {cmd.icon}
+                                </div>
+                                <span className="font-bold uppercase tracking-wide">{cmd.label}</span>
+                            </button>
+                        ))}
                     </div>
-                    {slashCommands.map((cmd, idx) => (
-                        <button
-                            key={cmd.id}
-                            onClick={() => executeCommand(cmd)}
-                            className={`w-full flex items-center gap-3 px-3 py-3 text-xs transition-colors ${idx === slashMenuIndex ? 'bg-white text-black' : 'text-neutral-300 hover:bg-white/5'}`}
-                        >
-                            <div className={`w-6 h-6 flex items-center justify-center font-bold text-[10px] rounded border ${idx === slashMenuIndex ? 'border-black/20 bg-black/5' : 'border-white/10 bg-white/5'}`}>
-                                {cmd.icon}
-                            </div>
-                            <span className="font-bold uppercase tracking-wide">{cmd.label}</span>
-                        </button>
-                    ))}
-                </div>
-            )}
+                )}
+            </div>
         </div>
 
-        {/* Floating Hint */}
-        <div className="fixed bottom-8 right-8 text-neutral-600 text-[10px] font-mono pointer-events-none hidden md:block uppercase tracking-widest bg-black/40 backdrop-blur px-2 py-1 rounded border border-white/5">
-            {content.split(' ').length} words
+        {/* Floating Word Count */}
+        <div className="fixed bottom-8 right-8 text-neutral-500 text-[10px] font-mono pointer-events-none hidden md:block uppercase tracking-widest bg-black/80 backdrop-blur px-3 py-1.5 rounded border border-white/10 shadow-lg z-50">
+            {content.split(/\s+/).filter(w => w.length > 0).length} words
         </div>
     </div>
   );

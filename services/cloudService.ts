@@ -1,5 +1,4 @@
 
-
 // This service handles interactions with GitHub (Database) and Google Services (Docs, Drive)
 // Based on the "GitHub-Powered Ebook Studio" architecture.
 
@@ -17,60 +16,38 @@ export const getUserGithubToken = (): string | null => {
 export const saveUserDataToGitHub = async (username: string, data: any): Promise<{success: boolean, message?: string, url?: string}> => {
   const token = getUserGithubToken();
   
-  // SIMULATION MODE
-  if (!token) {
-      console.log("GitHub Sync: No access token found. Simulating deployment...");
+  // SIMULATION MODE: Persist to LocalStorage to mimic a deployed site
+  // This allows the "Live Site" (HostingPreviewPage) to actually load this data in a new tab.
+  try {
+      // Key format: cowritter_site_{slug}
+      localStorage.setItem(`cowritter_site_${username}`, JSON.stringify(data));
       
       // Simulate network latency
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      await new Promise(resolve => setTimeout(resolve, 1500));
       
       return { 
           success: true, 
           message: "Deployed to GitHub Pages",
           url: `https://co-writter.github.io/${username}`
       };
-  }
-
-  try {
-      // 1. Get SHA of existing file (if any)
-      let sha = "";
-      try {
-          const checkRes = await fetch(`${GITHUB_API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/users/${username}.json`, {
-              headers: { 'Authorization': `token ${token}` }
-          });
-          if (checkRes.ok) {
-              const fileData = await checkRes.json();
-              sha = fileData.sha;
-          }
-      } catch (e) { /* File doesn't exist yet */ }
-
-      // 2. Upload/Update File
-      const content = btoa(JSON.stringify(data, null, 2));
-      const response = await fetch(`${GITHUB_API_BASE}/repos/${REPO_OWNER}/${REPO_NAME}/contents/users/${username}.json`, {
-        method: 'PUT',
-        headers: {
-          'Authorization': `token ${token}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: `Update ${username} profile via CoWritter`,
-          content: content,
-          sha: sha || undefined
-        })
-      });
-
-      if (response.ok) {
-          return { success: true, url: `https://co-writter.github.io/${username}` };
-      } else {
-          return { success: false, message: "GitHub API Error" };
-      }
-  } catch (error) {
-      console.error("GitHub Sync Failed:", error);
-      return { success: false, message: "Network Error" };
+  } catch (e) {
+      console.error("Deployment failed", e);
+      return { success: false, message: "Storage Error" };
   }
 };
 
 export const loadUserProfileFromGitHub = async (username: string) => {
+    // 1. Try to load from our Simulated "Cloud" (LocalStorage)
+    try {
+        const localData = localStorage.getItem(`cowritter_site_${username}`);
+        if (localData) {
+            return JSON.parse(localData);
+        }
+    } catch (e) {
+        console.warn("Failed to load from local storage simulation");
+    }
+
+    // 2. Real GitHub Fetch (Fallthrough for production)
     try {
         const response = await fetch(`https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/main/users/${username}.json`);
         if (!response.ok) return null;

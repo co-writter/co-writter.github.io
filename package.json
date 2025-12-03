@@ -1,6 +1,5 @@
 {
   "name": "co-writter",
-  "homepage": "https://co-writter.github.io",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -16,7 +15,9 @@
     "recharts": "^3.0.0",
     "react-dom": "^19.1.0",
     "react-pdf": "9.1.0",
-    "pdfjs-dist": "4.4.168"
+    "pdfjs-dist": "4.4.168",
+    "vite": "^7.2.6",
+    "@vitejs/plugin-react": "^5.1.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

@@ -1,442 +1,395 @@
 
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-import { EBook, Seller, CreatorSiteConfig, UserType } from '../../types';
+import { Seller, EBook, CreatorSiteConfig, UserType } from '../../types';
 import BookUploadForm from '../BookUpload/BookUploadForm';
 import AnalyticsChart from './AnalyticsChart';
-import {
-    IconUpload, IconSettings, IconBook, IconSparkles,
-    IconEdit, IconWallet, IconLink, IconCheck, IconRocket,
-    IconActivity, IconStore, IconEye, IconGithub, IconCloudUpload
-} from '../../constants';
+import { 
+    IconSettings, IconBook, IconSparkles, 
+    IconEdit, IconWallet, IconCheck, IconRocket, 
+    IconActivity, IconPlus, IconCloudUpload, IconGithub, IconLink,
+    IconUser, IconEye, IconClock, IconGlobe
+} from '../../constants'; 
 import * as ReactRouterDOM from 'react-router-dom';
 import { saveUserDataToGitHub } from '../../services/cloudService';
 
 const { Link, useNavigate } = ReactRouterDOM as any;
 
+const mockVisitors = [
+    { id: 1, name: "Alice Freeman", email: "alice.f...@gmail.com", location: "Mumbai, IN", time: "2 mins ago", status: "Signed In", action: "Viewed 'The Void Start'", avatar: "A" },
+    { id: 2, name: "Bob Script", email: "bob.script...@outlook.com", location: "London, UK", time: "15 mins ago", status: "Signed In", action: "Purchased 'Neural Architectures'", avatar: "B" },
+    { id: 3, name: "Guest User", email: "—", location: "New York, US", time: "42 mins ago", status: "Guest", action: "Browsing Store", avatar: "?" },
+    { id: 4, name: "Diana Prince", email: "diana.p...@gmail.com", location: "Toronto, CA", time: "1 hour ago", status: "Signed In", action: "Added to Cart", avatar: "D" },
+    { id: 5, name: "Evan Wright", email: "evan.w...@yahoo.com", location: "Sydney, AU", time: "3 hours ago", status: "Signed In", action: "Viewed Profile", avatar: "E" },
+    { id: 6, name: "Guest User", email: "—", location: "Berlin, DE", time: "5 hours ago", status: "Guest", action: "Read Preview", avatar: "?" },
+];
+
 export const SellerDashboardContent: React.FC = () => {
-    const { currentUser, updateSellerCreatorSite, addCreatedBook, verifyUser, setCurrentUser, userType } = useAppContext();
-    const seller = currentUser as Seller;
-    const [activeSellerTab, setActiveSellerTab] = useState<'overview' | 'studio' | 'config'>('overview');
-    const navigate = useNavigate();
-    const [isSwitching, setIsSwitching] = useState(false);
-    const [isDeploying, setIsDeploying] = useState(false);
-    const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
+  const { currentUser, updateSellerCreatorSite, addCreatedBook, verifyUser, setCurrentUser, userType } = useAppContext();
+  const seller = currentUser as Seller; 
+  const [activeTab, setActiveTab] = useState<'overview' | 'studio' | 'audience' | 'settings'>('overview');
+  const navigate = useNavigate();
+  const [isDeploying, setIsDeploying] = useState(false);
+  const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
 
-    const myUploadedBooks = seller?.uploadedBooks || [];
+  const myUploadedBooks = seller?.uploadedBooks || [];
 
-    const [creatorSiteForm, setCreatorSiteForm] = useState<CreatorSiteConfig>(
-        seller?.creatorSite || {
-            isEnabled: false,
-            slug: seller?.name.toLowerCase().replace(/\s+/g, '-'),
-            theme: 'dark-minimal',
-            profileImageUrl: seller?.profileImageUrl || '',
-            displayName: seller?.name || '',
-            tagline: 'Author & Digital Creator',
-            showcasedBookIds: [],
-        }
-    );
+  const [creatorSiteForm, setCreatorSiteForm] = useState<CreatorSiteConfig>(
+    seller?.creatorSite || {
+      isEnabled: false,
+      slug: seller?.name.toLowerCase().replace(/\s+/g, '-'),
+      theme: 'dark-minimal',
+      profileImageUrl: seller?.profileImageUrl || '',
+      displayName: seller?.name || '',
+      tagline: 'Author & Digital Creator',
+      showcasedBookIds: [],
+    }
+  );
 
-    useEffect(() => {
-        if (seller?.creatorSite) {
-            setCreatorSiteForm(seller.creatorSite);
-        } else if (seller) {
-            setCreatorSiteForm(prev => ({
-                ...prev,
-                slug: seller.name.toLowerCase().replace(/\s+/g, '-'),
-                displayName: seller.name,
-                profileImageUrl: seller.profileImageUrl || ''
-            }));
-        }
-    }, [seller]);
+  useEffect(() => {
+    if (seller?.creatorSite) {
+      setCreatorSiteForm(seller.creatorSite);
+    }
+  }, [seller]);
 
-    if (!seller) return null;
+  if (!seller) return null;
 
-    const handleBookUploaded = (book: EBook) => {
-        addCreatedBook(book);
-        setActiveSellerTab('overview');
-    };
+  const handleBookUploaded = (book: EBook) => {
+    addCreatedBook(book); 
+    setActiveTab('overview');
+  };
 
-    const handleCreatorSiteFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        if (type === 'checkbox') {
-            const { checked } = e.target as HTMLInputElement;
-            if (name === 'showcasedBookIds') {
-                const bookId = value;
-                setCreatorSiteForm(prev => ({
-                    ...prev,
-                    showcasedBookIds: checked
-                        ? [...prev.showcasedBookIds, bookId]
-                        : prev.showcasedBookIds.filter(id => id !== bookId),
-                }));
-            } else {
-                setCreatorSiteForm(prev => ({ ...prev, [name]: checked }));
-            }
-        } else {
-            setCreatorSiteForm(prev => ({ ...prev, [name]: value }));
-        }
-    };
+  const handleDeployToGitHub = async () => {
+    if (!creatorSiteForm.slug) return;
+    setIsDeploying(true);
+    updateSellerCreatorSite(creatorSiteForm);
+    const result = await saveUserDataToGitHub(creatorSiteForm.slug, {
+        sellerProfile: seller,
+        siteConfig: creatorSiteForm,
+        books: myUploadedBooks
+    });
+    if (result.success) {
+        setDeploymentUrl(result.url || null);
+    }
+    setIsDeploying(false);
+  };
 
-    const handleSaveCreatorSite = (e: React.FormEvent) => {
-        e.preventDefault();
-        updateSellerCreatorSite(creatorSiteForm);
-        alert('Profile Updated locally. Deploy to make it public.');
-    };
+  const handleCreatorSiteFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value, type } = e.target;
+    if (type === 'checkbox') {
+        const { checked } = e.target as HTMLInputElement;
+        setCreatorSiteForm(prev => ({ ...prev, [name]: checked }));
+    } else {
+        setCreatorSiteForm(prev => ({ ...prev, [name]: value }));
+    }
+  };
 
-    const handleDeployToGitHub = async () => {
-        if (!creatorSiteForm.slug) return;
-        setIsDeploying(true);
+  const SidebarItem = ({ id, label, icon: Icon }: any) => (
+    <button 
+      onClick={() => setActiveTab(id)}
+      className={`w-full flex items-center gap-4 px-6 py-3.5 text-sm font-medium rounded-r-full transition-all duration-200 group ${
+          activeTab === id 
+          ? 'bg-[#34a853]/15 text-[#81c995] border-l-4 border-[#34a853]' 
+          : 'text-neutral-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
+      }`}
+    >
+        <Icon className={`w-5 h-5 ${activeTab === id ? 'text-[#81c995]' : 'text-neutral-500 group-hover:text-white'}`} />
+        {label}
+    </button>
+  );
 
-        // Save local config first
-        updateSellerCreatorSite(creatorSiteForm);
+  const MobileNavItem = ({ id, label, icon: Icon }: any) => (
+    <button 
+      onClick={() => setActiveTab(id)}
+      className={`flex flex-col items-center justify-center py-2 px-4 flex-1 transition-colors ${
+          activeTab === id ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+      }`}
+    >
+        <Icon className={`w-6 h-6 mb-1 ${activeTab === id ? 'text-[#81c995]' : 'text-current'}`} />
+        <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
+    </button>
+  );
 
-        const result = await saveUserDataToGitHub(creatorSiteForm.slug, {
-            sellerProfile: seller,
-            siteConfig: creatorSiteForm,
-            books: myUploadedBooks
-        });
+  return (
+    <div className="h-screen w-full bg-[#0b0b0b] font-sans text-white pt-16 flex overflow-hidden">
+        
+        {/* --- SIDEBAR (Desktop) --- */}
+        <aside className="w-64 flex-shrink-0 border-r border-white/5 hidden md:flex flex-col bg-[#0b0b0b] z-20 h-full overflow-y-auto">
+            <div className="p-6">
+                <button 
+                    onClick={() => navigate('/ebook-studio')}
+                    className="w-full py-4 bg-[#c3eed0] text-[#0d3b1e] font-bold rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transition-all flex items-center justify-center gap-2 group"
+                >
+                    <IconSparkles className="w-5 h-5 group-hover:scale-110 transition-transform" /> Write New Book
+                </button>
+            </div>
 
-        if (result.success) {
-            setDeploymentUrl(result.url || null);
-        } else {
-            alert("Deployment Failed: " + result.message);
-        }
-        setIsDeploying(false);
-    };
+            <nav className="flex-1 space-y-1 pr-4">
+                <SidebarItem id="overview" label="Overview" icon={IconActivity} />
+                <SidebarItem id="audience" label="Audience" icon={IconUser} />
+                <SidebarItem id="studio" label="Upload & Manage" icon={IconCloudUpload} />
+                <div className="my-4 border-t border-white/5 mx-6"></div>
+                <SidebarItem id="settings" label="Site Settings" icon={IconSettings} />
+            </nav>
 
-    const handleGetVerified = async () => {
-        verifyUser();
-        alert(`Verification Successful!`);
-    };
-
-    const handleSwitchAccount = () => {
-        // Trigger Warp-out animation
-        setIsSwitching(true);
-
-        setTimeout(() => {
-            // Toggle back to User Mode (Reader)
-            setCurrentUser(currentUser, UserType.USER);
-        }, 600);
-    };
-
-    return (
-        <div className={`w-full font-sans min-h-screen bg-transparent text-white selection:bg-white/20 pb-20 transition-all duration-500 ${isSwitching ? 'animate-warp-out' : 'animate-page-enter'}`}>
-
-            {/* Ambient Glow */}
-            <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-indigo-900/10 rounded-full blur-[150px] pointer-events-none z-0"></div>
-
-            <div className="relative z-10 max-w-[1400px] mx-auto px-6 md:px-12 pt-32">
-
-                {/* --- HEADER --- */}
-                <header className="group flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16 border-b border-white/10 pb-8 bg-black/20 backdrop-blur-md rounded-[32px] p-8 shadow-2xl transition-all duration-500 hover:scale-[1.01] hover:bg-black/30 hover:border-white/20 animate-slide-up">
-                    <div>
-                        <div className="flex items-center gap-3 mb-2 animate-slide-up-stagger delay-100">
-                            <span className="px-2 py-0.5 rounded-full border border-white/20 bg-black text-[9px] font-bold uppercase tracking-widest text-neutral-400">
-                                Writer Dashboard
-                            </span>
-                            {seller.isVerified && <span className="text-white text-[9px] font-bold uppercase tracking-widest flex items-center gap-1"><IconCheck className="w-2 h-2" /> Verified</span>}
-                        </div>
-                        <h1 className="text-4xl md:text-7xl font-black text-white tracking-tighter leading-none mb-4 animate-text-reveal">
-                            {seller.name}
-                        </h1>
-                        <div className="flex gap-6 text-sm font-medium text-neutral-500 font-mono flex-wrap animate-slide-up-stagger delay-200">
-                            <span>{seller.username || '@' + seller.name.toLowerCase().replace(/\s/g, '')}</span>
-                            <span>•</span>
-                            <span className="text-white">{myUploadedBooks.length} Books Published</span>
-                        </div>
-                    </div>
-
-                    {/* Actions */}
-                    <div className="flex items-center gap-3 animate-slide-up-stagger delay-300">
-                        {/* Switch Account Button */}
-                        <button
-                            onClick={handleSwitchAccount}
-                            className="px-4 py-2 border border-white/20 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all hover:scale-105"
-                        >
-                            Go to Reading Mode
-                        </button>
-                        <button onClick={() => navigate('/ebook-studio')} className="h-10 px-6 bg-white text-black font-bold text-xs uppercase tracking-widest hover:scale-105 transition-transform flex items-center gap-2 rounded-full shadow-glow-white">
-                            <IconRocket className="w-4 h-4" /> Start Writing
-                        </button>
-                        {!seller.isVerified && (
-                            <button onClick={handleGetVerified} className="h-10 px-6 border border-white/20 text-white font-bold text-xs uppercase tracking-widest hover:bg-white hover:text-black transition-colors flex items-center gap-2 rounded-full">
-                                Get Verified
-                            </button>
+            <div className="p-6 border-t border-white/5">
+                 <button 
+                    onClick={() => setCurrentUser(currentUser, UserType.USER)}
+                    className="text-xs font-medium text-neutral-500 hover:text-white transition-colors mb-4 block"
+                 >
+                    Switch to Reading Mode
+                 </button>
+                 <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden border border-white/10">
+                        {seller.profileImageUrl ? (
+                            <img src={seller.profileImageUrl} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-neutral-500 font-bold">{seller.name[0]}</div>
                         )}
                     </div>
-                </header>
+                    <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold truncate flex items-center gap-2">
+                            {seller.name}
+                            {seller.isVerified && <IconCheck className="w-3 h-3 text-[#34a853]" />}
+                        </p>
+                        <p className="text-xs text-neutral-500 truncate">Writer Account</p>
+                    </div>
+                 </div>
+            </div>
+        </aside>
 
-                {/* --- TABS (Scrollable on mobile) --- */}
-                <div className="flex items-center gap-2 mb-12 overflow-x-auto pb-2 no-scrollbar animate-slide-up-stagger delay-500">
-                    {[
-                        { id: 'overview', label: 'Overview' },
-                        { id: 'studio', label: 'Publish Book' },
-                        { id: 'config', label: 'Deploy & Settings' },
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveSellerTab(tab.id as any)}
-                            className={`px-6 py-2.5 text-xs font-bold uppercase tracking-widest transition-all rounded-full flex-shrink-0 ${activeSellerTab === tab.id ? 'bg-white text-black shadow-glow-white scale-105' : 'bg-black/40 backdrop-blur-md border border-white/10 text-neutral-500 hover:text-white hover:bg-white/10'}`}
+        {/* --- MAIN CONTENT --- */}
+        <main className="flex-1 h-full overflow-y-auto bg-[#0b0b0b] relative scroll-smooth">
+            <div className="p-4 md:p-8 pb-32"> {/* Extra padding for mobile bottom nav */}
+            
+                 {/* Header */}
+                 <div className="mb-8 flex justify-between items-center">
+                    <h1 className="text-xl md:text-2xl font-normal text-white">
+                        {activeTab === 'overview' && 'Dashboard Overview'}
+                        {activeTab === 'audience' && 'Live Audience'}
+                        {activeTab === 'studio' && 'Content Manager'}
+                        {activeTab === 'settings' && 'Site Configuration'}
+                    </h1>
+                    {activeTab === 'overview' && (
+                        <button 
+                            onClick={() => navigate('/ebook-studio')} 
+                            className="md:hidden p-3 bg-white rounded-full text-black shadow-lg"
                         >
-                            {tab.label}
+                            <IconPlus className="w-5 h-5" />
                         </button>
-                    ))}
+                    )}
                 </div>
 
-                {/* --- CONTENT --- */}
-                <div className="animate-slide-up">
-
-                    {/* === OVERVIEW TAB === */}
-                    {activeSellerTab === 'overview' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                            {/* Stats */}
-                            <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6 mb-2">
-                                {[
-                                    { label: "Total Earnings", value: "₹24,500", icon: IconWallet, change: "+12%" },
-                                    { label: "Readers", value: "1,240", icon: IconActivity, change: "+5%" },
-                                    { label: "Books Sold", value: "342", icon: IconBook, change: "+8%" }
-                                ].map((stat, i) => (
-                                    <div key={i} className="bg-black/40 backdrop-blur-md border border-white/10 p-6 group hover:border-white/30 transition-all rounded-[24px]">
-                                        <div className="flex justify-between items-start mb-6">
-                                            <div className="text-neutral-500 group-hover:text-white transition-colors">
-                                                <stat.icon className="w-5 h-5" />
-                                            </div>
-                                            <span className="text-green-500 text-[10px] font-bold font-mono bg-green-900/20 px-1.5 py-0.5 rounded-full">{stat.change}</span>
+                {/* --- OVERVIEW TAB --- */}
+                {activeTab === 'overview' && (
+                    <div className="space-y-6 animate-fade-in">
+                        {/* Stats Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            {[
+                                { label: "Revenue", value: "₹24,500", icon: IconWallet, color: "text-[#81c995]" },
+                                { label: "Total Readers", value: "1,240", icon: IconActivity, color: "text-[#a8c7fa]" },
+                                { label: "Active Books", value: myUploadedBooks.length.toString(), icon: IconBook, color: "text-[#fdd663]" }
+                            ].map((stat, i) => (
+                                <div key={i} className="bg-[#1e1e1e] p-6 rounded-3xl border border-white/5">
+                                    <div className="flex items-start justify-between mb-4">
+                                        <div className={`p-3 rounded-full bg-white/5 ${stat.color}`}>
+                                            <stat.icon className="w-6 h-6" />
                                         </div>
-                                        <h3 className="text-4xl font-black text-white tracking-tighter mb-1">{stat.value}</h3>
-                                        <p className="text-neutral-600 text-[10px] uppercase font-bold tracking-widest">{stat.label}</p>
+                                        <span className="text-xs font-bold bg-green-900/30 text-green-400 px-2 py-1 rounded-full">+12%</span>
+                                    </div>
+                                    <h3 className="text-3xl font-normal text-white mb-1">{stat.value}</h3>
+                                    <p className="text-sm text-neutral-500">{stat.label}</p>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Chart Area */}
+                        <div className="bg-[#1e1e1e] rounded-3xl p-8 border border-white/5 h-[300px] md:h-[400px]">
+                            <AnalyticsChart className="w-full h-full" />
+                        </div>
+
+                        {/* Recent Books List */}
+                        <div className="bg-[#1e1e1e] rounded-3xl overflow-hidden border border-white/5">
+                            <div className="px-6 md:px-8 py-6 border-b border-white/5 flex justify-between items-center">
+                                <h3 className="text-lg font-medium">Recent Uploads</h3>
+                                <button onClick={() => setActiveTab('studio')} className="text-sm text-[#81c995] font-bold hover:underline">View All</button>
+                            </div>
+                            <div className="divide-y divide-white/5">
+                                {myUploadedBooks.slice(0, 5).map(book => (
+                                    <div key={book.id} className="px-6 md:px-8 py-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                                        <div className="flex items-center gap-4">
+                                            <img src={book.coverImageUrl} className="w-10 h-14 object-cover rounded bg-black" alt="" />
+                                            <div>
+                                                <p className="font-bold text-sm text-white group-hover:text-[#a8c7fa] transition-colors line-clamp-1">{book.title}</p>
+                                                <p className="text-xs text-neutral-500">₹{book.price}</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4">
+                                            <span className="text-xs text-neutral-500 hidden sm:block">{new Date(book.publicationDate).toLocaleDateString()}</span>
+                                            <button onClick={() => navigate(`/edit-ebook/${book.id}`)} className="p-2 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white">
+                                                <IconEdit className="w-4 h-4" />
+                                            </button>
+                                        </div>
                                     </div>
                                 ))}
-                            </div>
-
-                            {/* Chart */}
-                            <div className="lg:col-span-2 bg-black/40 backdrop-blur-md border border-white/10 p-0 h-[450px] relative rounded-[32px]">
-                                <div className="absolute top-0 left-0 w-full h-full bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
-                                <AnalyticsChart className="h-full w-full" />
-                            </div>
-
-                            {/* Recent Uploads */}
-                            <div className="lg:col-span-1 bg-black/40 backdrop-blur-md border border-white/10 p-6 flex flex-col rounded-[32px]">
-                                <div className="flex items-center justify-between mb-6 border-b border-white/10 pb-4">
-                                    <h3 className="text-white font-bold text-sm uppercase tracking-widest">Recent Books</h3>
-                                    <button onClick={() => setActiveSellerTab('studio')} className="text-[10px] bg-white text-black px-3 py-1 font-bold hover:bg-neutral-200 rounded-full">NEW</button>
-                                </div>
-                                <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar">
-                                    {myUploadedBooks.length > 0 ? (
-                                        myUploadedBooks.map(book => (
-                                            <div key={book.id} className="flex gap-4 group cursor-default">
-                                                <img src={book.coverImageUrl} alt="" className="w-12 h-16 object-cover border border-white/10 transition-all rounded-sm" />
-                                                <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                    <h4 className="text-white text-sm font-bold truncate group-hover:text-neutral-300 transition-colors">{book.title}</h4>
-                                                    <p className="text-neutral-500 text-xs font-mono">₹{book.price}</p>
-                                                </div>
-                                                <Link to={`/edit-ebook/${book.id}`} className="self-center p-2 text-neutral-600 hover:text-white transition-colors">
-                                                    <IconEdit className="w-4 h-4" />
-                                                </Link>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <p className="text-neutral-500 text-xs text-center py-10 font-mono">NO DATA</p>
-                                    )}
-                                </div>
+                                {myUploadedBooks.length === 0 && <p className="p-8 text-center text-neutral-500 text-sm">No books uploaded yet.</p>}
                             </div>
                         </div>
-                    )}
-
-                    {/* === UPLOAD TAB === */}
-                    {activeSellerTab === 'studio' && (
-                        <div className="max-w-4xl mx-auto">
-                            <BookUploadForm onBookUploaded={handleBookUploaded} />
-                        </div>
-                    )}
-
-                    {/* === CONFIG TAB (With Deployment) === */}
-                    {activeSellerTab === 'config' && (
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 h-auto lg:h-[calc(100vh-250px)] min-h-[600px]">
-
-                            {/* Left: Configuration Form */}
-                            <div className="bg-black/40 backdrop-blur-md border border-white/10 p-8 overflow-y-auto custom-scrollbar flex flex-col h-full rounded-[32px]">
-
-                                {/* Deployment Zone */}
-                                <div className="mb-8 p-6 bg-gradient-to-br from-indigo-900/20 to-black border border-indigo-500/20 rounded-2xl">
-                                    <h3 className="text-lg font-bold text-white mb-2 flex items-center gap-2">
-                                        <IconGithub className="w-5 h-5" /> GitHub Hosting
-                                    </h3>
-                                    <p className="text-neutral-400 text-xs mb-4">
-                                        Deploy your creator profile as a standalone static site.
-                                    </p>
-
-                                    {deploymentUrl ? (
-                                        <div className="bg-green-900/20 border border-green-500/30 p-4 rounded-xl flex items-center justify-between">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-                                                <div>
-                                                    <p className="text-xs text-green-400 font-bold uppercase tracking-widest">Live</p>
-                                                    <a href={`#/site/${creatorSiteForm.slug}`} target="_blank" className="text-white text-sm hover:underline font-mono truncate max-w-[200px] block">
-                                                        {deploymentUrl}
-                                                    </a>
-                                                </div>
-                                            </div>
-                                            <Link
-                                                to={`/site/${creatorSiteForm.slug}`}
-                                                target="_blank"
-                                                className="px-4 py-2 bg-white text-black text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-neutral-200"
-                                            >
-                                                Visit Site
-                                            </Link>
-                                        </div>
-                                    ) : (
-                                        <button
-                                            onClick={handleDeployToGitHub}
-                                            disabled={isDeploying}
-                                            className="w-full py-3 bg-white text-black font-bold text-xs uppercase tracking-widest rounded-full hover:bg-neutral-200 disabled:opacity-50 flex items-center justify-center gap-2"
-                                        >
-                                            {isDeploying ? (
-                                                <>Deploying to GitHub Pages...</>
-                                            ) : (
-                                                <><IconCloudUpload className="w-4 h-4" /> Deploy Site</>
-                                            )}
-                                        </button>
-                                    )}
-                                </div>
-
-                                <div className="mb-8">
-                                    <h2 className="text-2xl font-black text-white tracking-tight mb-2">Profile Settings</h2>
-                                    <p className="text-neutral-500 text-xs">Edit your public profile page.</p>
-                                </div>
-
-                                <form onSubmit={handleSaveCreatorSite} className="space-y-6 flex-1">
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Display Name</label>
-                                        <input type="text" name="displayName" value={creatorSiteForm.displayName} onChange={handleCreatorSiteFormChange} className="w-full bg-[#111] border border-white/10 p-3 text-white text-sm focus:outline-none focus:border-white transition-colors placeholder-neutral-700 font-mono rounded-lg" />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Tagline / Bio</label>
-                                        <textarea name="tagline" value={creatorSiteForm.tagline} onChange={handleCreatorSiteFormChange} rows={3} className="w-full bg-[#111] border border-white/10 p-3 text-white text-sm focus:outline-none focus:border-white transition-colors placeholder-neutral-700 font-mono resize-none rounded-lg"></textarea>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Site Slug (Username)</label>
-                                        <div className="flex items-center">
-                                            <span className="bg-[#0a0a0a] border border-r-0 border-white/10 text-neutral-500 p-3 text-xs font-mono rounded-l-lg">github.io/</span>
-                                            <input type="text" name="slug" value={creatorSiteForm.slug} onChange={handleCreatorSiteFormChange} className="flex-1 bg-[#111] border border-white/10 p-3 text-white text-sm focus:outline-none focus:border-white transition-colors font-mono rounded-r-lg" />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-2">Theme</label>
-                                        <select name="theme" value={creatorSiteForm.theme} onChange={handleCreatorSiteFormChange} className="w-full bg-[#111] border border-white/10 p-3 text-white text-sm focus:outline-none focus:border-white transition-colors rounded-lg">
-                                            <option value="dark-minimal">Dark Minimal</option>
-                                            <option value="light-elegant">Light Elegant</option>
-                                        </select>
-                                    </div>
-
-                                    <div className="pt-2">
-                                        <label className="flex items-center gap-3 cursor-pointer group">
-                                            <div className={`w-4 h-4 border border-white/20 flex items-center justify-center rounded-sm ${creatorSiteForm.isEnabled ? 'bg-white' : 'bg-black'}`}>
-                                                {creatorSiteForm.isEnabled && <IconCheck className="w-3 h-3 text-black" />}
-                                            </div>
-                                            <input type="checkbox" name="isEnabled" checked={creatorSiteForm.isEnabled} onChange={handleCreatorSiteFormChange} className="hidden" />
-                                            <span className="text-xs font-bold text-neutral-400 group-hover:text-white transition-colors uppercase tracking-widest">Enable Public Access</span>
-                                        </label>
-                                    </div>
-
-                                    <div className="border-t border-white/10 pt-6">
-                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4">Showcase Books</label>
-                                        <div className="space-y-1 max-h-60 overflow-y-auto custom-scrollbar border border-white/10 p-1 bg-[#0a0a0a] rounded-lg">
-                                            {myUploadedBooks.map(book => (
-                                                <label key={book.id} className="flex items-center gap-3 p-2 hover:bg-white/5 cursor-pointer group">
-                                                    <div className={`w-3 h-3 border border-white/20 flex items-center justify-center rounded-sm ${creatorSiteForm.showcasedBookIds.includes(book.id) ? 'bg-white' : 'bg-transparent'}`}>
-                                                        {creatorSiteForm.showcasedBookIds.includes(book.id) && <IconCheck className="w-2 h-2 text-black" />}
-                                                    </div>
-                                                    <input
-                                                        type="checkbox"
-                                                        name="showcasedBookIds"
-                                                        value={book.id}
-                                                        checked={creatorSiteForm.showcasedBookIds.includes(book.id)}
-                                                        onChange={handleCreatorSiteFormChange}
-                                                        className="hidden"
-                                                    />
-                                                    <span className="text-xs text-neutral-400 group-hover:text-white font-mono truncate">{book.title}</span>
-                                                </label>
-                                            ))}
-                                            {myUploadedBooks.length === 0 && <p className="text-neutral-600 text-[10px] p-2 font-mono">No books available.</p>}
-                                        </div>
-                                    </div>
-
-                                    <button type="submit" className="w-full py-4 bg-white/10 text-white font-bold text-xs uppercase tracking-widest hover:bg-white/20 transition-colors mt-auto rounded-full border border-white/10">
-                                        Save Changes Locally
-                                    </button>
-                                </form>
+                    </div>
+                )}
+                
+                {/* --- AUDIENCE TAB --- */}
+                {activeTab === 'audience' && (
+                    <div className="animate-fade-in max-w-5xl mx-auto">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-1">Live Feed</h2>
+                                <p className="text-neutral-400 text-xs">Real-time visitor tracking</p>
                             </div>
+                            <div className="flex items-center gap-2 bg-[#34a853]/10 px-3 py-1.5 rounded-full border border-[#34a853]/20">
+                                <span className="relative flex h-2 w-2">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34a853] opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34a853]"></span>
+                                </span>
+                                <span className="text-[10px] font-bold text-[#81c995] uppercase tracking-widest">Active</span>
+                            </div>
+                        </div>
 
-                            {/* Right: Live Preview (Hidden on Mobile) */}
-                            <div className="bg-[#111]/80 backdrop-blur-md border border-white/10 p-8 hidden lg:flex flex-col items-center justify-center relative overflow-hidden rounded-[32px]">
-                                <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-white/5 to-transparent pointer-events-none"></div>
-
-                                <h3 className="absolute top-6 left-6 text-neutral-500 text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                                    <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span> Mobile Preview
-                                </h3>
-
-                                {/* Phone Frame */}
-                                <div className="w-[300px] h-[550px] bg-black border-[8px] border-neutral-800 rounded-[30px] shadow-2xl relative overflow-hidden flex flex-col ring-1 ring-white/10">
-                                    {/* Notch */}
-                                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-neutral-800 rounded-b-xl z-20"></div>
-
-                                    {/* Preview Content (Mini Creator Site) */}
-                                    <div className={`flex-1 overflow-y-auto no-scrollbar ${creatorSiteForm.theme === 'light-elegant' ? 'bg-white text-black' : 'bg-black text-white'} pt-10 px-4 pb-4`}>
-                                        {/* Header */}
-                                        <div className="text-center mb-6">
-                                            <div className="w-16 h-16 rounded-full bg-neutral-900 border border-white/10 mx-auto mb-3 overflow-hidden">
-                                                {creatorSiteForm.profileImageUrl ? (
-                                                    <img src={creatorSiteForm.profileImageUrl} className="w-full h-full object-cover" alt="" />
-                                                ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-xs text-neutral-600 font-bold">{creatorSiteForm.displayName.charAt(0)}</div>
-                                                )}
-                                            </div>
-                                            <h3 className="font-bold text-lg leading-tight">{creatorSiteForm.displayName || 'Creator Name'}</h3>
-                                            <p className="opacity-60 text-[10px] mt-1 line-clamp-2">{creatorSiteForm.tagline || 'Tagline goes here...'}</p>
+                        <div className="space-y-3">
+                            {mockVisitors.map((visitor) => (
+                                <div key={visitor.id} className="group bg-[#1e1e1e] hover:bg-[#252525] border border-white/5 hover:border-white/10 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 transition-all duration-300">
+                                    
+                                    {/* User Info */}
+                                    <div className="flex items-center gap-4 flex-1 min-w-[200px]">
+                                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 border border-white/10 flex items-center justify-center font-bold text-sm text-white shadow-inner">
+                                            {visitor.avatar}
                                         </div>
-
-                                        {/* Grid */}
-                                        <div className="space-y-3">
-                                            {myUploadedBooks.filter(b => creatorSiteForm.showcasedBookIds.includes(b.id)).map(book => (
-                                                <div key={book.id} className={`flex gap-3 p-2 rounded border ${creatorSiteForm.theme === 'light-elegant' ? 'bg-gray-100 border-gray-200' : 'bg-white/5 border-white/5'}`}>
-                                                    <img src={book.coverImageUrl} className="w-10 h-14 object-cover rounded-sm bg-neutral-800" alt="" />
-                                                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                                                        <p className="text-[10px] font-bold truncate">{book.title}</p>
-                                                        <p className="text-[9px] opacity-60">₹{book.price}</p>
-                                                    </div>
-                                                    <button className="self-center px-2 py-1 bg-blue-600 text-white text-[8px] font-bold uppercase rounded-full">Get</button>
-                                                </div>
-                                            ))}
-                                            {creatorSiteForm.showcasedBookIds.length === 0 && (
-                                                <div className="text-center py-10 opacity-30">
-                                                    <IconBook className="w-8 h-8 mx-auto mb-2" />
-                                                    <p className="text-[9px]">No books showcased</p>
-                                                </div>
-                                            )}
+                                        <div>
+                                            <div className="font-medium text-white text-sm">{visitor.name}</div>
+                                            <div className="text-xs text-neutral-500">{visitor.email}</div>
                                         </div>
                                     </div>
 
-                                    {/* Bottom Bar */}
-                                    <div className="h-12 bg-neutral-900 border-t border-white/5 flex items-center justify-center">
-                                        <div className="w-1/3 h-1 bg-white/20 rounded-full"></div>
+                                    {/* Location */}
+                                    <div className="flex items-center gap-2 md:w-[150px] text-neutral-400 text-sm">
+                                        <IconGlobe className="w-4 h-4 text-neutral-600" />
+                                        <span>{visitor.location}</span>
+                                    </div>
+
+                                    {/* Activity */}
+                                    <div className="flex-1 md:w-[250px]">
+                                         <div className="flex items-center gap-2 text-white text-sm mb-0.5">
+                                            <IconActivity className="w-3 h-3 text-[#a8c7fa]" />
+                                            <span className="truncate">{visitor.action}</span>
+                                         </div>
+                                         <div className="text-[10px] text-neutral-500 font-mono flex items-center gap-1">
+                                            <IconClock className="w-3 h-3" /> {visitor.time}
+                                         </div>
+                                    </div>
+
+                                    {/* Status */}
+                                    <div className="md:w-[120px] flex justify-end">
+                                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+                                            visitor.status === 'Signed In' 
+                                            ? 'bg-[#34a853]/10 text-[#81c995] border border-[#34a853]/20' 
+                                            : 'bg-white/5 text-neutral-500 border border-white/5'
+                                        }`}>
+                                            <span className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'Signed In' ? 'bg-[#34a853]' : 'bg-neutral-500'}`}></span>
+                                            {visitor.status === 'Signed In' ? 'User' : 'Guest'}
+                                        </span>
                                     </div>
                                 </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
-                                {creatorSiteForm.isEnabled && deploymentUrl && (
-                                    <Link to={`/site/${creatorSiteForm.slug}`} target="_blank" className="mt-6 flex items-center gap-2 text-white font-bold text-xs uppercase tracking-widest hover:text-green-400 transition-colors">
-                                        <IconLink className="w-4 h-4" /> Open Live Site
-                                    </Link>
+                {/* --- STUDIO TAB --- */}
+                {activeTab === 'studio' && (
+                    <div className="animate-fade-in max-w-4xl mx-auto">
+                        <BookUploadForm onBookUploaded={handleBookUploaded} />
+                    </div>
+                )}
+
+                {/* --- SETTINGS TAB --- */}
+                {activeTab === 'settings' && (
+                    <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="bg-[#1e1e1e] rounded-3xl p-6 md:p-8 border border-white/5">
+                            <div className="mb-6 flex items-center justify-between">
+                                <h2 className="text-xl font-medium">Public Profile</h2>
+                                {deploymentUrl && (
+                                    <a href={deploymentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-[#81c995] bg-[#34a853]/10 px-3 py-1 rounded-full">
+                                        <span className="w-2 h-2 rounded-full bg-[#34a853] animate-pulse"></span> Live
+                                    </a>
                                 )}
                             </div>
+
+                            <div className="space-y-6">
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Display Name</label>
+                                    <input name="displayName" value={creatorSiteForm.displayName} onChange={handleCreatorSiteFormChange} className="w-full bg-[#0b0b0b] border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-white/30 text-white" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Tagline</label>
+                                    <textarea name="tagline" value={creatorSiteForm.tagline} onChange={handleCreatorSiteFormChange} rows={3} className="w-full bg-[#0b0b0b] border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-white/30 text-white resize-none" />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Username (Slug)</label>
+                                    <div className="flex">
+                                        <span className="bg-[#151515] border border-r-0 border-white/10 text-neutral-500 px-3 py-3 text-sm rounded-l-lg hidden sm:block">co-writter.github.io/</span>
+                                        <input name="slug" value={creatorSiteForm.slug} onChange={handleCreatorSiteFormChange} className="flex-1 bg-[#0b0b0b] border border-white/10 rounded-lg sm:rounded-l-none p-3 text-sm focus:outline-none focus:border-white/30 text-white" />
+                                    </div>
+                                </div>
+                                
+                                <button 
+                                    onClick={handleDeployToGitHub} 
+                                    disabled={isDeploying}
+                                    className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 mt-4"
+                                >
+                                    {isDeploying ? 'Deploying...' : <><IconCloudUpload className="w-5 h-5"/> Publish Site</>}
+                                </button>
+                            </div>
                         </div>
-                    )}
-                </div>
+                        
+                        <div className="flex flex-col gap-6">
+                            <div className="bg-[#1e1e1e] rounded-3xl p-8 border border-white/5 flex flex-col items-center justify-center text-center">
+                                <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4">
+                                    <IconGithub className="w-10 h-10 text-white" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">GitHub Integration</h3>
+                                <p className="text-sm text-neutral-400 max-w-xs mb-6">
+                                    Your creator site is hosted for free on GitHub Pages. Changes may take up to 2 minutes to propagate globally.
+                                </p>
+                                {deploymentUrl ? (
+                                    <div className="bg-[#0b0b0b] p-4 rounded-xl border border-white/10 w-full flex justify-between items-center">
+                                        <span className="text-xs text-neutral-500 truncate">{deploymentUrl}</span>
+                                        <a href={deploymentUrl} target="_blank" className="text-[#81c995] hover:text-white"><IconLink className="w-4 h-4"/></a>
+                                    </div>
+                                ) : (
+                                    <div className="bg-[#0b0b0b] p-4 rounded-xl border border-white/10 w-full text-xs text-neutral-600">
+                                        Not deployed yet.
+                                    </div>
+                                )}
+                            </div>
+
+                             <div className="bg-[#1e1e1e] rounded-3xl p-6 border border-white/5">
+                                 <button onClick={() => setCurrentUser(currentUser, UserType.USER)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl transition-colors text-sm">
+                                    Switch to Reader Mode
+                                 </button>
+                             </div>
+                        </div>
+                    </div>
+                )}
             </div>
+        </main>
+
+        {/* --- MOBILE BOTTOM NAVIGATION --- */}
+        <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#0b0b0b]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around z-50 pb-safe">
+            <MobileNavItem id="overview" label="Stats" icon={IconActivity} />
+            <MobileNavItem id="audience" label="Visitors" icon={IconUser} />
+            <MobileNavItem id="studio" label="Content" icon={IconCloudUpload} />
+            <MobileNavItem id="settings" label="Config" icon={IconSettings} />
         </div>
-    );
+    </div>
+  );
 };

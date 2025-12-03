@@ -11,35 +11,32 @@ const MorphicEye: React.FC<MorphicEyeProps> = ({ className = "w-14 h-14", isActi
   const [pupilPos, setPupilPos] = useState({ x: 0, y: 0 });
   const [isBlinking, setIsBlinking] = useState(false);
 
-  // Mouse Tracking Logic
+  // Mouse & Touch Tracking Logic
   useEffect(() => {
-    // Disable tracking on mobile/touch devices
-    const isTouch = window.matchMedia("(pointer: coarse)").matches;
-    if (!isActive || isTouch) {
+    if (!isActive) {
         setPupilPos({ x: 0, y: 0 });
         return;
     }
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const calculateGaze = (clientX: number, clientY: number) => {
       if (!containerRef.current) return;
       
       const rect = containerRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
 
-      // Calculate distance from center of the eye to the mouse
-      const deltaX = e.clientX - centerX;
-      const deltaY = e.clientY - centerY;
+      // Calculate distance from center of the eye to the input
+      const deltaX = clientX - centerX;
+      const deltaY = clientY - centerY;
 
       // Constraint the movement within the eye socket
-      // Scale movement radius based on container size
       const maxRadius = rect.width * 0.15; 
       
       const angle = Math.atan2(deltaY, deltaX);
       const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
       
       // Smooth clamping
-      const moveDistance = Math.min(distance / 5, maxRadius); // Reduced divisor for more responsiveness
+      const moveDistance = Math.min(distance / 5, maxRadius); 
 
       const x = Math.cos(angle) * moveDistance;
       const y = Math.sin(angle) * moveDistance;
@@ -47,8 +44,25 @@ const MorphicEye: React.FC<MorphicEyeProps> = ({ className = "w-14 h-14", isActi
       setPupilPos({ x, y });
     };
 
+    const handleMouseMove = (e: MouseEvent) => {
+        calculateGaze(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+        if (e.touches.length > 0) {
+            calculateGaze(e.touches[0].clientX, e.touches[0].clientY);
+        }
+    };
+
     window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('touchmove', handleTouchMove);
+    window.addEventListener('touchstart', handleTouchMove); // React to initial tap
+
+    return () => {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('touchmove', handleTouchMove);
+        window.removeEventListener('touchstart', handleTouchMove);
+    };
   }, [isActive]);
 
   // Blinking Logic
@@ -78,7 +92,7 @@ const MorphicEye: React.FC<MorphicEyeProps> = ({ className = "w-14 h-14", isActi
       ref={containerRef}
       className={`rounded-full aspect-square bg-[#1a1a1a] flex items-center justify-center relative shadow-2xl border border-white/5 overflow-hidden flex-shrink-0 group ${className}`}
     >
-      {/* Eyes Container - Moves with Cursor */}
+      {/* Eyes Container - Moves with Cursor/Touch */}
       <div 
         className="w-full h-full flex items-center justify-center gap-[10%] transition-transform duration-100 ease-out will-change-transform"
         style={{ transform: `translate(${pupilPos.x}px, ${pupilPos.y}px)` }}

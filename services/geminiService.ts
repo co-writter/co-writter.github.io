@@ -81,11 +81,11 @@ const proposeBlueprintTool: FunctionDeclaration = {
 
 const generateImageTool: FunctionDeclaration = {
     name: "generate_image",
-    description: "Generates an image based on a prompt. Use this when asked to create a cover, illustration, or visual asset.",
+    description: "Generates a high-quality visual asset based on a prompt. Use this for book covers, character illustrations, diagrams, charts, or infographics.",
     parameters: {
         type: Type.OBJECT,
         properties: {
-            prompt: { type: Type.STRING, description: "The visual description of the image to generate." }
+            prompt: { type: Type.STRING, description: "The detailed visual description of the image or diagram to generate." }
         },
         required: ["prompt"]
     }
@@ -125,16 +125,21 @@ export const createStudioSession = (initialContext: string): Chat | null => {
         return ai.chats.create({
             model: GEMINI_TEXT_MODEL,
             config: {
-                systemInstruction: `IDENTITY: You are Co-Author, a highly advanced creative engine.
-MISSION: Collaborate to write, edit, fix, and visualize books.
+                systemInstruction: `IDENTITY: You are Co-Author, an elite AI Ghostwriter & Visual Architect.
 
-CAPABILITIES:
-1. **READ & FIX**: You will receive the [Current Editor Content] in every message. You can analyze it, fix grammar, rewrite styles, or continue the story.
-2. **WRITE**: To update the editor, YOU MUST USE the \`write_content\` tool. The content you send in the tool will REPLACE the current editor text, so always preserve what shouldn't be changed.
-3. **PLAN**: Use \`propose_blueprint\` for outlines.
-4. **VISUALIZE**: Use \`generate_image\` to create book covers or illustrations when requested.
+MISSION: Help the user create professional, "viral-ready" eBooks suitable for publishing.
 
-TONE: Professional, efficient, slightly robotic but friendly (like TARS from Interstellar).
+CRITICAL PERFORMANCE RULES:
+1. **SPEAK FAST**: In your chat responses, be extremely concise (1-2 sentences max). This allows the audio to start playing almost immediately.
+2. **WRITE DEEP**: If the user wants content, use the \`write_content\` tool. Do not put long text in the chat window, put it in the editor.
+3. **VISUALS**: Proactively use \`generate_image\` for diagrams or illustrations if the topic is complex.
+
+TOOLS:
+- **write_content**: For the Book Editor.
+- **generate_image**: For Visuals.
+- **propose_blueprint**: For Outlines.
+
+TONE: Professional, intelligent, fast-paced.
 
 CONTEXT:
 ${initialContext}`,
@@ -173,7 +178,8 @@ export const generateSceneVisualization = async (sceneDescription: string): Prom
 export const generateBookCover = async (prompt: string, style: string = 'Cinematic', title: string = '', author: string = ''): Promise<GeneratedImage | { error: string }> => {
   if (!API_KEY) return { error: "API Key missing." };
   try {
-    const refinedPrompt = `Book art/illustration. Title: "${title}". Author: "${author}". Visual: ${prompt}. Style: ${style}. High resolution, 4k.`;
+    // Enhanced prompt to handle diagrams vs art
+    const refinedPrompt = `Professional Book Visual. Context: ${title} by ${author}. Request: ${prompt}. Mode: ${style}. Create a high-quality, clear, and relevant image/diagram. For diagrams, ensure clear labels and structure.`;
     
     const response = await ai.models.generateContent({
       model: GEMINI_IMAGE_MODEL,

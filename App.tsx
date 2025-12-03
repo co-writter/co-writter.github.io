@@ -24,7 +24,7 @@ import RefundPolicyPage from './pages/RefundPolicyPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
-// Removed namespace destructuring
+
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -35,7 +35,6 @@ const AnimatedRoutes = () => {
       <Routes location={location}>
         <Route path="/" element={<StorePage />} />
         <Route path="/about" element={<HomePage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

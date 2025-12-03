@@ -2,7 +2,7 @@
 
 import React from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck } from '../constants';
+import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain } from '../constants';
 import MorphicEye from '../components/MorphicEye';
 import { useAppContext } from '../contexts/AppContext';
 
@@ -77,36 +77,45 @@ const HomePage: React.FC = () => {
                 <div className="max-w-7xl mx-auto">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
 
-                        {/* Feature 1 */}
+                        {/* Feature 1: AI Co-Author */}
                         <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:rotate-12 transition-transform border border-white/10">
-                                <IconSparkles className="w-6 h-6" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                            {/* Improved Logo Container - Removed rotate-12, added scale-110 */}
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-indigo-500/30 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                                <IconBrain className="w-7 h-7 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
                             </div>
+
                             <h3 className="text-2xl font-bold text-white mb-3">AI Co-Author</h3>
                             <p className="text-neutral-400 leading-relaxed text-sm">
                                 Write with AI. Plan your chapters, write full pages, and fix grammar easily with our writing tools.
                             </p>
                         </div>
 
-                        {/* Feature 2 */}
+                        {/* Feature 2: Sell Your Books */}
                         <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:rotate-12 transition-transform border border-white/10">
-                                <IconStore className="w-6 h-6" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                            {/* Improved Logo Container - Removed rotate-12, added scale-110 */}
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                                <IconRocket className="w-7 h-7 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                             </div>
+
                             <h3 className="text-2xl font-bold text-white mb-3">Sell Your Books</h3>
                             <p className="text-neutral-400 leading-relaxed text-sm">
                                 Publish your book instantly. Get your own profile link and keep 70% of every sale you make.
                             </p>
                         </div>
 
-                        {/* Feature 3 */}
+                        {/* Feature 3: Easy Reading */}
                         <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:rotate-12 transition-transform border border-white/10">
-                                <IconBook className="w-6 h-6" />
+                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
+                            {/* Improved Logo Container - Removed rotate-12, added scale-110 */}
+                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-amber-500/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                                <IconBook className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
                             </div>
+
                             <h3 className="text-2xl font-bold text-white mb-3">Easy Reading</h3>
                             <p className="text-neutral-400 leading-relaxed text-sm">
                                 Read comfortably on any device. Support for PDF uploads and a distraction-free reading mode.

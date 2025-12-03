@@ -23,13 +23,13 @@ const DashboardPage: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-transparent animate-fade-in pb-20">
+    <>
       {/* 
-        Background is handled by App.tsx global theme.
-        We keep container transparent here.
+        Layout is now handled entirely by the child components 
+        to ensure perfect 100vh fit without scroll conflicts.
       */}
       {userType === UserType.USER ? <UserDashboardContent /> : <SellerDashboardContent />}
-    </div>
+    </>
   );
 };
 

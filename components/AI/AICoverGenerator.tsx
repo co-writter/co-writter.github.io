@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { generateBookCover } from '../../services/geminiService';
 import Spinner from '../Spinner';
 import { GeneratedImage } from '../../types';
-import { IconSparkles, BORDER_CLASS, IconChevronDown } from '../../constants';
+import { IconChevronDown, IconCheck } from '../../constants';
 
 interface AICoverGeneratorProps {
   onCoverGenerated: (imageData: GeneratedImage) => void;
@@ -12,18 +12,9 @@ interface AICoverGeneratorProps {
 }
 
 const COVER_STYLES = [
-    'Cinematic',
-    'Minimalist',
-    'Fantasy',
-    'Sci-Fi',
-    'Cyberpunk',
-    'Oil Painting',
-    'Watercolor',
-    '3D Render',
-    'Photorealistic',
-    'Abstract',
-    'Noir',
-    'Vintage'
+    'Cinematic', 'Minimalist', 'Fantasy', 'Sci-Fi', 
+    'Cyberpunk', 'Oil Painting', 'Watercolor', '3D Render', 
+    'Photorealistic', 'Abstract', 'Noir', 'Vintage'
 ];
 
 const AICoverGenerator: React.FC<AICoverGeneratorProps> = ({ onCoverGenerated, currentTitle, currentAuthor }) => {
@@ -33,9 +24,10 @@ const AICoverGenerator: React.FC<AICoverGeneratorProps> = ({ onCoverGenerated, c
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleGenerateCover = async () => {
+  const handleGenerateCover = async (e: React.MouseEvent) => {
+    e.preventDefault(); // Prevent form submission if inside a form
     if (!prompt.trim()) {
-        setError("Please enter a description for the cover.");
+        setError("Please describe your vision.");
         return;
     }
     setIsLoading(true);
@@ -50,72 +42,86 @@ const AICoverGenerator: React.FC<AICoverGeneratorProps> = ({ onCoverGenerated, c
         onCoverGenerated(result);
       }
     } catch (err) {
-      setError('Failed to generate cover image. The AI service may be temporarily unavailable.');
+      setError('Generation failed. Please try again.');
       setGeneratedImage(null);
-      console.error(err);
     } finally {
       setIsLoading(false);
     }
   };
 
+  const commonInputClasses = `w-full bg-[#0b0b0b] border border-white/10 rounded-xl p-4 text-sm text-white focus:outline-none focus:border-white/30 transition-all duration-200 placeholder-neutral-600 font-sans`;
+  const labelClasses = `block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2`;
+
   return (
-    <div className={`my-6 p-5 bg-neutral-800/60 rounded-md border ${BORDER_CLASS} shadow-md`}>
-      <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-        <IconSparkles className="w-5 h-5 mr-2.5 text-brand-accent" />
-        AI Cover Generator
-      </h4>
+    <div className="bg-[#151515] border border-white/5 rounded-2xl p-6 md:p-8">
+      <div className="mb-6">
+         <h4 className="text-base font-bold text-white">AI Cover Designer</h4>
+         <p className="text-xs text-neutral-500">Generate professional cover art instantly.</p>
+      </div>
 
-      {/* Style Selector */}
-      <div className="mb-4">
-        <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Art Style</label>
-        <div className="relative">
-            <select 
-                value={style} 
-                onChange={(e) => setStyle(e.target.value)}
-                className={`w-full bg-neutral-700 text-white border ${BORDER_CLASS} rounded-sm py-2.5 px-3 appearance-none focus:ring-2 focus:ring-brand-accent focus:outline-none cursor-pointer transition-colors hover:bg-neutral-600`}
-            >
-                {COVER_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-400">
-                <IconChevronDown className="w-4 h-4" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Style Selector */}
+          <div>
+            <label className={labelClasses}>Art Direction</label>
+            <div className="relative">
+                <select 
+                    value={style} 
+                    onChange={(e) => setStyle(e.target.value)}
+                    className={`${commonInputClasses} appearance-none cursor-pointer`}
+                >
+                    {COVER_STYLES.map(s => <option key={s} value={s}>{s}</option>)}
+                </select>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-neutral-500">
+                    <IconChevronDown className="w-4 h-4" />
+                </div>
             </div>
-        </div>
-      </div>
+          </div>
 
-      <div className="mb-4">
-        <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-1.5">Description</label>
-        <textarea
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe your book cover (e.g., 'a lone astronaut gazing at a swirling nebula')"
-            className={`w-full bg-neutral-700 text-white placeholder-neutral-400/70 border ${BORDER_CLASS} rounded-sm py-2.5 px-3.5 focus:ring-2 focus:ring-brand-accent focus:border-brand-accent transition-all duration-200 min-h-[90px]`}
-            rows={3}
-            aria-label="Describe cover art for AI generation"
-        />
-      </div>
-
-      <button
-        onClick={handleGenerateCover}
-        disabled={isLoading || !prompt.trim()}
-        className="bg-brand-accent text-black font-semibold py-2.5 px-5 rounded-full hover:bg-brand-accent-darker transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed w-full sm:w-auto transform hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-brand-accent-darker focus:ring-offset-2 focus:ring-offset-neutral-800 text-xs uppercase tracking-widest"
-      >
-        {isLoading ? <Spinner size="sm" color="text-black" /> : 'Generate Cover with AI'}
-      </button>
-      
-      {error && <p className="text-red-400 mt-2.5 text-sm p-2 bg-red-900/30 rounded-sm border border-red-700/50">{error}</p>}
-      {isLoading && !error && <div className="mt-4 py-5 flex justify-center"><Spinner /></div>}
-      
-      {generatedImage && !error && (
-        <div className="mt-5 pt-4 border-t border-brand-border/30">
-          <h5 className="text-md font-semibold text-white mb-2.5">AI Generated Cover Preview:</h5>
-          <div className="flex justify-center bg-black/20 p-4 rounded-lg">
-            <img 
-              src={`data:image/jpeg;base64,${generatedImage.imageBytes}`} 
-              alt={generatedImage.revisedPrompt || generatedImage.prompt || 'Generated AI Cover'} 
-              className={`rounded-sm border-2 ${BORDER_CLASS} border-brand-accent/50 max-w-sm w-full sm:w-2/3 md:w-1/2 mx-auto shadow-sharp-lg`}
+          {/* Description */}
+          <div>
+            <label className={labelClasses}>Visual Concept</label>
+            <input
+                value={prompt}
+                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="e.g. A lone astronaut..."
+                className={commonInputClasses}
             />
           </div>
-          {generatedImage.revisedPrompt && <p className="text-xs text-neutral-400/80 mt-2 italic text-center">Revised prompt by AI: {generatedImage.revisedPrompt}</p>}
+      </div>
+
+      <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={handleGenerateCover}
+            disabled={isLoading || !prompt.trim()}
+            className="px-8 py-3 rounded-full bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center justify-center disabled:opacity-50 shadow-[0_0_20px_rgba(255,255,255,0.2)] hover:scale-105 active:scale-95 min-w-[140px]"
+          >
+            {isLoading ? <Spinner size="sm" color="text-black" /> : 'Generate Art'}
+          </button>
+      </div>
+      
+      {error && <p className="text-red-400 mt-4 text-xs bg-red-500/10 p-3 rounded-lg border border-red-500/20">{error}</p>}
+      
+      {generatedImage && !error && (
+        <div className="mt-8 pt-8 border-t border-white/5 animate-fade-in">
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+              <div className="relative w-32 h-48 rounded-lg overflow-hidden shadow-2xl border border-white/10 group">
+                   <img 
+                      src={`data:image/jpeg;base64,${generatedImage.imageBytes}`} 
+                      alt="Generated Cover" 
+                      className="w-full h-full object-cover"
+                    />
+              </div>
+              <div className="flex-1 text-center md:text-left">
+                  <h5 className="text-sm font-bold text-white mb-2 flex items-center justify-center md:justify-start gap-2">
+                      <IconCheck className="w-4 h-4 text-green-500" /> Cover Applied
+                  </h5>
+                  <p className="text-xs text-neutral-500 mb-1">The image has been automatically attached to your book.</p>
+                  {generatedImage.revisedPrompt && (
+                      <p className="text-[10px] text-neutral-600 italic mt-2">"{generatedImage.revisedPrompt.substring(0, 80)}..."</p>
+                  )}
+              </div>
+          </div>
         </div>
       )}
     </div>
