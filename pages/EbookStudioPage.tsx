@@ -8,7 +8,7 @@ import {
     IconSend, IconPlus, IconArrowLeft, 
     IconRocket, IconX, 
     IconPenTip, IconBulb, IconImage,
-    IconMenu, IconCheck, IconWand, IconBrain, IconMic, IconStop
+    IconMenu, IconCheck, IconWand, IconBrain, IconMic, IconStop, IconDownload
 } from '../constants';
 import { 
     createStudioSession, generateBookCover, generateSpeech
@@ -18,6 +18,13 @@ import MorphicEye from '../components/MorphicEye';
 import NovelEditor from '../components/NovelEditor';
 
 const { useNavigate, useLocation } = ReactRouterDOM as any;
+
+// Declare jsPDF on window
+declare global {
+  interface Window {
+    jspdf: any;
+  }
+}
 
 interface ChatMessage {
     id: string;
@@ -536,6 +543,46 @@ User Input: ${text}
       navigate('/dashboard');
   };
 
+  const handleDownloadPDF = async () => {
+      if (!window.jspdf) {
+          alert("PDF generator not ready. Please try again.");
+          return;
+      }
+      
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      
+      // Title Page
+      doc.setFontSize(24);
+      doc.text(activePage.title || "Untitled Book", 105, 80, { align: "center" });
+      
+      doc.setFontSize(14);
+      doc.text("Written by Co-Writter AI", 105, 95, { align: "center" });
+      
+      doc.setFontSize(10);
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 280, { align: "center" });
+      
+      // Chapters
+      pages.forEach((page, index) => {
+          doc.addPage();
+          
+          // Chapter Title
+          doc.setFontSize(18);
+          doc.text(page.title || `Chapter ${index + 1}`, 20, 30);
+          
+          // Content
+          doc.setFontSize(12);
+          const splitText = doc.splitTextToSize(page.content.replace(/[#*_]/g, ''), 170);
+          doc.text(splitText, 20, 50);
+          
+          // Footer
+          doc.setFontSize(8);
+          doc.text(`${index + 1}`, 105, 290, { align: "center" });
+      });
+      
+      doc.save(`${activePage.title || 'ebook'}.pdf`);
+  };
+
   return (
     <div className="flex flex-col h-screen bg-transparent text-white overflow-hidden font-sans selection:bg-white/20 selection:text-black">
         
@@ -570,6 +617,12 @@ User Input: ${text}
                     className="flex items-center gap-2 px-3 sm:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 text-neutral-300 border border-white/5 hover:bg-white/10 hover:text-white transition-all hover:scale-105 active:scale-95 hover:shadow-[0_0_15px_rgba(255,255,255,0.1)]"
                 >
                     <IconRocket className="w-3 h-3 text-google-blue" /> <span className="hidden sm:inline">Auto-Write</span>
+                </button>
+                <button 
+                    onClick={handleDownloadPDF}
+                    className="flex items-center gap-2 px-3 sm:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 text-neutral-300 border border-white/5 hover:bg-white/10 hover:text-white transition-all hover:scale-105 active:scale-95"
+                >
+                    <IconDownload className="w-3 h-3" /> <span className="hidden sm:inline">PDF</span>
                 </button>
                 <button 
                     onClick={handleExport}

@@ -9,8 +9,8 @@ const { Link, useLocation } = ReactRouterDOM as any;
 const Footer: React.FC = () => {
   const location = useLocation();
 
-  // HIDE FOOTER ON STUDIO PAGE, STANDALONE PREVIEW, OR DASHBOARD
-  if (location.pathname === '/ebook-studio' || location.pathname.startsWith('/site/') || location.pathname === '/dashboard') {
+  // HIDE FOOTER ON STUDIO PAGE, STANDALONE PREVIEW, DASHBOARD, OR READER PAGE
+  if (location.pathname === '/ebook-studio' || location.pathname.startsWith('/site/') || location.pathname === '/dashboard' || location.pathname.startsWith('/read/')) {
       return null;
   }
 

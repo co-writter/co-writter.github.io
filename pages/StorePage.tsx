@@ -2,8 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import BookCard from '../components/BookCard';
 import { EBook } from '../types';
-import { IconSparkles, BORDER_CLASS, IconShoppingCart, IconChevronDown, IconSearch, IconBook, IconStar } from '../constants';
+import { IconSparkles, BORDER_CLASS, IconShoppingCart, IconChevronDown, IconSearch, IconBook, IconStar, IconRocket } from '../constants';
 import Modal from '../components/Modal'; 
+import CustomDropdown, { DropdownOption } from '../components/CustomDropdown';
 import { useAppContext } from '../contexts/AppContext';
 import * as ReactRouterDOM from 'react-router-dom';
 
@@ -21,6 +22,20 @@ const StorePage: React.FC = () => {
   const [selectedBook, setSelectedBook] = useState<EBook | null>(null);
 
   const genres = useMemo(() => ['All', ...new Set(allBooks.map(book => book.genre))], [allBooks]);
+
+  const genreOptions: DropdownOption[] = genres.map(g => ({ label: g === 'All' ? 'All Genres' : g, value: g }));
+  
+  const priceOptions: DropdownOption[] = [
+      { label: 'All Prices', value: 'All' },
+      { label: 'Free Only', value: 'Free' },
+      { label: 'Paid Only', value: 'Paid' },
+  ];
+
+  const sortOptions: DropdownOption[] = [
+      { label: 'Newest First', value: 'publicationDate' },
+      { label: 'Title (A-Z)', value: 'title' },
+      { label: 'Price (Low-High)', value: 'price' },
+  ];
 
   const filteredAndSortedBooks = useMemo(() => {
     let books = allBooks.filter(book =>
@@ -51,9 +66,9 @@ const StorePage: React.FC = () => {
     });
   }, [searchTerm, selectedGenre, selectedPriceFilter, sortBy, allBooks]);
 
-  // Prioritize "Quantum Minds" for the featured spot if available, else standard fallback
+  // Prioritize "Co-Writter's Manual" or "Quantum Minds" for the featured spot
   const featuredBook = useMemo(() => {
-      return allBooks.find(b => b.genre === 'Quantum Minds' && b.price > 0) || allBooks.find(b => b.price > 0) || allBooks[0];
+      return allBooks.find(b => b.title.includes("Manual")) || allBooks.find(b => b.price > 0) || allBooks[0];
   }, [allBooks]);
 
   const handleViewDetails = (bookId: string) => {
@@ -77,20 +92,22 @@ const StorePage: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 sm:px-6 pt-24 pb-20 md:pb-24">
+    <div className="container mx-auto px-4 sm:px-6 pt-24 pb-20 md:pb-24 overflow-x-hidden">
       
       {/* Featured Hero Section */}
       {featuredBook && !searchTerm && selectedGenre === 'All' && (
-        <div className="relative w-full min-h-[550px] md:h-[500px] rounded-[32px] overflow-hidden mb-12 md:mb-16 group border border-white/10 shadow-2xl animate-fade-in flex flex-col justify-end md:block">
+        <div className="relative w-full rounded-[32px] overflow-hidden mb-12 md:mb-16 group border border-white/10 shadow-2xl animate-fade-in flex flex-col md:block h-auto md:h-[500px]">
              {/* Background Image with Blur */}
              <div 
                 className="absolute inset-0 bg-cover bg-center transition-transform duration-[2s] group-hover:scale-105"
                 style={{backgroundImage: `url(${featuredBook.coverImageUrl})`}}
              ></div>
-             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/60 to-transparent md:bg-gradient-to-r md:from-black md:via-black/80 md:to-transparent"></div>
+             
+             {/* Mobile: Heavy gradient to make text readable. Desktop: Horizontal gradient */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black via-black/80 to-transparent md:bg-gradient-to-r md:from-black md:via-black/80 md:to-transparent"></div>
              
              {/* Content */}
-             <div className="relative z-10 p-6 md:p-16 flex flex-col justify-end md:justify-center h-full max-w-2xl">
+             <div className="relative z-10 p-8 md:p-16 flex flex-col justify-end md:justify-center min-h-[400px] md:h-full max-w-2xl">
                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-google-blue/20 border border-google-blue/30 w-fit mb-4 md:mb-6 backdrop-blur-md rounded-full animate-slide-up-stagger">
                      <IconStar className="w-3 h-3 text-google-blue fill-current" />
                      <span className="text-[10px] md:text-xs font-bold text-google-blue uppercase tracking-widest">Featured Release</span>
@@ -130,72 +147,53 @@ const StorePage: React.FC = () => {
             <IconSparkles className="w-5 h-5 md:w-6 md:h-6 text-brand-accent" />
             Full Catalog
             </h2>
-            <p className="text-neutral-400 mt-1 text-sm md:text-base">Exploring {filteredAndSortedBooks.length} titles across all dimensions.</p>
+            <p className="text-neutral-400 mt-1 text-sm md:text-base">Exploring {filteredAndSortedBooks.length} titles.</p>
         </div>
       </header>
 
-      {/* Floating Filter Bar */}
+      {/* Floating Filter Bar - Mobile Optimized */}
       <div className="sticky top-20 md:top-24 z-30 mx-auto w-full mb-8 md:mb-10 transition-all duration-300 animate-slide-down">
-        <div className="bg-black/60 backdrop-blur-xl border border-white/10 shadow-sharp-lg rounded-3xl md:rounded-full flex flex-col md:flex-row md:items-center p-2 gap-2">
+        <div className="bg-black/90 backdrop-blur-xl border border-white/10 shadow-sharp-lg rounded-[24px] p-3 flex flex-col md:flex-row gap-3">
             
-            {/* Search */}
-            <div className="relative flex-grow group w-full">
+            {/* Search - Full width on mobile */}
+            <div className="relative group w-full md:w-64 md:flex-shrink-0">
                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 group-focus-within:text-white transition-colors">
-                    <IconSearch className="w-5 h-5" />
+                    <IconSearch className="w-4 h-4" />
                 </div>
                 <input 
                     type="text"
-                    placeholder="Search by title or author..."
-                    className="w-full bg-white/5 border border-transparent focus:border-white/10 rounded-full py-3 pl-12 pr-4 text-white placeholder-neutral-500 focus:outline-none focus:bg-white/10 transition-all text-sm font-medium"
+                    placeholder="Search books..."
+                    className="w-full bg-white/5 border border-transparent focus:border-white/10 rounded-full py-3 pl-10 pr-4 text-white placeholder-neutral-500 focus:outline-none focus:bg-white/10 transition-all text-sm font-bold"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
             </div>
 
-            {/* Filters Group - Horizontal Scroll on Mobile */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0 no-scrollbar w-full md:w-auto px-1">
+            {/* Filters - Grid on mobile for easier tapping */}
+            <div className="flex-1 grid grid-cols-2 md:flex md:flex-wrap md:justify-end gap-2">
+                <CustomDropdown 
+                    options={genreOptions}
+                    value={selectedGenre}
+                    onChange={setSelectedGenre}
+                    className="w-full md:w-auto min-w-0" 
+                    placeholder="Genre"
+                />
                 
-                {/* Genre */}
-                <div className="relative flex-shrink-0">
-                     <select
-                        className="appearance-none bg-white/5 hover:bg-white/10 text-white font-medium text-xs md:text-sm py-3 pl-4 pr-9 rounded-full focus:outline-none cursor-pointer border border-transparent focus:border-white/10 transition-colors"
-                        value={selectedGenre}
-                        onChange={e => setSelectedGenre(e.target.value)}
-                    >
-                        {genres.map(genre => (
-                            <option key={genre} value={genre} className="bg-[#18181b]">{genre}</option>
-                        ))}
-                    </select>
-                    <IconChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
-                </div>
+                <CustomDropdown 
+                    options={priceOptions}
+                    value={selectedPriceFilter}
+                    onChange={(val) => setSelectedPriceFilter(val as any)}
+                    className="w-full md:w-auto min-w-0"
+                    placeholder="Price"
+                />
 
-                {/* Price */}
-                <div className="relative flex-shrink-0">
-                     <select
-                        className="appearance-none bg-white/5 hover:bg-white/10 text-white font-medium text-xs md:text-sm py-3 pl-4 pr-9 rounded-full focus:outline-none cursor-pointer border border-transparent focus:border-white/10 transition-colors"
-                        value={selectedPriceFilter}
-                        onChange={e => setSelectedPriceFilter(e.target.value as any)}
-                    >
-                        <option value="All" className="bg-[#18181b]">All Prices</option>
-                        <option value="Free" className="bg-[#18181b]">Free</option>
-                        <option value="Paid" className="bg-[#18181b]">Paid</option>
-                    </select>
-                    <IconChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
-                </div>
-
-                {/* Sort */}
-                <div className="relative flex-shrink-0">
-                     <select
-                        className="appearance-none bg-white/5 hover:bg-white/10 text-white font-medium text-xs md:text-sm py-3 pl-4 pr-9 rounded-full focus:outline-none cursor-pointer border border-transparent focus:border-white/10 transition-colors"
-                        value={sortBy}
-                        onChange={e => setSortBy(e.target.value)}
-                    >
-                        <option value="publicationDate" className="bg-[#18181b]">Newest</option>
-                        <option value="title" className="bg-[#18181b]">Title</option>
-                        <option value="price" className="bg-[#18181b]">Price</option>
-                    </select>
-                    <IconChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-3 h-3 text-neutral-500 pointer-events-none" />
-                </div>
+                <CustomDropdown 
+                    options={sortOptions}
+                    value={sortBy}
+                    onChange={setSortBy}
+                    className="w-full col-span-2 md:w-auto min-w-0"
+                    placeholder="Sort By"
+                />
             </div>
         </div>
     </div>

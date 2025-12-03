@@ -6,8 +6,7 @@ export default defineConfig({
   plugins: [react()],
   // IMPORTANT: Set base to './' for relative paths, essential for GitHub Pages (project site)
   // or set it to '/repo-name/' if you prefer absolute paths.
-  base: './',
-  publicDir: 'public',
+  base: './', 
   build: {
     outDir: 'dist',
     sourcemap: true,

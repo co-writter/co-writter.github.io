@@ -24,7 +24,7 @@ const CreatorSitePage: React.FC = () => {
     if (foundSeller && foundSeller.creatorSite && foundSeller.creatorSite.isEnabled) {
       setSeller(foundSeller);
       setSiteConfig(foundSeller.creatorSite);
-      const booksToDisplay = mockEBooks.filter(book =>
+      const booksToDisplay = mockEBooks.filter(book => 
         foundSeller.creatorSite!.showcasedBookIds.includes(book.id) && book.sellerId === foundSeller.id
       );
       setShowcasedBooks(booksToDisplay);
@@ -69,7 +69,7 @@ const CreatorSitePage: React.FC = () => {
       </div>
     );
   }
-
+  
   // Dynamic class for the main wrapper based on theme
   const themeWrapperClass = `theme-${siteConfig.theme}`;
 
@@ -77,10 +77,10 @@ const CreatorSitePage: React.FC = () => {
     <div className={`${themeWrapperClass} pt-20`}> {/* Added top padding for fixed navbar clearance if needed, though this page layout is custom */}
       <header className="creator-site-header">
         {siteConfig.profileImageUrl && (
-          <img
-            src={siteConfig.profileImageUrl}
-            alt={siteConfig.displayName || seller.name}
-            className="creator-site-profile-img"
+          <img 
+            src={siteConfig.profileImageUrl} 
+            alt={siteConfig.displayName || seller.name} 
+            className="creator-site-profile-img" 
           />
         )}
         <h1 className="creator-site-display-name">{siteConfig.displayName || seller.name}</h1>
@@ -98,7 +98,7 @@ const CreatorSitePage: React.FC = () => {
                   <p className="creator-site-book-author">By {book.author}</p>
                   <p className="creator-site-book-price">₹{book.price.toFixed(2)}</p>
                   {/* Link to the main store page for the book */}
-                  <Link
+                  <Link 
                     to={`/store?bookId=${book.id}`} // Or a more specific book detail page if it exists
                     className="creator-site-book-button"
                     target="_blank" // Open in new tab to keep creator site open
@@ -114,7 +114,7 @@ const CreatorSitePage: React.FC = () => {
           <p className="text-center text-lg col-span-full py-10">This creator hasn't showcased any eBooks yet.</p>
         )}
       </main>
-
+      
       <footer className="creator-site-footer">
         <p>&copy; {new Date().getFullYear()} {siteConfig.displayName || seller.name}. Powered by <Link to="/" target="_blank" rel="noopener noreferrer">{APP_NAME}</Link>.</p>
       </footer>
