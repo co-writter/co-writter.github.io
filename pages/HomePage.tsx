@@ -136,7 +136,7 @@ const HomePage: React.FC = () => {
                         Co-Writter isn't just a tool; it's a partner. We believe that everyone has a story worth telling,
                         and with the right help, anyone can become an author.
                     </p>
-                    <Link to="/" className="inline-flex items-center gap-2 text-white font-bold border-b border-white pb-1 hover:opacity-70 transition-opacity tracking-widest uppercase text-sm">
+                    <Link to="/store" className="inline-flex items-center gap-2 text-white font-bold border-b border-white pb-1 hover:opacity-70 transition-opacity tracking-widest uppercase text-sm">
                         Browse the Library &rarr;
                     </Link>
                 </div>

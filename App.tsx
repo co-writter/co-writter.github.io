@@ -33,8 +33,8 @@ const AnimatedRoutes = () => {
     // Key is vital for triggering the animation on route change
     <div key={location.pathname} className="flex-grow flex flex-col animate-page-enter">
       <Routes location={location}>
-        <Route path="/" element={<StorePage />} />
-        <Route path="/about" element={<HomePage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/store" element={<StorePage />} />
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />

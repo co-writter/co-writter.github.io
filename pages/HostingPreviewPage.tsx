@@ -179,7 +179,7 @@ const HostingPreviewPage: React.FC = () => {
                                                 {book.price === 0 ? 'Free' : `₹${book.price}`}
                                             </span>
                                             <Link
-                                                to={`/?bookId=${book.id}`}
+                                                to={`/store?bookId=${book.id}`}
                                                 className={`flex items-center gap-2 text-xs font-bold uppercase tracking-widest hover:underline ${isLight ? 'text-blue-600' : 'text-blue-400'}`}
                                             >
                                                 Get Book <IconLink className="w-3 h-3" />

@@ -38,7 +38,7 @@ const Navbar: React.FC = () => {
     const totalCartItems = cart.reduce((sum, item) => sum + item.quantity, 0);
 
     const navLinks = [
-        { label: 'Browse', path: '/', icon: <IconStore className="w-5 h-5" /> },
+        { label: 'Browse', path: '/store', icon: <IconStore className="w-5 h-5" /> },
         { label: 'Plans', path: '/pricing', icon: <IconBook className="w-5 h-5" /> },
     ];
 

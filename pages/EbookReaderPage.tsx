@@ -103,7 +103,7 @@ const EbookReaderPage: React.FC = () => {
                         return;
                     } else if (currentUser) {
                         alert("Access denied. Please purchase this book.");
-                        navigate('/');
+                        navigate('/store');
                         return;
                     }
                 }
@@ -297,8 +297,8 @@ const EbookReaderPage: React.FC = () => {
                                         contentRef.current?.scrollTo(0, 0);
                                     }}
                                     className={`w-full text-left p-4 rounded-xl transition-all border ${textPageIndex === idx
-                                            ? 'bg-current/10 border-current/20 font-bold'
-                                            : 'bg-transparent border-transparent hover:bg-current/5 text-current/60'
+                                        ? 'bg-current/10 border-current/20 font-bold'
+                                        : 'bg-transparent border-transparent hover:bg-current/5 text-current/60'
                                         }`}
                                 >
                                     <span className="text-xs opacity-50 block mb-1">Chapter {idx + 1}</span>

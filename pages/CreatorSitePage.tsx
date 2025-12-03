@@ -99,7 +99,7 @@ const CreatorSitePage: React.FC = () => {
                   <p className="creator-site-book-price">₹{book.price.toFixed(2)}</p>
                   {/* Link to the main store page for the book */}
                   <Link
-                    to={`/?bookId=${book.id}`} // Or a more specific book detail page if it exists
+                    to={`/store?bookId=${book.id}`} // Or a more specific book detail page if it exists
                     className="creator-site-book-button"
                     target="_blank" // Open in new tab to keep creator site open
                     rel="noopener noreferrer"

@@ -150,7 +150,7 @@ const PricingPage: React.FC = () => {
                         </p>
 
                         <button
-                            onClick={() => navigate('/')}
+                            onClick={() => navigate('/store')}
                             className="w-full py-4 rounded-full border border-white/20 text-white font-bold hover:bg-white/10 transition-colors mb-8 uppercase tracking-widest text-xs"
                         >
                             Browse Books

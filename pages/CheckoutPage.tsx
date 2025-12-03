@@ -245,7 +245,7 @@ const CheckoutPage: React.FC = () => {
               </button>
             ) : (
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate('/store')}
                 className="w-full py-4 bg-white/10 text-white border border-white/20 font-bold text-xs uppercase tracking-widest rounded-full hover:bg-white hover:text-black transition-all"
               >
                 Login to Purchase

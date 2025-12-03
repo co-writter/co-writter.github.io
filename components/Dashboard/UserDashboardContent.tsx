@@ -40,8 +40,8 @@ const UserDashboardContent: React.FC = () => {
         <button
             onClick={() => setActiveTab(id)}
             className={`w-full flex items-center gap-4 px-6 py-3.5 text-sm font-medium rounded-r-full transition-all duration-200 group ${activeTab === id
-                    ? 'bg-[#4285f4]/15 text-[#a8c7fa] border-l-4 border-[#4285f4]'
-                    : 'text-neutral-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
+                ? 'bg-[#4285f4]/15 text-[#a8c7fa] border-l-4 border-[#4285f4]'
+                : 'text-neutral-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
                 }`}
         >
             <Icon className={`w-5 h-5 ${activeTab === id ? 'text-[#a8c7fa]' : 'text-neutral-500 group-hover:text-white'}`} />
@@ -70,7 +70,7 @@ const UserDashboardContent: React.FC = () => {
             <aside className="w-64 flex-shrink-0 border-r border-white/5 hidden md:flex flex-col bg-[#0b0b0b] z-20 h-full overflow-y-auto">
                 <div className="p-6">
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate('/store')}
                         className="w-full py-4 bg-white text-black font-bold rounded-2xl shadow-lg hover:shadow-xl hover:bg-neutral-200 transition-all flex items-center justify-center gap-2"
                     >
                         <IconBook className="w-5 h-5" /> Browse Store
@@ -192,7 +192,7 @@ const UserDashboardContent: React.FC = () => {
                                         {activeTab === 'wishlist' ? 'Save books you want to read later.' : 'Start your reading journey by exploring the store.'}
                                     </p>
                                     <button
-                                        onClick={() => navigate('/')}
+                                        onClick={() => navigate('/store')}
                                         className="px-8 py-3 bg-[#4285f4] text-black font-bold rounded-full hover:bg-[#5b96f5] transition-colors"
                                     >
                                         Explore Books
