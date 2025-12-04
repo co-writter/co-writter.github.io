@@ -1,11 +1,9 @@
 
 import React, { createContext, useState, useContext, useEffect, useCallback, ReactNode } from 'react';
 import { User, Seller, UserType, EBook, CartItem, AppContextType, CreatorSiteConfig } from '../types';
-import { mockUser, mockSeller, mockEBooks, mockUsers } 
-    from '../services/mockData';
+import { mockEBooks, mockUsers } from '../services/mockData';
 import { initializeGeminiChat } from '../services/geminiService';
 import { Chat } from '@google/genai';
-
 
 const defaultAppContext: AppContextType = {
   currentUser: null,
@@ -31,23 +29,59 @@ const defaultAppContext: AppContextType = {
 
 const AppContext = createContext<AppContextType>(defaultAppContext);
 
+// Key for persisting app state in browser storage
+const STORAGE_KEY = 'cowritter_production_state_v1';
+
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [currentUser, setCurrentUserState] = useState<User | Seller | null>(null);
-  const [userType, setUserTypeState] = useState<UserType>(UserType.GUEST);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  // 1. Initialize State from LocalStorage (Lazy Loading)
+  const [currentUser, setCurrentUserState] = useState<User | Seller | null>(() => {
+      try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          return stored ? JSON.parse(stored).currentUser : null;
+      } catch (e) { return null; }
+  });
+
+  const [userType, setUserTypeState] = useState<UserType>(() => {
+      try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          return stored ? JSON.parse(stored).userType : UserType.GUEST;
+      } catch (e) { return UserType.GUEST; }
+  });
+
+  const [cart, setCart] = useState<CartItem[]>(() => {
+      try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          return stored ? JSON.parse(stored).cart : [];
+      } catch (e) { return []; }
+  });
+
+  const [allBooks, setAllBooks] = useState<EBook[]>(() => {
+      try {
+          const stored = localStorage.getItem(STORAGE_KEY);
+          return stored ? JSON.parse(stored).allBooks : mockEBooks;
+      } catch (e) { return mockEBooks; }
+  });
+
   const theme = 'dark'; // For now, only dark theme
   const [geminiChat, setGeminiChat] = useState<Chat | null>(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-  const [allBooks, setAllBooks] = useState<EBook[]>(mockEBooks);
 
+  // 2. Persistence Effect: Save state on any change
+  useEffect(() => {
+      const stateToSave = {
+          currentUser,
+          userType,
+          cart,
+          allBooks
+      };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
+  }, [currentUser, userType, cart, allBooks]);
 
   const setCurrentUser = (user: User | Seller | null, type: UserType) => {
     setCurrentUserState(user);
     setUserTypeState(type);
-    if (user && type !== UserType.GUEST) {
-      // Simulate loading user-specific cart from backend
-    } else {
-      setCart([]); // Clear cart for guest or on logout
+    if (!user) {
+      setCart([]); // Clear cart on logout
     }
   };
 
@@ -92,9 +126,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   
   const updateSellerCreatorSite = (config: CreatorSiteConfig) => {
     setCurrentUserState(prevUser => {
-        if (prevUser && prevUser.id.startsWith('seller')) { // or userType === UserType.SELLER
+        if (prevUser && (prevUser.id.startsWith('seller') || prevUser.id.startsWith('google') || userType === UserType.SELLER)) { 
             const updatedSeller = { ...prevUser as Seller, creatorSite: config };
-            // Also update the mockUsers array for persistence in demo
+            
+            // Update local mock store for simulation consistency
             if (mockUsers[updatedSeller.id]) {
                 (mockUsers[updatedSeller.id] as Seller).creatorSite = config;
             }
@@ -105,26 +140,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   const addCreatedBook = (book: EBook) => {
-    setAllBooks(prevBooks => [book, ...prevBooks]);
+    setAllBooks(prevBooks => {
+        // Prevent duplicates
+        if (prevBooks.some(b => b.id === book.id)) return prevBooks;
+        return [book, ...prevBooks];
+    });
+
     // If current user is a seller, also add to their uploadedBooks
     if (currentUser && userType === UserType.SELLER) {
         setCurrentUserState(prev => {
             const seller = prev as Seller;
-            // Ensure uploadedBooks is initialized if it's undefined
             const currentUploadedBooks = seller.uploadedBooks || [];
             return {
                 ...seller,
                 uploadedBooks: [book, ...currentUploadedBooks]
             };
         });
-        // Update mock data for persistence in demo
-        if (mockUsers[currentUser.id]) {
-            const sellerInMock = mockUsers[currentUser.id] as Seller;
-            if (!sellerInMock.uploadedBooks) {
-                sellerInMock.uploadedBooks = [];
-            }
-            sellerInMock.uploadedBooks.unshift(book);
-        }
     }
   };
 
@@ -141,29 +172,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             };
         });
     }
-
-    // Update mockEBooks array for persistence in demo
-    let mockBookIndex = mockEBooks.findIndex(b => b.id === updatedBook.id);
-    if (mockBookIndex !== -1) {
-      mockEBooks[mockBookIndex] = updatedBook;
-    } else {
-      mockEBooks.unshift(updatedBook); 
-    }
-
-    // Update the seller in mockUsers array
-    const sellerInMock = mockUsers[updatedBook.sellerId] as Seller | undefined;
-    if (sellerInMock && sellerInMock.uploadedBooks) {
-      const bookIndexInSellerMock = sellerInMock.uploadedBooks.findIndex(b => b.id === updatedBook.id);
-      if (bookIndexInSellerMock !== -1) {
-        sellerInMock.uploadedBooks[bookIndexInSellerMock] = updatedBook;
-      } else {
-        sellerInMock.uploadedBooks.unshift(updatedBook);
-      }
-    } else if (sellerInMock) { 
-        sellerInMock.uploadedBooks = [updatedBook];
-    }
   };
-
 
   const handleGoogleLogin = (credentialResponse: any) => {
     try {
@@ -186,13 +195,23 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             email: payload.email,
             purchaseHistory: [],
             wishlist: [],
-            isVerified: false
+            isVerified: false,
+            profileImageUrl: payload.picture
         };
 
-        setCurrentUserState(googleUser);
-        setUserTypeState(UserType.USER);
+        // Check if we have previous data for this user in mock/local
+        const existingData = mockUsers[googleUser.id];
+        if (existingData) {
+            // Restore role if they were a seller
+            if ('uploadedBooks' in existingData) {
+                setCurrentUser(existingData as Seller, UserType.SELLER);
+                return;
+            }
+        }
+
+        setCurrentUser(googleUser, UserType.USER);
         
-        // Persist to mock data so it survives this session
+        // Persist to mock data (runtime cache)
         mockUsers[googleUser.id] = googleUser;
 
         console.log("Logged in with Google:", googleUser.name);
@@ -205,32 +224,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (currentUser && userType === UserType.USER) {
         const user = currentUser as User;
         
-        // Check if user is already a seller in mock data to restore previous state if any
-        let existingSellerData: Partial<Seller> = {};
-        if (mockUsers[user.id] && 'uploadedBooks' in mockUsers[user.id]) {
-            existingSellerData = mockUsers[user.id] as Seller;
-        }
-
         const newSeller: Seller = {
             id: user.id,
             name: user.name,
             email: user.email,
-            payoutEmail: user.email, // Default to email
-            uploadedBooks: existingSellerData.uploadedBooks || [],
+            payoutEmail: user.email, 
+            uploadedBooks: [],
             isVerified: user.isVerified || false,
-            creatorSite: existingSellerData.creatorSite || {
+            username: user.username || `@${user.name.replace(/\s+/g, '').toLowerCase()}`,
+            profileImageUrl: user.profileImageUrl,
+            creatorSite: {
                  isEnabled: false,
                  slug: user.name.toLowerCase().replace(/\s+/g, '-'),
                  theme: 'dark-minimal',
-                 profileImageUrl: '',
+                 profileImageUrl: user.profileImageUrl,
                  displayName: user.name,
-                 tagline: '',
+                 tagline: 'Digital Creator',
                  showcasedBookIds: []
             }
         };
         
-        setCurrentUserState(newSeller);
-        setUserTypeState(UserType.SELLER);
+        setCurrentUser(newSeller, UserType.SELLER);
+        // Update runtime cache
         mockUsers[user.id] = newSeller;
         
         console.log("Upgraded to Seller:", newSeller.name);
@@ -241,19 +256,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       if (currentUser) {
           const updatedUser = { ...currentUser, isVerified: true };
           setCurrentUserState(updatedUser);
-          // Persist to mock data
-          if (mockUsers[currentUser.id]) {
-              mockUsers[currentUser.id] = updatedUser;
-          }
       }
   };
-
-
-  // Default to Seller/Admin view so user sees the 3 books immediately
-  useEffect(() => {
-     setCurrentUser(mockSeller, UserType.SELLER);
-  }, []);
-
 
   return (
     <AppContext.Provider value={{ currentUser, userType, setCurrentUser, cart, addToCart, removeFromCart, clearCart, theme, geminiChat, initializeChat, isChatbotOpen, toggleChatbot, updateSellerCreatorSite, allBooks, addCreatedBook, updateEBook, handleGoogleLogin, upgradeToSeller, verifyUser }}>

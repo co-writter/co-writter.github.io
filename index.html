@@ -1,11 +1,47 @@
-
 <!DOCTYPE html>
 <html lang="en" class="dark">
+
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>co-writter</title>
+  <meta name="theme-color" content="#000000" />
+
+  <!-- Primary Meta Tags -->
+  <title>co-writter | AI-Powered eBook Creation & Publishing Platform</title>
+  <meta name="title" content="co-writter | AI-Powered eBook Creation & Publishing Platform" />
+  <meta name="description"
+    content="Create, edit, and publish professional eBooks with AI. The all-in-one platform for authors featuring AI writing assistance, cover generation, and direct sales." />
+  <meta name="keywords"
+    content="AI writing, ebook creator, self-publishing, digital publishing, AI cover generator, author tools" />
+  <meta name="author" content="co-writter" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://co-writter.github.io/" />
+  <meta property="og:title" content="co-writter | AI-Powered eBook Creation & Publishing Platform" />
+  <meta property="og:description"
+    content="Create, edit, and publish professional eBooks with AI. The all-in-one platform for authors featuring AI writing assistance, cover generation, and direct sales." />
+  <meta property="og:image" content="https://co-writter.github.io/og-image.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://co-writter.github.io/" />
+  <meta property="twitter:title" content="co-writter | AI-Powered eBook Creation & Publishing Platform" />
+  <meta property="twitter:description"
+    content="Create, edit, and publish professional eBooks with AI. The all-in-one platform for authors featuring AI writing assistance, cover generation, and direct sales." />
+  <meta property="twitter:image" content="https://co-writter.github.io/og-image.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- Styles & Scripts -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script>
@@ -87,12 +123,12 @@
               "100%": { opacity: "1", transform: "translateY(0)", filter: "blur(0px)" }
             },
             "warp-out": {
-               "0%": { opacity: "1", transform: "scale(1)", filter: "blur(0px)" },
-               "100%": { opacity: "0", transform: "scale(1.1)", filter: "blur(20px)" },
+              "0%": { opacity: "1", transform: "scale(1)", filter: "blur(0px)" },
+              "100%": { opacity: "0", transform: "scale(1.1)", filter: "blur(20px)" },
             },
             "slide-up": {
-               "0%": { opacity: "0", transform: "translateY(20px)" },
-               "100%": { opacity: "1", transform: "translateY(0)" },
+              "0%": { opacity: "0", transform: "translateY(20px)" },
+              "100%": { opacity: "1", transform: "translateY(0)" },
             },
             "shine": {
               "0%": { backgroundPosition: "200% center" },
@@ -106,26 +142,28 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
-    "recharts": "https://esm.sh/recharts@^3.0.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react-pdf": "https://esm.sh/react-pdf@9.1.0?external=react,react-dom",
-    "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.4.168",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  <script type="importmap">
+  {
+    "imports": {
+      "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+      "react/": "https://esm.sh/react@^19.1.0/",
+      "react": "https://esm.sh/react@^19.1.0",
+      "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
+      "recharts": "https://esm.sh/recharts@^3.0.0",
+      "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+      "react-pdf": "https://esm.sh/react-pdf@9.1.0?external=react,react-dom",
+      "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.4.168",
+      "vite": "https://aistudiocdn.com/vite@^7.2.6",
+      "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+    }
   }
-}
-</script>
-<link rel="stylesheet" href="/index.css">
+  </script>
+  <link rel="stylesheet" href="/index.css">
 </head>
+
 <body class="selection:bg-white selection:text-black">
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
+
 </html>
