@@ -149,6 +149,60 @@ const EbookReaderPage: React.FC = () => {
         }
     };
 
+    // --- MARKDOWN RENDERER ---
+    const renderMarkdownContent = (content: string) => {
+        // Split text by markdown image syntax ![alt](url)
+        // Regex captures the whole image tag
+        const parts = content.split(/(!\[.*?\]\(.*?\))/g);
+        
+        return parts.map((part, index) => {
+            // Check if this part is an image
+            const imageMatch = part.match(/!\[(.*?)\]\((.*?)\)/);
+            if (imageMatch) {
+                return (
+                    <div key={index} className="my-8 flex flex-col items-center group">
+                        <div className="relative rounded-lg overflow-hidden shadow-2xl border border-white/10 bg-black">
+                            <img 
+                                src={imageMatch[2]} 
+                                alt={imageMatch[1]} 
+                                className="max-h-[500px] w-auto object-contain transition-transform duration-500 hover:scale-[1.02]" 
+                            />
+                        </div>
+                        {imageMatch[1] && <span className="text-[10px] text-neutral-500 mt-3 font-mono uppercase tracking-widest">{imageMatch[1]}</span>}
+                    </div>
+                );
+            }
+            
+            // Render text with basic formatting (Headers, Bold, Newlines)
+            return (
+                <div key={index} className="whitespace-pre-wrap">
+                    {part.split('\n').map((line, i) => {
+                        // Skip empty lines in some contexts or render as spacer
+                        if (!line.trim()) return <div key={i} className="h-4"></div>;
+
+                        if (line.startsWith('# ')) return <h1 key={i} className="text-3xl md:text-4xl font-bold mb-6 mt-8 leading-tight">{line.replace('# ', '')}</h1>
+                        if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mb-4 mt-6 leading-snug opacity-90">{line.replace('## ', '')}</h2>
+                        if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mb-3 mt-5 leading-snug opacity-80">{line.replace('### ', '')}</h3>
+                        if (line.startsWith('- ')) return <li key={i} className="ml-6 list-disc mb-2 pl-2">{line.replace('- ', '')}</li>
+                        
+                        // Parse Bold **text** within paragraph
+                        const lineParts = line.split(/(\*\*.*?\*\*)/g);
+                        return (
+                            <p key={i} className="mb-4 leading-relaxed">
+                                {lineParts.map((sub, j) => {
+                                    if (sub.startsWith('**') && sub.endsWith('**')) {
+                                        return <strong key={j} className="font-bold opacity-100">{sub.slice(2, -2)}</strong>;
+                                    }
+                                    return sub;
+                                })}
+                            </p>
+                        )
+                    })}
+                </div>
+            );
+        });
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
@@ -370,8 +424,8 @@ const EbookReaderPage: React.FC = () => {
                                         color: 'currentColor' 
                                     }}
                                 >
-                                    <div className="whitespace-pre-wrap opacity-90">
-                                        {currentTextPage.content || "Start writing to see content here..."}
+                                    <div className="opacity-90">
+                                        {renderMarkdownContent(currentTextPage.content || "Start writing to see content here...")}
                                     </div>
                                 </article>
 

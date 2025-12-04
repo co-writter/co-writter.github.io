@@ -1,66 +1,154 @@
 
-# Co-Writter Changelog
+# Co-Writter: Production Blueprint (v2.0)
 
-All notable changes to the "co-writter" project will be documented in this file.
+**Project Name:** Co-Writter
+**Codename:** Antigravity Engine
+**Repository:** `co-writter/co-writter.github.io`
+**Live URL:** `https://co-writter.github.io`
 
-## [Unreleased]
+---
 
-## [1.2.3] - Animated Logo Polish
-- **MorphicEye**: Enhanced the logo animation logic.
-  - **Tracking**: Mouse tracking now uses a smoother radial constraint logic, preventing the eyes from clipping outside the socket.
-  - **Blinking**: Implemented a robust recursive timeout loop to ensure blinking occurs randomly (2-6s intervals) and visibly squashes the eye height to 2px.
-  - **Aesthetics**: Added a "glint" reflection to the pupils for a cuter, more lively robot appearance.
+## 1. Executive Architecture: "The Universal Engine"
 
-## [1.2.2] - Animated Identity
-- **Logo**: Integrated the animated **MorphicEye** component into the main navigation bar. The "tiny robot in a circle with blinking eyes" is now the primary application logo.
-- **Branding**: Updated the logo typography to **lowercase** ("co-writter") as per design requirements.
+Co-Writter is architected as a **Single-Page Application (SPA)** that functions as a **Self-Replicating Publishing Platform**. Instead of deploying separate websites for every user, the application uses a **Universal Hosting Pattern** on GitHub Pages.
 
-## [1.2.1] - Branding Update
-- **Logo Update**: Replaced the abstract `IconCogito` with a custom-designed **Cute Robot** icon to serve as the friendly face of the application.
-- **Navbar Refinement**: Updated the logo container in the navigation bar to be larger and rounder (`rounded-2xl`), accentuating the new friendly robot aesthetic.
-- **Login Page**: Updated the logo display on the login portal to match the new branding.
+### The Core Loop
+1.  **The Engine:** The React App (`index.html` + `assets`) is hosted at the root.
+2.  **The Database:** The GitHub Repository itself acts as the database. User profiles and book catalogs are stored as **JSON files** in the `public/data/users/` directory.
+3.  **The Routing:** The app uses **HashRouting** to dynamically hydrate a generic template based on the URL hash.
 
-## [1.2.0] - Morphic Studio Redesign
-- **UI Overhaul**: Replaced the previous studio interface with a **Morphic Dark Theme**.
-  - **Layout**: Implemented a professional 3-pane workspace (Manifest, Editor, Mission Control).
-  - **Visuals**: Deep black backgrounds (`#050505`), thin crisp borders, and monospaced accents.
-  - **Components**: Added `SystemCard` for visualizing agent thought processes and `BlueprintCard` for outlines.
-- **Auto-Pilot Feature**: 
-  - Added a "Mission Control" modal to launch autonomous generation sequences.
-  - Integrated "Vision" tab for generating concept art directly alongside the text.
-- **UX Improvements**:
-  - Live character streaming simulation for the "Writer Agent".
-  - Real-time progress bars for AI actions.
-  - Improved mobile navigation for the studio.
+> **Example:**
+> When a visitor navigates to `https://co-writter.github.io/#/site/johndoe`:
+> 1. The SPA loads.
+> 2. It parses `:username` (johndoe).
+> 3. It fetches `https://raw.githubusercontent.com/co-writter/co-writter.github.io/main/public/data/users/johndoe.json`.
+> 4. It renders the **HostingPreviewPage** with John's specific theme, bio, and books.
 
-## [1.1.1] - UI Enhancements
-- **Icons**: Improved the "Launch Interface" button icon in the Seller Dashboard. Replaced the generic sparkles with a dynamic **Rocket** icon that animates on hover, better signifying the action of launching the studio.
+---
 
-## [1.1.0] - Pitch Black Theme Overhaul
+## 2. Tech Stack & Dependencies
 
-### Visual Design
-- **Pitch Black Aesthetic**: Migrated the entire application background to pure `#000000`.
-- **2D Animative Elements**: 
-  - Added a global **Kinetic Grid** background with floating geometry.
-  - Replaced soft glassmorphism with **High-Contrast 2D Panels** (Black fill, White/15 border).
-  - Updated `Spinner` to a 2D mechanical square animation.
-- **UI Components**:
-  - `BookCard`: Updated to pitch black with sharp white borders and hover lifts.
-  - `Navbar`: Pure black with stark border separators.
-  - `Dashboard`: Panels now adhere to the strict 2D black/white theme.
+**Frontend Core:**
+*   **Framework:** React 18 (via Vite)
+*   **Language:** TypeScript
+*   **Styling:** Tailwind CSS (CDN/Configured), Anime.js (Animations)
+*   **Routing:** React Router DOM v6 (HashRouter)
 
-### New Features
-- **Ebook Studio**: Implemented a dedicated writing environment (`pages/EbookStudioPage.tsx`) utilizing Gemini 2.5 Flash for:
-  - Agentic writing workflow (Planner, Writer, Editor).
-  - Real-time streaming of generated content.
-  - Chat-based "Co-Author" collaboration.
-- **Smart Upload System**: Added `analyzePdfContent` service to extract book metadata.
-- **AI Asset Generation**: `AICoverGenerator` and `AIPricingOptimizer`.
-- **Commerce**: Razorpay integration and Storefront.
+**AI & Neural Engine:**
+*   **SDK:** `@google/genai` (v1.6.0+)
+*   **Models:** 
+    *   `gemini-2.5-flash` (Reasoning, Writing, Logic)
+    *   `gemini-2.5-flash-image` (Cover Generation)
+    *   `gemini-2.5-flash-preview-tts` (Audio Synthesis)
 
-### Technical Updates
-- Updated `index.html` Tailwind config for strict dark mode color palette.
-- Enhanced `App.tsx` layout structure to support fixed background animations.
+**Commerce & Infrastructure:**
+*   **Payments:** Razorpay (Client-side integration)
+*   **Hosting:** GitHub Pages (Static)
+*   **Data:** GitHub Repository API (JSON Storage)
 
-## [1.0.0] - Initial Beta
-- Initial release with Gemini AI integration, Google Auth, and Reader functionality.
+---
+
+## 3. Directory Structure
+
+```text
+/
+├── public/
+│   ├── vite.svg
+│   └── data/               <-- THE "DATABASE"
+│       └── users/
+│           ├── admin.json  <-- Example Profile
+│           └── [user].json <-- User-generated Profiles
+├── src/
+│   ├── components/         <-- UI Building Blocks
+│   ├── contexts/           <-- Global State (User, Cart, AI Chat)
+│   ├── pages/
+│   │   ├── HostingPreviewPage.tsx <-- The Universal Store Template
+│   │   └── EbookStudioPage.tsx    <-- The Writing Engine
+│   ├── services/
+│   │   ├── geminiService.ts       <-- AI Logic
+│   │   └── cloudService.ts        <-- GitHub/Google API Logic
+│   ├── types.ts
+│   ├── constants.tsx
+│   ├── App.tsx
+│   └── index.tsx
+├── index.html              <-- Entry Point (Tailwind Config Injection)
+├── vite.config.ts          <-- Build Config (base: './')
+└── tsconfig.json
+```
+
+---
+
+## 4. Deployment Strategy (Automated)
+
+To make this "Production Ready", the **Google-Antigravity-IDE** must execute the following pipeline:
+
+### Step A: Build Configuration
+The `vite.config.ts` **MUST** have the base set to relative path `./` to ensure assets load correctly on GitHub Pages sub-directories.
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  base: './', // CRITICAL for GitHub Pages
+  build: { outDir: 'dist' }
+});
+```
+
+### Step B: Environment Variables
+Create a `.env` file (or set GitHub Secrets) with the following keys. **DO NOT** commit real keys to public repos.
+
+```env
+VITE_API_KEY=your_google_gemini_api_key
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
+```
+
+### Step C: The "Push" Command
+Run the build and deploy to the `gh-pages` branch.
+
+```bash
+npm install
+npm run build
+# Using gh-pages package
+npx gh-pages -d dist
+```
+
+---
+
+## 5. The "Write-to-Repo" Feature (Advanced)
+
+For the **Seller Dashboard** to publish changes live to the internet without a backend server, the app uses the **GitHub API**.
+
+**Implementation Logic (`cloudService.ts`):**
+
+1.  **Auth:** User authenticates via GitHub OAuth (Personal Access Token or OAuth App).
+2.  **Commit:** The app constructs a `PUT` request to `https://api.github.com/repos/co-writter/co-writter.github.io/contents/public/data/users/{username}.json`.
+3.  **Payload:**
+    ```json
+    {
+      "message": "Update site configuration for {username}",
+      "content": "BASE64_ENCODED_JSON_STRING",
+      "sha": "EXISTING_FILE_SHA_IF_UPDATE"
+    }
+    ```
+4.  **Live:** Within 60 seconds (GitHub Pages cache time), the URL `/#/site/{username}` reflects the new data.
+
+---
+
+## 6. Safety & Verification
+
+*   **SanitizeBookStructure:** The `EbookStudioPage` includes a logic engine that enforces sequential chapter numbering (1, 2, 3...) and prevents empty titles before saving/exporting.
+*   **Context-Aware AI:** The `geminiService` injects the previous 1000 characters of the book context into every new prompt to ensure continuity.
+*   **Blue Tick Verification:** Logic exists in `AppContext` to verify sellers (`isVerified: true`), which adds a trusted checkmark to their profile on the storefront.
+
+## 7. Policies & Legal
+
+The application includes fully rendered policy pages required for Payment Gateway approval:
+*   `/privacy-policy` (Includes Google Core Data clauses)
+*   `/terms-and-conditions`
+*   `/shipping-policy` (Digital Goods)
+*   `/refund-policy` (No Refunds on Digital Downloads)
+*   `/contact` (Merchant details)
+
+---
+
+**Ready for Launch Sequence.**

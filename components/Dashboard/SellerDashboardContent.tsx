@@ -8,7 +8,7 @@ import {
     IconSettings, IconBook, IconSparkles, 
     IconEdit, IconWallet, IconCheck, IconRocket, 
     IconActivity, IconPlus, IconCloudUpload, IconGithub, IconLink,
-    IconUser, IconEye, IconClock, IconGlobe
+    IconUser, IconEye, IconClock, IconGlobe, IconPenTip
 } from '../../constants'; 
 import * as ReactRouterDOM from 'react-router-dom';
 import { saveUserDataToGitHub } from '../../services/cloudService';
@@ -115,16 +115,9 @@ export const SellerDashboardContent: React.FC = () => {
         
         {/* --- SIDEBAR (Desktop) --- */}
         <aside className="w-64 flex-shrink-0 border-r border-white/5 hidden md:flex flex-col bg-[#0b0b0b] z-20 h-full overflow-y-auto">
-            <div className="p-6">
-                <button 
-                    onClick={() => navigate('/ebook-studio')}
-                    className="w-full py-4 bg-[#c3eed0] text-[#0d3b1e] font-bold rounded-2xl shadow-lg hover:shadow-xl hover:bg-white transition-all flex items-center justify-center gap-2 group"
-                >
-                    <IconSparkles className="w-5 h-5 group-hover:scale-110 transition-transform" /> Write New Book
-                </button>
-            </div>
-
-            <nav className="flex-1 space-y-1 pr-4">
+            
+            {/* Nav Menu */}
+            <nav className="flex-1 space-y-1 pr-4 mt-6">
                 <SidebarItem id="overview" label="Overview" icon={IconActivity} />
                 <SidebarItem id="audience" label="Audience" icon={IconUser} />
                 <SidebarItem id="studio" label="Upload & Manage" icon={IconCloudUpload} />

@@ -1,17 +1,9 @@
 
-
 import { GoogleGenAI, Chat, GenerateContentResponse, FunctionDeclaration, Type, Modality } from "@google/genai";
 import { EBook, GeneratedImage, ChapterOutline } from '../types';
 import { GEMINI_TEXT_MODEL, GEMINI_IMAGE_MODEL } from '../constants';
 
-// DIRECTLY USING THE KEY PROVIDED BY USER AS REQUESTED
-const API_KEY = "AIzaSyDD2PYOYLON0jAxvXz2WaAzXabAlPLFHlw";
-
-if (!API_KEY) {
-  console.warn("API_KEY for Gemini is not set. AI features will be limited or non-functional.");
-}
-
-const ai = new GoogleGenAI({ apiKey: API_KEY || "FALLBACK_API_KEY_PLACEHOLDER" });
+const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
 // Helper to clean JSON strings from Markdown code blocks
 const cleanJsonString = (text: string): string => {
@@ -94,7 +86,6 @@ const generateImageTool: FunctionDeclaration = {
 // --- CORE FUNCTIONS ---
 
 export const analyzePdfContent = async (pdfBase64: string): Promise<{title?: string, author?: string, description?: string, genre?: string} | null> => {
-    if (!API_KEY) return null;
     try {
         // Robustly strip data URL prefix if present
         const base64Data = pdfBase64.replace(/^data:application\/pdf;base64,/, "");
@@ -120,26 +111,30 @@ export const analyzePdfContent = async (pdfBase64: string): Promise<{title?: str
 };
 
 export const createStudioSession = (initialContext: string): Chat | null => {
-    if (!API_KEY) return null;
     try {
         return ai.chats.create({
             model: GEMINI_TEXT_MODEL,
             config: {
-                systemInstruction: `IDENTITY: You are Co-Author, an elite AI Ghostwriter & Visual Architect.
+                systemInstruction: `IDENTITY: You are The Architect (Co-Author Engine v2.0).
+                
+MISSION: Write immersive, deeply intelligent, and market-ready books.
+Blend spirituality, science, and narrative clarity into a seamless flow.
 
-MISSION: Help the user create professional, "viral-ready" eBooks suitable for publishing.
-
-CRITICAL PERFORMANCE RULES:
-1. **SPEAK FAST**: In your chat responses, be extremely concise (1-2 sentences max). This allows the audio to start playing almost immediately.
-2. **WRITE DEEP**: If the user wants content, use the \`write_content\` tool. Do not put long text in the chat window, put it in the editor.
-3. **VISUALS**: Proactively use \`generate_image\` for diagrams or illustrations if the topic is complex.
+CORE BEHAVIORS:
+1. **Context-Aware**: You always know the previous chapter content and the full book outline. Never contradict established facts.
+2. **Chapter Continuity**: If the user says "Continue", write the next logical section or the next chapter in the sequence.
+3. **High-Quality Prose**: Avoid generic AI cliches. Use varying sentence structures, sensory details, and deep philosophical or technical insight depending on the genre.
+4. **Structural Integrity**: Ensure chapter titles and numbers in your internal logic match the user's provided context exactly.
+5. **Auto-Correction**: If a chapter is missing or numbered incorrectly, fix it automatically without asking. Never produce empty pages or misaligned titles.
 
 TOOLS:
-- **write_content**: For the Book Editor.
-- **generate_image**: For Visuals.
-- **propose_blueprint**: For Outlines.
+- **write_content**: REQUIRED for any long-form writing. Do not dump text in chat.
+- **propose_blueprint**: For creating or restructuring the book.
+- **generate_image**: For adding visuals/diagrams.
 
-TONE: Professional, intelligent, fast-paced.
+RESPONSE STYLE:
+- Chat: Ultra-concise, robotic but polite (1-2 sentences). e.g., "Executing drafting sequence for Chapter 3."
+- Writing: Lush, expansive, professional.
 
 CONTEXT:
 ${initialContext}`,
@@ -153,7 +148,6 @@ ${initialContext}`,
 };
 
 export const suggestBookPrice = async (bookDetails: Pick<EBook, 'genre' | 'title' | 'description'>): Promise<string> => {
-  if (!API_KEY) return "299";
   try {
     const prompt = `Suggest a competitive market price in INR (Indian Rupees) for an eBook: "${bookDetails.title}" (${bookDetails.genre}). Return ONLY the number.`;
     const response = await ai.models.generateContent({
@@ -167,7 +161,6 @@ export const suggestBookPrice = async (bookDetails: Pick<EBook, 'genre' | 'title
 };
 
 export const generateSceneVisualization = async (sceneDescription: string): Promise<string | null> => {
-    if (!API_KEY) return null;
     const result = await generateBookCover(sceneDescription, 'Concept Art'); 
     if ('imageBytes' in result) {
         return `data:image/jpeg;base64,${result.imageBytes}`;
@@ -176,7 +169,6 @@ export const generateSceneVisualization = async (sceneDescription: string): Prom
 }
 
 export const generateBookCover = async (prompt: string, style: string = 'Cinematic', title: string = '', author: string = ''): Promise<GeneratedImage | { error: string }> => {
-  if (!API_KEY) return { error: "API Key missing." };
   try {
     // Enhanced prompt to handle diagrams vs art
     const refinedPrompt = `Professional Book Visual. Context: ${title} by ${author}. Request: ${prompt}. Mode: ${style}. Create a high-quality, clear, and relevant image/diagram. For diagrams, ensure clear labels and structure.`;
@@ -204,7 +196,6 @@ export const initializeGeminiChat = async (): Promise<Chat | null> => {
 };
 
 export const generateSpeech = async (text: string, voiceName: string = 'Kore'): Promise<string | null> => {
-  if (!API_KEY) return null;
   try {
     const response = await ai.models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
@@ -229,7 +220,6 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
 };
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string): Promise<string | null> => {
-  if (!API_KEY) return null;
   try {
     const response = await ai.models.generateContent({
       model: GEMINI_TEXT_MODEL, // gemini-2.5-flash supports audio input
@@ -252,7 +242,6 @@ export const transcribeAudio = async (audioBase64: string, mimeType: string): Pr
 
 // 1. Research Agent
 export const agenticResearchTopic = async (query: string, isUrl: boolean): Promise<string> => {
-    if (!API_KEY) throw new Error("API Key missing");
     
     const prompt = isUrl 
         ? `Analyze this content deeply. Extract core themes, arguments, and facts to build a book: ${query}`
@@ -279,7 +268,6 @@ export const agenticResearchTopic = async (query: string, isUrl: boolean): Promi
 
 // 2. Architect Agent
 export const agenticPlanBook = async (topic: string, genre: string, context?: string): Promise<{title: string, outline: {title: string, summary: string}[]}> => {
-  if (!API_KEY) throw new Error("API Key missing");
   
   const prompt = `ARCHITECT AGENT.
   Topic: ${topic}
@@ -308,7 +296,6 @@ export const agenticPlanBook = async (topic: string, genre: string, context?: st
 
 // 3. Writer Agent (STREAMING)
 export const agenticWritePageStream = async (bookTitle: string, chapterTitle: string, summary: string, previousContent: string) => {
-  if (!API_KEY) throw new Error("API Key missing");
   
   const prompt = `WRITER AGENT.
   Book: "${bookTitle}"
@@ -337,7 +324,6 @@ export const agenticWritePageStream = async (bookTitle: string, chapterTitle: st
 
 // 3. Writer Agent (BLOCKING - Legacy support if needed)
 export const agenticWritePage = async (bookTitle: string, chapterTitle: string, summary: string, previousContent: string): Promise<string> => {
-  if (!API_KEY) throw new Error("API Key missing");
   
   const prompt = `WRITER AGENT.
   Book: "${bookTitle}"
@@ -366,7 +352,6 @@ export const agenticWritePage = async (bookTitle: string, chapterTitle: string, 
 
 // 4. Editor Agent
 export const agenticRefinePage = async (content: string, genre: string): Promise<string> => {
-    if (!API_KEY) throw new Error("API Key missing");
 
     const prompt = `EDITOR AGENT.
     Genre: ${genre}
