@@ -1,3 +1,7 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 /* ============================================
    Co-Writter Production Design System
    ============================================ */
@@ -12,18 +16,18 @@
   --cw-gray-700: #27272a;
   --cw-gray-500: #71717a;
   --cw-gray-300: #a1a1aa;
-  
+
   /* Accent Colors */
   --cw-accent-blue: #3b82f6;
   --cw-accent-purple: #8b5cf6;
   --cw-accent-green: #10b981;
   --cw-accent-red: #ef4444;
-  
+
   /* Gradients */
   --cw-gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --cw-gradient-hero: linear-gradient(180deg, rgba(20,20,30,0.9) 0%, rgba(0,0,0,1) 100%);
-  --cw-gradient-card: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%);
-  
+  --cw-gradient-hero: linear-gradient(180deg, rgba(20, 20, 30, 0.9) 0%, rgba(0, 0, 0, 1) 100%);
+  --cw-gradient-card: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+
   /* Spacing Scale */
   --cw-space-xs: 0.25rem;
   --cw-space-sm: 0.5rem;
@@ -32,11 +36,11 @@
   --cw-space-xl: 2rem;
   --cw-space-2xl: 3rem;
   --cw-space-3xl: 4rem;
-  
+
   /* Typography */
   --cw-font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --cw-font-mono: 'JetBrains Mono', 'Courier New', monospace;
-  
+
   /* Font Sizes */
   --cw-text-xs: 0.75rem;
   --cw-text-sm: 0.875rem;
@@ -47,26 +51,26 @@
   --cw-text-3xl: 1.875rem;
   --cw-text-4xl: 2.25rem;
   --cw-text-5xl: 3rem;
-  
+
   /* Shadows */
   --cw-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   --cw-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --cw-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
   --cw-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
   --cw-shadow-glow: 0 0 20px rgba(139, 92, 246, 0.3);
-  
+
   /* Border Radius */
   --cw-radius-sm: 0.25rem;
   --cw-radius-md: 0.5rem;
   --cw-radius-lg: 0.75rem;
   --cw-radius-xl: 1rem;
   --cw-radius-full: 9999px;
-  
+
   /* Transitions */
   --cw-transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
   --cw-transition-base: 300ms cubic-bezier(0.4, 0, 0.2, 1);
   --cw-transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
-  
+
   /* Z-Index Scale */
   --cw-z-base: 0;
   --cw-z-dropdown: 1000;
@@ -101,18 +105,40 @@ body {
 }
 
 /* === Typography === */
-h1, h2, h3, h4, h5, h6 {
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
   font-weight: 700;
   line-height: 1.2;
   margin-bottom: var(--cw-space-md);
 }
 
-h1 { font-size: var(--cw-text-5xl); }
-h2 { font-size: var(--cw-text-4xl); }
-h3 { font-size: var(--cw-text-3xl); }
-h4 { font-size: var(--cw-text-2xl); }
-h5 { font-size: var(--cw-text-xl); }
-h6 { font-size: var(--cw-text-lg); }
+h1 {
+  font-size: var(--cw-text-5xl);
+}
+
+h2 {
+  font-size: var(--cw-text-4xl);
+}
+
+h3 {
+  font-size: var(--cw-text-3xl);
+}
+
+h4 {
+  font-size: var(--cw-text-2xl);
+}
+
+h5 {
+  font-size: var(--cw-text-xl);
+}
+
+h6 {
+  font-size: var(--cw-text-lg);
+}
 
 p {
   margin-bottom: var(--cw-space-md);
@@ -278,24 +304,29 @@ a:hover {
 }
 
 @keyframes cw-spin {
-  to { transform: rotate(360deg); }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .cw-skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--cw-gray-800) 25%,
-    var(--cw-gray-700) 50%,
-    var(--cw-gray-800) 75%
-  );
+  background: linear-gradient(90deg,
+      var(--cw-gray-800) 25%,
+      var(--cw-gray-700) 50%,
+      var(--cw-gray-800) 75%);
   background-size: 200% 100%;
   animation: cw-skeleton-loading 1.5s ease-in-out infinite;
   border-radius: var(--cw-radius-md);
 }
 
 @keyframes cw-skeleton-loading {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .cw-skeleton-text {
@@ -341,8 +372,13 @@ a:hover {
 }
 
 @keyframes cw-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes cw-modal-enter {
@@ -350,6 +386,7 @@ a:hover {
     opacity: 0;
     transform: translate(-50%, -48%) scale(0.96);
   }
+
   to {
     opacity: 1;
     transform: translate(-50%, -50%) scale(1);
@@ -434,10 +471,21 @@ a:hover {
   gap: var(--cw-space-lg);
 }
 
-.cw-grid-cols-1 { grid-template-columns: repeat(1, 1fr); }
-.cw-grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
-.cw-grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
-.cw-grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+.cw-grid-cols-1 {
+  grid-template-columns: repeat(1, 1fr);
+}
+
+.cw-grid-cols-2 {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.cw-grid-cols-3 {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.cw-grid-cols-4 {
+  grid-template-columns: repeat(4, 1fr);
+}
 
 /* === Animation Utilities === */
 .cw-animate-float {
@@ -445,8 +493,15 @@ a:hover {
 }
 
 @keyframes cw-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-20px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-20px);
+  }
 }
 
 .cw-animate-pulse-slow {
@@ -454,8 +509,15 @@ a:hover {
 }
 
 @keyframes cw-pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
 }
 
 .cw-animate-slide-up {
@@ -467,6 +529,7 @@ a:hover {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -485,9 +548,14 @@ a:hover {
     --cw-text-5xl: 2.5rem;
     --cw-text-4xl: 2rem;
   }
-  
-  .cw-grid-cols-4 { grid-template-columns: repeat(2, 1fr); }
-  .cw-grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+
+  .cw-grid-cols-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .cw-grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 768px) {
@@ -497,18 +565,18 @@ a:hover {
     --cw-space-2xl: 2rem;
     --cw-space-3xl: 2.5rem;
   }
-  
+
   .cw-grid-cols-4,
   .cw-grid-cols-3,
   .cw-grid-cols-2 {
     grid-template-columns: repeat(1, 1fr);
   }
-  
+
   .cw-modal {
     max-width: 95vw;
     padding: var(--cw-space-lg);
   }
-  
+
   .cw-section {
     padding: var(--cw-space-2xl) 0;
   }
@@ -520,7 +588,7 @@ a:hover {
     background-color: white;
     color: black;
   }
-  
+
   .cw-btn,
   .cw-modal,
   nav,
@@ -571,6 +639,7 @@ a:hover {
 
 /* === Accessibility - Reduce Motion === */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -578,7 +647,7 @@ a:hover {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-  
+
   html {
     scroll-behavior: auto;
   }
