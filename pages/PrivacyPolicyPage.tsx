@@ -1,54 +1,113 @@
 
 import React from 'react';
-import { BORDER_CLASS, APP_NAME } from '../constants';
+import { APP_NAME, IconCheck } from '../constants';
+import MorphicEye from '../components/MorphicEye';
 
 const PrivacyPolicyPage: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 sm:px-6 pt-24 pb-12 md:pb-20">
-      <div className={`max-w-3xl mx-auto bg-brand-card-dark p-8 rounded-md border ${BORDER_CLASS} shadow-xl`}>
-        <h1 className="text-3xl font-bold text-white mb-6">Privacy Policy</h1>
+    <div className="min-h-screen w-full relative bg-transparent font-sans pt-32 pb-20">
+      
+      {/* Background Decor */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none">
+          <div className="absolute top-[20%] right-[10%] w-[500px] h-[500px] bg-white/5 rounded-full blur-[120px]"></div>
+      </div>
+
+      <div className="container mx-auto px-6 max-w-4xl relative z-10 animate-slide-up">
         
-        <div className="text-neutral-300 space-y-6 leading-relaxed text-sm">
-             <p className="font-semibold text-white">Last updated on: {new Date().toLocaleDateString()}</p>
+        {/* Header */}
+        <div className="text-center mb-16">
+            <div className="flex justify-center mb-6">
+                <MorphicEye className="w-20 h-20 border border-white/20 bg-black shadow-[0_0_30px_rgba(255,255,255,0.1)] rounded-full" isActive={true} />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">Privacy Policy</h1>
+            <p className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
+                Last Updated: {new Date().toLocaleDateString()}
+            </p>
+        </div>
 
-            <p>
-                At {APP_NAME}, accessible from {window.location.origin}, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by {APP_NAME} and how we use it.
-            </p>
+        {/* Content Card */}
+        <div className="bg-[#0b0b0b] border border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl relative overflow-hidden">
+             
+             {/* Security Badge */}
+             <div className="absolute top-0 right-0 p-6 opacity-50 hidden md:block">
+                 <div className="flex items-center gap-2 px-3 py-1 bg-green-900/20 border border-green-500/30 rounded-full">
+                     <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                     <span className="text-[10px] font-bold text-green-500 uppercase tracking-widest">Google Core Security Active</span>
+                 </div>
+             </div>
 
-            <h3 className="text-lg font-semibold text-white mt-4">1. Information We Collect</h3>
-            <p>
-                The personal information that you are asked to provide, and the reasons why you are asked to provide it, will be made clear to you at the point we ask you to provide your personal information.
-            </p>
-            <p>
-                If you contact us directly, we may receive additional information about you such as your name, email address, phone number, the contents of the message and/or attachments you may send us, and any other information you may choose to provide.
-            </p>
-            <p>
-                When you register for an Account, we may ask for your contact information, including items such as name, company name, address, email address, and telephone number.
-            </p>
+             <div className="space-y-12 text-neutral-300 leading-relaxed">
+                
+                <section>
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10">01</span>
+                        Introduction
+                    </h2>
+                    <p>
+                        At {APP_NAME}, accessible from <span className="text-white font-mono">co-writter.github.io</span>, the privacy of our visitors and creators is our top priority. This Privacy Policy document contains types of information that is collected and recorded by {APP_NAME} and how we use it.
+                    </p>
+                </section>
 
-            <h3 className="text-lg font-semibold text-white mt-4">2. How We Use Your Information</h3>
-            <p>
-                We use the information we collect in various ways, including to:
-            </p>
-             <ul className="list-disc list-inside ml-4 text-neutral-400">
-                <li>Provide, operate, and maintain our website</li>
-                <li>Improve, personalize, and expand our website</li>
-                <li>Understand and analyze how you use our website</li>
-                <li>Develop new products, services, features, and functionality</li>
-                <li>Process your transactions (eBook purchases)</li>
-                <li>Send you emails</li>
-                <li>Find and prevent fraud</li>
-            </ul>
+                <section>
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10">02</span>
+                        Google Core Data & Security
+                    </h2>
+                    <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
+                        <p className="mb-4 text-sm font-medium text-white">
+                            We comply with Google API Services User Data Policy, including the Limited Use requirements.
+                        </p>
+                        <ul className="space-y-3">
+                            <li className="flex gap-3 text-sm text-neutral-400">
+                                <IconCheck className="w-5 h-5 text-google-blue shrink-0" />
+                                <span><strong>Authentication:</strong> We use Google OAuth 2.0 to securely authenticate users. Your password is never stored on our servers.</span>
+                            </li>
+                            <li className="flex gap-3 text-sm text-neutral-400">
+                                <IconCheck className="w-5 h-5 text-google-blue shrink-0" />
+                                <span><strong>Database Integrity:</strong> User data (such as eBook drafts) is processed using ephemeral secure sessions. Long-term storage leverages secure cloud infrastructure.</span>
+                            </li>
+                            <li className="flex gap-3 text-sm text-neutral-400">
+                                <IconCheck className="w-5 h-5 text-google-blue shrink-0" />
+                                <span><strong>Gemini AI:</strong> Content generated via Google Gemini is transmitted over encrypted (TLS 1.3) channels.</span>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
 
-            <h3 className="text-lg font-semibold text-white mt-4">3. Log Files</h3>
-            <p>
-                {APP_NAME} follows a standard procedure of using log files. These files log visitors when they visit websites. All hosting companies do this and a part of hosting services' analytics.
-            </p>
+                <section>
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10">03</span>
+                        Information Collection
+                    </h2>
+                    <p className="mb-4">We collect information to provide better services to all our users:</p>
+                    <ul className="list-disc list-inside ml-4 space-y-2 text-neutral-400">
+                        <li>Personal identification (Name, Email address, Profile Picture).</li>
+                        <li>Log Data (IP address, browser version, visit duration).</li>
+                        <li>Transactional Data (Purchase history of eBooks).</li>
+                    </ul>
+                </section>
 
-             <h3 className="text-lg font-semibold text-white mt-4">4. Third Party Privacy Policies</h3>
-             <p>
-                {APP_NAME}'s Privacy Policy does not apply to other advertisers or websites. Thus, we are advising you to consult the respective Privacy Policies of these third-party ad servers for more detailed information.
-             </p>
+                <section>
+                    <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                        <span className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center text-sm border border-white/10">04</span>
+                        Data Usage & Rights
+                    </h2>
+                    <p>
+                        We use the collected data to maintain our service, notify you about changes, provide customer support, and detect technical issues.
+                    </p>
+                    <p className="mt-4">
+                        You have the right to request copies of your personal data, request corrections, or request deletion of your account at any time via the User Dashboard.
+                    </p>
+                </section>
+
+             </div>
+
+             {/* Footer Note */}
+             <div className="mt-12 pt-8 border-t border-white/5 text-center">
+                 <p className="text-xs text-neutral-600 uppercase tracking-widest">
+                     Protected by Co-Writter Secure Enclave
+                 </p>
+             </div>
         </div>
       </div>
     </div>

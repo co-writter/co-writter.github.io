@@ -1,5 +1,6 @@
+
 import React, { ReactNode } from 'react';
-import { BORDER_CLASS } from '../constants';
+import { IconX } from '../constants';
 
 interface ModalProps {
   isOpen: boolean;
@@ -15,32 +16,37 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
   const sizeClasses = {
     sm: 'max-w-sm',
     md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    full: 'max-w-full h-full'
+    lg: 'max-w-4xl',
+    xl: 'max-w-6xl',
+    full: 'max-w-[95vw] h-[95vh]'
   };
 
   return (
     <div 
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[100] p-4 transition-opacity duration-300 ease-in-out" 
+      className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[100] p-4 transition-opacity duration-300 ease-in-out animate-fade-in" 
       onClick={onClose}
       role="dialog"
       aria-modal="true"
-      aria-labelledby={title ? "modal-title" : undefined}
     >
       <div 
-        className={`bg-brand-card-dark rounded-md shadow-2xl p-6 relative w-full ${sizeClasses[size]} border ${BORDER_CLASS} border-opacity-75 animate-modalShow ring-1 ring-black/5`}
+        className={`bg-black rounded-[32px] shadow-[0_0_100px_rgba(0,0,0,1)] relative w-full ${sizeClasses[size]} border border-white/15 flex flex-col max-h-[90vh] overflow-hidden animate-slide-up ring-1 ring-white/5`}
         onClick={e => e.stopPropagation()} 
       >
         <button
           onClick={onClose}
-          className="absolute top-3 right-3 text-neutral-400 hover:text-white hover:bg-white/10 rounded-full transition-all duration-200 text-3xl leading-none p-1 w-8 h-8 flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-brand-accent focus:ring-offset-2 focus:ring-offset-brand-card-dark"
+          className="absolute top-5 right-5 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/50 border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 hover:border-white/30 transition-all hover:rotate-90 backdrop-blur-md"
           aria-label="Close modal"
         >
-          &times;
+          <IconX className="w-5 h-5" />
         </button>
-        {title && <h2 id="modal-title" className={`text-2xl font-semibold text-white mb-4 border-b ${BORDER_CLASS} pb-3`}>{title}</h2>}
-        <div className="text-neutral-300 max-h-[80vh] overflow-y-auto pr-2 custom-scrollbar">
+
+        {title && (
+            <div className="px-8 py-6 border-b border-white/5 bg-white/[0.02] flex-shrink-0">
+                <h2 className="text-xl font-bold text-white tracking-tight">{title}</h2>
+            </div>
+        )}
+        
+        <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
           {children}
         </div>
       </div>

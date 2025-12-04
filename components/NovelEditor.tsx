@@ -21,10 +21,25 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
 }) => {
   const [showSlashMenu, setShowSlashMenu] = useState(false);
   const [slashMenuIndex, setSlashMenuIndex] = useState(0);
+  const [slashFilter, setSlashFilter] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
 
   const LINE_HEIGHT = 36; // px - Controls spacing of the lines
+
+  const allSlashCommands = [
+      { id: 'h1', label: 'Big Heading', icon: 'H1', template: '# ' },
+      { id: 'h2', label: 'Medium Heading', icon: 'H2', template: '## ' },
+      { id: 'bullet', label: 'Bullet List', icon: '•', template: '- ' },
+      { id: 'quote', label: 'Quote', icon: '“', template: '> ' },
+      { id: 'generate', label: 'Ask Co-Author', icon: <IconSparkles className="w-4 h-4" />, template: '' },
+      { id: 'image', label: 'Create Image', icon: <IconImage className="w-4 h-4" />, template: '' },
+  ];
+
+  // Filter commands based on input
+  const slashCommands = allSlashCommands.filter(c => 
+      c.label.toLowerCase().includes(slashFilter) || c.id.includes(slashFilter)
+  );
 
   // Auto-resize textarea
   useEffect(() => {
@@ -34,61 +49,35 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
     }
   }, [content]);
 
-  // Handle Slash Command Detection
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (showSlashMenu) {
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setSlashMenuIndex(prev => (prev + 1) % slashCommands.length);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setSlashMenuIndex(prev => (prev - 1 + slashCommands.length) % slashCommands.length);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            executeCommand(slashCommands[slashMenuIndex]);
-        } else if (e.key === 'Escape') {
-            setShowSlashMenu(false);
-        }
-        return;
-    }
-
-    if (e.key === '/') {
-        setShowSlashMenu(true);
-        setSlashMenuIndex(0);
-    }
-  };
-
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      onContentChange(e.target.value);
-      if (!e.target.value.includes('/')) {
-          setShowSlashMenu(false);
-      }
-  };
-
   const executeCommand = (cmd: any) => {
       const cursorPos = textareaRef.current?.selectionStart || content.length;
-      const textBefore = content.substring(0, cursorPos).replace(/\/$/, ''); // Remove the slash
+      
+      // Find start of the current command word to replace it
+      let start = cursorPos - 1;
+      while (start >= 0 && !/\s/.test(content[start])) {
+          start--;
+      }
+      start++;
+
+      const textBefore = content.substring(0, start);
       const textAfter = content.substring(cursorPos);
       
       if (cmd.id === 'generate') {
           onTriggerAI("Continue writing from here...");
+          // Remove the slash command from text
           onContentChange(textBefore + textAfter);
       } else if (cmd.id === 'image') {
-          // Context Intelligence: Grab the preceding paragraph to use as default prompt
           const lines = textBefore.trim().split('\n');
           const lastLine = lines[lines.length - 1]?.trim() || "";
-          // Provide a helpful default. If paragraph is long, truncate for display, but logic below handles full text.
           const defaultPrompt = lastLine.length > 0 ? (lastLine.length > 100 ? lastLine.substring(0, 100) + "..." : lastLine) : "Illustration of...";
           
           const imagePrompt = window.prompt("Describe the image or diagram:", defaultPrompt);
           
           if (imagePrompt) {
-              // If user kept the default (which might have '...'), try to use the full lastLine if it matches start
               let finalPrompt = imagePrompt;
               if (defaultPrompt.endsWith("...") && imagePrompt === defaultPrompt) {
                   finalPrompt = lastLine; 
               }
-              
               onTriggerImageGen(finalPrompt);
               onContentChange(textBefore + `\n![Generating Visual: ${finalPrompt.substring(0, 25)}...]()\n` + textAfter);
           } else {
@@ -99,17 +88,63 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
           onContentChange(textBefore + insertText + textAfter);
       }
       setShowSlashMenu(false);
-      textareaRef.current?.focus();
+      setSlashFilter('');
+      
+      // Re-focus
+      setTimeout(() => {
+        if(textareaRef.current) {
+            textareaRef.current.focus();
+            const newCursor = textBefore.length + cmd.template.length;
+            textareaRef.current.setSelectionRange(newCursor, newCursor);
+        }
+      }, 0);
   };
 
-  const slashCommands = [
-      { id: 'h1', label: 'Big Heading', icon: 'H1', template: '\n# ' },
-      { id: 'h2', label: 'Medium Heading', icon: 'H2', template: '\n## ' },
-      { id: 'bullet', label: 'Bullet List', icon: '•', template: '\n- ' },
-      { id: 'quote', label: 'Quote', icon: '“', template: '\n> ' },
-      { id: 'generate', label: 'Ask Co-Author', icon: <IconSparkles className="w-4 h-4" />, template: '' },
-      { id: 'image', label: 'Create Image', icon: <IconImage className="w-4 h-4" />, template: '' },
-  ];
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (showSlashMenu) {
+        if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            setSlashMenuIndex(prev => (prev + 1) % slashCommands.length);
+        } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            setSlashMenuIndex(prev => (prev - 1 + slashCommands.length) % slashCommands.length);
+        } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (slashCommands.length > 0) {
+                executeCommand(slashCommands[slashMenuIndex]);
+            }
+        } else if (e.key === 'Escape') {
+            setShowSlashMenu(false);
+        }
+    }
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      const newVal = e.target.value;
+      onContentChange(newVal);
+
+      const cursorPos = e.target.selectionStart;
+      
+      // Find the "word" before cursor
+      let start = cursorPos - 1;
+      while (start >= 0 && !/\s/.test(newVal[start])) {
+          start--;
+      }
+      start++; // The character after the space
+
+      const currentWord = newVal.substring(start, cursorPos);
+
+      // Trigger if word starts with / and is either the first char of line or preceded by space
+      // AND we aren't just typing a path like /usr/bin (simple heuristic: length < 15)
+      if (currentWord.startsWith('/') && currentWord.length < 15) {
+          const filter = currentWord.substring(1).toLowerCase();
+          setSlashFilter(filter);
+          setShowSlashMenu(true);
+          setSlashMenuIndex(0);
+      } else {
+          setShowSlashMenu(false);
+      }
+  };
 
   return (
     <div className="w-full max-w-4xl mx-auto min-h-screen p-4 md:p-8 relative font-sans">
@@ -139,20 +174,19 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
                     onChange={handleInput}
                     onKeyDown={handleKeyDown}
                     className="w-full bg-transparent resize-none border-none outline-none text-lg text-neutral-300 placeholder-neutral-700 min-h-[70vh] font-serif relative z-10 pl-12 pr-8 md:pl-16 md:pr-16"
-                    placeholder="Start writing..."
+                    placeholder="Start writing... (Type '/' for tools)"
                     spellCheck={false}
                     style={{ 
                         lineHeight: `${LINE_HEIGHT}px`,
-                        // Dark Paper (#121212) with Black Lines (#000000)
                         backgroundImage: `linear-gradient(transparent ${LINE_HEIGHT - 1}px, #000000 ${LINE_HEIGHT}px)`,
                         backgroundSize: `100% ${LINE_HEIGHT}px`,
                         backgroundAttachment: 'local',
-                        paddingTop: '6px' // Fine tune to sit on line
+                        paddingTop: '6px'
                     }}
                 />
 
                 {/* Slash Command Menu */}
-                {showSlashMenu && (
+                {showSlashMenu && slashCommands.length > 0 && (
                     <div 
                         ref={menuRef}
                         className="absolute top-20 left-16 z-50 w-64 max-w-[80vw] bg-black/90 backdrop-blur-xl border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up rounded-xl"
@@ -167,7 +201,7 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
                                 className={`w-full flex items-center gap-3 px-3 py-3 text-xs transition-colors ${idx === slashMenuIndex ? 'bg-white text-black' : 'text-neutral-300 hover:bg-white/5'}`}
                             >
                                 <div className={`w-6 h-6 flex items-center justify-center font-bold text-[10px] rounded border ${idx === slashMenuIndex ? 'border-black/20 bg-black/5' : 'border-white/10 bg-white/5'}`}>
-                                    {cmd.icon}
+                                    {typeof cmd.icon === 'string' ? cmd.icon : cmd.icon}
                                 </div>
                                 <span className="font-bold uppercase tracking-wide">{cmd.label}</span>
                             </button>

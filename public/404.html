@@ -1,18 +1,130 @@
+
 <!DOCTYPE html>
-<html>
-
+<html lang="en" class="dark">
 <head>
-    <meta charset="utf-8">
-    <title>co-writter</title>
-    <script>
-        // GitHub Pages SPA redirect script
-        // This saves the path and query from 404 page and redirects to index.html
-        sessionStorage.redirect = location.href;
-    </script>
-    <meta http-equiv="refresh" content="0;URL='/'">
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>co-writter</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        container: {
+          center: true,
+          padding: "2rem",
+          screens: {
+            "2xl": "1400px",
+          },
+        },
+        extend: {
+          colors: {
+            border: "#27272a",
+            input: "#27272a",
+            ring: "#ffffff",
+            background: "#000000",
+            foreground: "#ffffff",
+            primary: {
+              DEFAULT: "#ffffff",
+              foreground: "#000000",
+            },
+            secondary: {
+              DEFAULT: "#18181b",
+              foreground: "#ffffff",
+            },
+            muted: {
+              DEFAULT: "#18181b",
+              foreground: "#a1a1aa",
+            },
+            card: {
+              DEFAULT: "#000000",
+              foreground: "#ffffff",
+            },
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          animation: {
+            "grid-flow": "grid-flow 20s linear infinite",
+            "spin-slow": "spin 3s linear infinite",
+            "float": "float 8s ease-in-out infinite",
+            "float-subtle": "float 6s ease-in-out infinite",
+            "float-delayed": "float 12s ease-in-out infinite reverse",
+            "pulse-square": "pulse-square 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
+            "page-enter": "page-enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            "slide-down": "slide-down 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            "text-reveal": "text-reveal 1s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+            "warp-out": "warp-out 0.6s cubic-bezier(0.7, 0, 0.84, 0) forwards",
+            "slide-up-stagger": "slide-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) backwards",
+            "shine": "shine 4s linear infinite",
+          },
+          keyframes: {
+            "grid-flow": {
+              "0%": { transform: "translateY(0)" },
+              "100%": { transform: "translateY(40px)" },
+            },
+            "float": {
+              "0%, 100%": { transform: "translateY(0)" },
+              "50%": { transform: "translateY(-20px)" },
+            },
+            "pulse-square": {
+              "0%, 100%": { opacity: "1", transform: "scale(1)" },
+              "50%": { opacity: "0.5", transform: "scale(0.9)" },
+            },
+            "page-enter": {
+              "0%": { opacity: "0", transform: "translateY(20px) scale(0.98)" },
+              "100%": { opacity: "1", transform: "translateY(0) scale(1)" },
+            },
+            "slide-down": {
+              "0%": { transform: "translateY(-100%)", opacity: "0" },
+              "100%": { transform: "translateY(0)", opacity: "1" }
+            },
+            "text-reveal": {
+              "0%": { opacity: "0", transform: "translateY(10px)", filter: "blur(10px)" },
+              "100%": { opacity: "1", transform: "translateY(0)", filter: "blur(0px)" }
+            },
+            "warp-out": {
+               "0%": { opacity: "1", transform: "scale(1)", filter: "blur(0px)" },
+               "100%": { opacity: "0", transform: "scale(1.1)", filter: "blur(20px)" },
+            },
+            "slide-up": {
+               "0%": { opacity: "0", transform: "translateY(20px)" },
+               "100%": { opacity: "1", transform: "translateY(0)" },
+            },
+            "shine": {
+              "0%": { backgroundPosition: "200% center" },
+              "100%": { backgroundPosition: "-200% center" }
+            }
+          }
+        },
+      },
+    }
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
+    "react/": "https://esm.sh/react@^19.1.0/",
+    "react": "https://esm.sh/react@^19.1.0",
+    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
+    "recharts": "https://esm.sh/recharts@^3.0.0",
+    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
+    "react-pdf": "https://esm.sh/react-pdf@9.1.0?external=react,react-dom",
+    "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.4.168",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
+  }
+}
+</script>
 </head>
-
-<body>
+<body class="selection:bg-white selection:text-black">
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
 </body>
-
 </html>

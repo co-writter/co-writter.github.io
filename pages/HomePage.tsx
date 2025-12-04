@@ -86,8 +86,9 @@ const HomePage: React.FC = () => {
                  </h1>
                  
                  <p className="text-base md:text-xl text-neutral-300 max-w-2xl mb-10 leading-relaxed px-4 drop-shadow-md">
-                    The easiest way to write, read, and sell books with AI. 
-                    Powered by <span className="text-white font-mono font-bold border-b border-white/20 pb-0.5">GOOGLE</span>.
+                    The easiest way to write, read, and sell books with AI.
+                    <br className="my-2 block"/>
+                    <span className="inline-block mt-1">Powered by <span className="text-white font-mono font-bold border-b border-white/20 pb-0.5">GOOGLE</span>.</span>
                  </p>
 
                  <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">

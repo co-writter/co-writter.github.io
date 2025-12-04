@@ -1,49 +1,84 @@
 
 import React from 'react';
-import { BORDER_CLASS, APP_NAME } from '../constants';
+import { APP_NAME, IconBook } from '../constants';
 
 const TermsPage: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 sm:px-6 pt-24 pb-12 md:pb-20">
-      <div className={`max-w-3xl mx-auto bg-brand-card-dark p-8 rounded-md border ${BORDER_CLASS} shadow-xl`}>
-        <h1 className="text-3xl font-bold text-white mb-6">Terms and Conditions</h1>
+    <div className="min-h-screen w-full relative bg-transparent font-sans pt-32 pb-20">
+      
+      {/* Background Decor */}
+      <div className="fixed inset-0 z-[-1] pointer-events-none">
+          <div className="absolute bottom-[20%] left-[10%] w-[400px] h-[400px] bg-white/5 rounded-full blur-[100px]"></div>
+      </div>
+
+      <div className="container mx-auto px-6 max-w-4xl relative z-10 animate-slide-up">
         
-        <div className="text-neutral-300 space-y-6 leading-relaxed text-sm">
-             <p className="font-semibold text-white">Last updated on: {new Date().toLocaleDateString()}</p>
-
-            <p>
-                Welcome to {APP_NAME}. These terms and conditions outline the rules and regulations for the use of our Website.
+        {/* Header */}
+        <div className="text-center mb-16">
+            <div className="w-16 h-16 mx-auto bg-[#1e1e1e] rounded-2xl flex items-center justify-center border border-white/10 mb-6 shadow-lg">
+                <IconBook className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-6xl font-black text-white tracking-tighter mb-4">Terms of Service</h1>
+            <p className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
+                Effective Date: {new Date().toLocaleDateString()}
             </p>
-            <p>
-                By accessing this website we assume you accept these terms and conditions. Do not continue to use {APP_NAME} if you do not agree to take all of the terms and conditions stated on this page.
-            </p>
+        </div>
 
-            <h3 className="text-lg font-semibold text-white mt-4">1. License</h3>
-            <p>
-                Unless otherwise stated, {APP_NAME} and/or its licensors/sellers own the intellectual property rights for all material on {APP_NAME}. All intellectual property rights are reserved. You may access this from {APP_NAME} for your own personal use subjected to restrictions set in these terms and conditions.
-            </p>
-            <p>You must not:</p>
-             <ul className="list-disc list-inside ml-4 text-neutral-400">
-                <li>Republish material from {APP_NAME}</li>
-                <li>Sell, rent or sub-license material from {APP_NAME}</li>
-                <li>Reproduce, duplicate or copy material from {APP_NAME}</li>
-                <li>Redistribute content from {APP_NAME}</li>
-            </ul>
+        {/* Content Card */}
+        <div className="bg-[#0b0b0b] border border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl">
+             <div className="space-y-10 text-neutral-300 leading-relaxed">
+                
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">1. Agreement to Terms</h3>
+                    <p>
+                        By accessing <span className="text-white font-mono">co-writter.github.io</span>, you agree to be bound by these Terms of Service. If you do not agree to abide by the terms of this Agreement, you are not authorized to use or access the Website.
+                    </p>
+                </section>
 
-            <h3 className="text-lg font-semibold text-white mt-4">2. User Content</h3>
-            <p>
-                In these Website Standard Terms and Conditions, "Your Content" shall mean any audio, video text, images or other material you choose to display on this Website. By displaying Your Content, you grant {APP_NAME} a non-exclusive, worldwide irrevocable, sub licensable license to use, reproduce, adapt, publish, translate and distribute it in any and all media.
-            </p>
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">2. Intellectual Property</h3>
+                    <p>
+                        The Platform and its original content, features, and functionality are owned by {APP_NAME} and are protected by international copyright, trademark, patent, trade secret, and other intellectual property or proprietary rights laws.
+                    </p>
+                    <p className="mt-2 text-sm text-neutral-500 bg-white/5 p-4 rounded-xl border border-white/5">
+                        <strong>Note on AI Content:</strong> Content generated via our AI tools belongs to the user (you), subject to the terms of the underlying model providers (Google Gemini).
+                    </p>
+                </section>
 
-             <h3 className="text-lg font-semibold text-white mt-4">3. Limitation of Liability</h3>
-             <p>
-                In no event shall {APP_NAME}, nor any of its officers, directors and employees, be held liable for anything arising out of or in any way connected with your use of this Website whether such liability is under contract.
-             </p>
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">3. Google API Services</h3>
+                    <p>
+                        Our application integrates with Google API Services. By using these features, you acknowledge and agree to be bound by Google's Terms of Service.
+                    </p>
+                    <ul className="list-disc list-inside ml-4 mt-2 text-neutral-400">
+                        <li>We do not transfer user data to third parties for surveillance.</li>
+                        <li>We do not sell user data sourced from Google APIs.</li>
+                        <li>We do not use user data for advertising purposes.</li>
+                    </ul>
+                </section>
 
-             <h3 className="text-lg font-semibold text-white mt-4">4. Governing Law</h3>
-             <p>
-                These Terms will be governed by and interpreted in accordance with the laws of the State of [YOUR STATE], and you submit to the non-exclusive jurisdiction of the state and federal courts located in [YOUR STATE] for the resolution of any disputes.
-             </p>
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">4. User Accounts</h3>
+                    <p>
+                        When you create an account with us, you must provide information that is accurate, complete, and current at all times. Failure to do so constitutes a breach of the Terms, which may result in immediate termination of your account on our Service.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">5. Limitation of Liability</h3>
+                    <p>
+                        In no event shall {APP_NAME}, nor its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">6. Governing Law</h3>
+                    <p>
+                        These Terms shall be governed and construed in accordance with the laws of India, without regard to its conflict of law provisions.
+                    </p>
+                </section>
+
+             </div>
         </div>
       </div>
     </div>

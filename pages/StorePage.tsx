@@ -220,50 +220,54 @@ const StorePage: React.FC = () => {
 
       {selectedBook && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="" size="lg">
-            <div className="flex flex-col md:flex-row gap-6 md:gap-8">
-                <div className="w-full md:w-5/12">
+            <div className="flex flex-col md:flex-row h-full">
+                <div className="w-full md:w-5/12 bg-black/20 md:border-r border-white/5 relative group">
                     <img 
                         src={selectedBook.coverImageUrl} 
                         alt={selectedBook.title} 
-                        className="w-full h-auto aspect-[3/4] object-cover rounded-[16px] shadow-2xl border border-white/10" 
+                        className="w-full h-full object-cover min-h-[400px] md:min-h-full opacity-90 group-hover:opacity-100 transition-opacity" 
                     />
-                </div>
-                <div className="w-full md:w-7/12 flex flex-col">
-                    <div className="mb-4 md:mb-6">
-                         <div className="flex items-center gap-2 mb-2">
-                             <span className="px-2 py-1 bg-white/10 rounded-full text-[10px] font-bold uppercase tracking-wider text-neutral-300 border border-white/5">
+                    <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
+                    <div className="absolute bottom-6 left-6 right-6">
+                        <div className="inline-flex items-center gap-2 mb-3">
+                             <span className="px-2.5 py-1 bg-white/10 backdrop-blur-md rounded-full text-[10px] font-bold uppercase tracking-wider text-neutral-200 border border-white/10">
                                  {selectedBook.genre}
                              </span>
                              {selectedBook.price === 0 && (
-                                 <span className="px-2 py-1 bg-google-blue/20 text-google-blue rounded-full text-[10px] font-bold uppercase tracking-wider border border-google-blue/20">
+                                 <span className="px-2.5 py-1 bg-google-blue/20 backdrop-blur-md text-google-blue rounded-full text-[10px] font-bold uppercase tracking-wider border border-google-blue/20">
                                      Free
                                  </span>
                              )}
-                         </div>
-                        <h2 className="text-2xl md:text-3xl font-black text-white leading-tight mb-2">{selectedBook.title}</h2>
-                        <p className="text-base md:text-lg text-neutral-400">by <span className="text-white">{selectedBook.author}</span></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div className="w-full md:w-7/12 flex flex-col p-8 md:p-10 bg-black">
+                    <div className="mb-6">
+                        <h2 className="text-3xl md:text-4xl font-black text-white leading-[0.95] mb-2 tracking-tighter">{selectedBook.title}</h2>
+                        <p className="text-base md:text-lg text-neutral-400 font-medium">by <span className="text-white">{selectedBook.author}</span></p>
                     </div>
 
                     <div className="flex-grow">
-                        <h4 className="text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Synopsis</h4>
-                        <p className="text-neutral-300 text-sm leading-relaxed max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        <h4 className="text-xs font-bold text-neutral-600 uppercase tracking-widest mb-3 border-b border-white/5 pb-1 w-fit">Synopsis</h4>
+                        <p className="text-neutral-300 text-sm leading-7 max-h-60 overflow-y-auto custom-scrollbar pr-4 font-light">
                             {selectedBook.description}
                         </p>
                     </div>
                     
-                    <div className="mt-6 md:mt-8 pt-6 border-t border-white/10 flex items-center justify-between">
+                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
                         <div>
-                             <p className="text-xs text-neutral-500 uppercase font-bold">Price</p>
-                             <p className="text-2xl md:text-3xl font-black text-white tracking-tight">
-                                {selectedBook.price === 0 ? 'Free' : `₹${selectedBook.price.toFixed(2)}`}
+                             <p className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1">Price</p>
+                             <p className="text-3xl md:text-4xl font-black text-white tracking-tighter">
+                                {selectedBook.price === 0 ? 'Free' : `₹${selectedBook.price.toFixed(0)}`}
                              </p>
                         </div>
                         <button 
                             onClick={handleModalAction}
-                            className={`py-3 px-8 rounded-full font-bold transition-all duration-200 shadow-glow hover:scale-105 active:scale-95 flex items-center gap-2 text-xs uppercase tracking-widest ${
+                            className={`py-4 px-8 rounded-full font-bold transition-all duration-300 flex items-center gap-3 text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:scale-105 active:scale-95 ${
                                 selectedBook.price === 0 
-                                ? 'bg-google-blue text-black hover:bg-white' 
-                                : 'bg-white text-black hover:bg-neutral-200 shadow-glow-white'
+                                ? 'bg-google-blue text-black hover:bg-white border border-transparent' 
+                                : 'bg-white text-black hover:bg-neutral-200'
                             }`}
                         >
                             {selectedBook.price === 0 ? (

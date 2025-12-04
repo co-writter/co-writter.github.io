@@ -1,38 +1,54 @@
 
 import React from 'react';
-import { BORDER_CLASS, APP_NAME } from '../constants';
+import { APP_NAME, IconRocket } from '../constants';
 
 const ShippingPolicyPage: React.FC = () => {
   return (
-    <div className="container mx-auto px-4 sm:px-6 pt-24 pb-12 md:pb-20">
-      <div className={`max-w-3xl mx-auto bg-brand-card-dark p-8 rounded-md border ${BORDER_CLASS} shadow-xl`}>
-        <h1 className="text-3xl font-bold text-white mb-6">Shipping & Delivery Policy</h1>
+    <div className="min-h-screen w-full relative bg-transparent font-sans pt-32 pb-20">
+      <div className="container mx-auto px-6 max-w-4xl relative z-10 animate-slide-up">
         
-        <div className="text-neutral-300 space-y-6 leading-relaxed">
-            <p className="font-semibold text-white">Last updated on: {new Date().toLocaleDateString()}</p>
-            
-            <p>
-                {APP_NAME} is a digital marketplace for eBooks. As such, we do not sell or ship any physical products.
+        <div className="text-center mb-16">
+            <div className="w-16 h-16 mx-auto bg-[#1e1e1e] rounded-2xl flex items-center justify-center border border-white/10 mb-6 shadow-lg">
+                <IconRocket className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter mb-4">Shipping Policy</h1>
+            <p className="text-neutral-400 text-sm font-mono uppercase tracking-widest">
+                Instant Digital Delivery
             </p>
+        </div>
 
-            <h3 className="text-xl font-semibold text-white mt-4">1. Digital Delivery</h3>
-            <p>
-                Upon successful payment, delivery of your purchased eBook is <strong>instant</strong>. You will receive immediate access to download or read your eBook via:
-            </p>
-            <ul className="list-disc list-inside ml-4 text-neutral-400">
-                <li>Your User Dashboard under "Purchase History".</li>
-                <li>A confirmation email sent to your registered email address containing the download link.</li>
-            </ul>
+        <div className="bg-[#0b0b0b] border border-white/10 rounded-[32px] p-8 md:p-12 shadow-2xl">
+             <div className="space-y-8 text-neutral-300 leading-relaxed">
+                
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">1. Digital Delivery</h3>
+                    <p>
+                        {APP_NAME} is a digital marketplace. We do not ship physical products. Upon successful payment, delivery of your eBook is <strong>instant</strong>.
+                    </p>
+                </section>
 
-            <h3 className="text-xl font-semibold text-white mt-4">2. Shipping Costs</h3>
-            <p>
-                Since there are no physical products, there are <strong>no shipping charges</strong> applicable to any purchase on {APP_NAME}.
-            </p>
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">2. Accessing Your Order</h3>
+                    <ul className="list-disc list-inside ml-4 space-y-2 text-neutral-400">
+                        <li><strong>Dashboard:</strong> Access via "Purchase History" immediately.</li>
+                        <li><strong>Email:</strong> A download link is sent to your registered email.</li>
+                    </ul>
+                </section>
 
-            <h3 className="text-xl font-semibold text-white mt-4">3. Delivery Timeline</h3>
-            <p>
-                 Orders are processed immediately. If you do not receive access to your eBook within 5 minutes of payment, please contact our support team at [YOUR SUPPORT EMAIL].
-            </p>
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">3. Shipping Costs</h3>
+                    <p>
+                        There are <strong>zero shipping charges</strong> applicable to any purchase on {APP_NAME}.
+                    </p>
+                </section>
+
+                <section>
+                    <h3 className="text-xl font-bold text-white mb-2">4. Delays</h3>
+                    <p>
+                         If you do not receive access within 5 minutes of payment, please verify your email spam folder or contact support.
+                    </p>
+                </section>
+             </div>
         </div>
       </div>
     </div>

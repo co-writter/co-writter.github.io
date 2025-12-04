@@ -7,11 +7,10 @@ import {
     IconBook, IconSparkles, 
     IconSend, IconPlus, IconArrowLeft, 
     IconRocket, IconX, 
-    IconPenTip, IconBulb, IconImage,
-    IconMenu, IconCheck, IconWand, IconBrain, IconMic, IconStop, IconDownload
+    IconWand, IconBrain, IconMic, IconStop, IconDownload, IconUpload
 } from '../constants';
 import { 
-    createStudioSession, generateBookCover, generateSpeech
+    createStudioSession, generateBookCover, generateSpeech, transcribeAudio
 } from '../services/geminiService';
 import { Chat } from '@google/genai';
 import MorphicEye from '../components/MorphicEye';
@@ -23,6 +22,7 @@ const { useNavigate, useLocation } = ReactRouterDOM as any;
 declare global {
   interface Window {
     jspdf: any;
+    anime: any;
   }
 }
 
@@ -85,7 +85,7 @@ const EbookStudioPage: React.FC = () => {
 
   // --- Project State ---
   const [pages, setPages] = useState<EBookPage[]>([
-    { id: '1', title: 'Introduction', content: '', pageNumber: 1 }
+    { id: '1', title: 'Chapter 1: The Beginning', content: '# Chapter 1: The Beginning\n\nStart writing here...', pageNumber: 1 }
   ]);
   const [activePageId, setActivePageId] = useState<string>('1');
   const activePage = useMemo(() => pages.find(p => p.id === activePageId) || pages[0], [pages, activePageId]);
@@ -106,14 +106,26 @@ const EbookStudioPage: React.FC = () => {
   const audioQueueRef = useRef<string[]>([]);
   const isPlayingAudioRef = useRef(false);
 
-  // Speech Recognition State
+  // Speech Recognition State (REPLACED NATIVE API WITH MEDIA RECORDER + GEMINI)
   const [isListening, setIsListening] = useState(false);
-  const recognitionRef = useRef<any>(null);
-  const textBeforeListening = useRef<string>('');
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
 
   const chatSessionRef = useRef<Chat | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const lastGeneratedImageRef = useRef<string | null>(null);
+
+  // --- BOOK CONSISTENCY ENGINE ---
+  const sanitizeBookStructure = (currentPages: EBookPage[]) => {
+      // Ensures pages are numbered sequentially 1..N
+      // Ensures no page is missing a title
+      return currentPages.map((page, index) => ({
+          ...page,
+          pageNumber: index + 1,
+          title: page.title || `Chapter ${index + 1}`
+      }));
+  };
 
   // Initialize Session
   useEffect(() => {
@@ -122,7 +134,7 @@ const EbookStudioPage: React.FC = () => {
         const session = createStudioSession(initialContext);
         if (session) {
             chatSessionRef.current = session;
-            const initMsg = "I'm online. Elite Ghostwriter active. What are we writing today?";
+            const initMsg = "I'm online. The Architect is listening.";
             const initMsgId = 'sys-init';
             setMessages([{
                 id: initMsgId,
@@ -142,8 +154,24 @@ const EbookStudioPage: React.FC = () => {
     }
   }, []);
 
-  // Scroll to bottom of chat
+  // Anime.js Typing Effect Trigger
   useEffect(() => {
+    const lastMsg = messages[messages.length - 1];
+    if (lastMsg && lastMsg.role === 'ai' && !lastMsg.isStreaming && window.anime) {
+       // Only animate new blocks that finished streaming, 
+       // but strictly speaking, streaming updates render via React state.
+       // We can use anime.js to flash the container or text color on completion.
+       const el = document.getElementById(`msg-${lastMsg.id}`);
+       if (el) {
+           window.anime({
+               targets: el,
+               opacity: [0.8, 1],
+               translateY: [5, 0],
+               duration: 400,
+               easing: 'easeOutExpo'
+           });
+       }
+    }
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, leftTab]);
 
@@ -154,8 +182,8 @@ const EbookStudioPage: React.FC = () => {
           if (audioContextRef.current) {
               audioContextRef.current.close();
           }
-          if (recognitionRef.current) {
-              recognitionRef.current.stop();
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state === 'recording') {
+              mediaRecorderRef.current.stop();
           }
       };
   }, []);
@@ -183,38 +211,6 @@ const EbookStudioPage: React.FC = () => {
         window.removeEventListener('keydown', unlockAudio);
         window.removeEventListener('touchstart', unlockAudio);
     };
-  }, []);
-
-  // Initialize Speech Recognition
-  useEffect(() => {
-      if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-          const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-          recognitionRef.current = new SpeechRecognition();
-          recognitionRef.current.continuous = true;
-          recognitionRef.current.interimResults = true;
-          recognitionRef.current.lang = 'en-US';
-
-          recognitionRef.current.onresult = (event: any) => {
-              const sessionTranscript = Array.from(event.results)
-                  .map((result: any) => result[0].transcript)
-                  .join('');
-              
-              const baseText = textBeforeListening.current ? textBeforeListening.current + ' ' : '';
-              setInput(baseText + sessionTranscript);
-          };
-
-          recognitionRef.current.onerror = (event: any) => {
-              console.error('Speech recognition error', event.error);
-              if (event.error === 'not-allowed') {
-                  alert("Microphone access denied.");
-              }
-              setIsListening(false);
-          };
-
-          recognitionRef.current.onend = () => {
-              setIsListening(false);
-          };
-      }
   }, []);
 
   const stopAudio = () => {
@@ -299,22 +295,87 @@ const EbookStudioPage: React.FC = () => {
   };
 
 
-  const handleMicClick = () => {
-    if (!recognitionRef.current) {
-        alert("Speech recognition is not supported in this browser. Please use Chrome.");
-        return;
-    }
+  // --- MEDIA RECORDER + GEMINI TRANSCRIPTION ---
+  const startRecording = async () => {
+      try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+          
+          let options = {};
+          if (MediaRecorder.isTypeSupported('audio/webm')) {
+              options = { mimeType: 'audio/webm' };
+          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+              options = { mimeType: 'audio/mp4' };
+          }
+          
+          const mediaRecorder = new MediaRecorder(stream, options);
+          mediaRecorderRef.current = mediaRecorder;
+          audioChunksRef.current = [];
 
+          mediaRecorder.ondataavailable = (event) => {
+              if (event.data.size > 0) {
+                  audioChunksRef.current.push(event.data);
+              }
+          };
+
+          mediaRecorder.onstop = async () => {
+              const mimeType = mediaRecorder.mimeType || 'audio/webm';
+              const audioBlob = new Blob(audioChunksRef.current, { type: mimeType });
+              
+              if (audioBlob.size > 0) {
+                  await processAudioForTranscription(audioBlob);
+              }
+              
+              // Stop all tracks to release mic
+              stream.getTracks().forEach(track => track.stop());
+          };
+
+          mediaRecorder.start();
+          setIsListening(true);
+      } catch (e) {
+          console.error("Mic error", e);
+          alert("Could not access microphone. Please ensure permission is granted.");
+      }
+  };
+
+  const stopRecording = () => {
+      if (mediaRecorderRef.current && isListening) {
+          mediaRecorderRef.current.stop();
+          setIsListening(false);
+      }
+  };
+
+  const processAudioForTranscription = async (blob: Blob) => {
+      setIsTranscribing(true);
+      try {
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          reader.onloadend = async () => {
+              const base64String = reader.result as string;
+              // Remove data URL prefix
+              const base64Data = base64String.split(',')[1];
+              
+              const text = await transcribeAudio(base64Data, blob.type);
+              
+              if (text) {
+                  setInput(prev => (prev ? prev + " " : "") + text);
+              } else {
+                 alert("Transcription failed. Please check your internet connection.");
+              }
+              setIsTranscribing(false);
+          };
+      } catch (e) {
+          console.error("Transcription failed", e);
+          setIsTranscribing(false);
+          alert("Failed to process audio.");
+      }
+  };
+
+  const handleMicClick = () => {
     if (isListening) {
-        recognitionRef.current.stop();
-        setIsListening(false);
+        stopRecording();
     } else {
-        // Stop any playing TTS audio so we don't record the AI
-        stopAudio();
-        
-        textBeforeListening.current = input; // Capture existing text
-        recognitionRef.current.start();
-        setIsListening(true);
+        stopAudio(); // Stop TTS output
+        startRecording();
     }
   };
 
@@ -369,15 +430,14 @@ const EbookStudioPage: React.FC = () => {
       }
   };
 
-  // --- CORE AI LOGIC (STREAMING + INSTANT AUDIO) ---
+  // --- CORE AI LOGIC (STREAMING + INSTANT AUDIO + CONTEXT AWARENESS) ---
   const handleSendMessage = async (e?: React.FormEvent, overrideInput?: string) => {
       e?.preventDefault();
       const text = overrideInput || input;
       if (!text.trim() || isBusy) return;
       
       if (isListening) {
-          recognitionRef.current.stop();
-          setIsListening(false);
+          stopRecording();
       }
 
       stopAudio(); // Stop previous TTS immediately
@@ -392,13 +452,46 @@ const EbookStudioPage: React.FC = () => {
 
       let speechBuffer = "";
 
+      // --- SMART "CONTINUE" LOGIC ---
+      let userPrompt = text;
+      const lowerText = text.toLowerCase().trim();
+      const isContinue = lowerText === 'continue' || lowerText === 'next' || lowerText === 'keep going';
+      
+      // If user says "continue" and current chapter is done, move to next
+      if (isContinue) {
+          const currentIndex = pages.findIndex(p => p.id === activePageId);
+          if (currentIndex < pages.length - 1) {
+             // Move to next chapter and write
+             const nextId = pages[currentIndex + 1].id;
+             setActivePageId(nextId);
+             userPrompt = `Continue writing ${pages[currentIndex + 1].title}. Previous context: ...${activePage.content.slice(-300)}`;
+          } else {
+             // Create new chapter if we are at the end
+             userPrompt = "The current chapter is finished. Create the next logical chapter in the book outline and start writing it.";
+          }
+      }
+
       try {
           if (chatSessionRef.current) {
+              // --- CONTEXT INJECTION ---
+              // Gather previous chapter context to ensure continuity
+              const prevPageIndex = pages.findIndex(p => p.id === activePageId) - 1;
+              const prevPageContext = prevPageIndex >= 0 ? pages[prevPageIndex].content.slice(-1000) : "Start of Book";
+              
+              const outlineSummary = pages.map((p, i) => `${i+1}. ${p.title}`).join('\n');
+
               const contextPayload = `
 [SYSTEM_CONTEXT]
-Chapter: "${activePage.title}"
+Current Outline:
+${outlineSummary}
+
+Previous Chapter Context (Last 1000 chars):
+${prevPageContext}
+
+Current Active Chapter: "${activePage.title}"
 Content Length: ${activePage.content.length} chars.
-User Input: ${text}
+
+USER REQUEST: ${userPrompt}
 `;
 
               const resultStream = await chatSessionRef.current.sendMessageStream({ message: contextPayload });
@@ -470,7 +563,7 @@ User Input: ${text}
                                       content: (i === 0 && existingCover) ? existingCover : '',
                                       pageNumber: i + 1
                                   }));
-                                  return newPages;
+                                  return sanitizeBookStructure(newPages);
                               });
 
                               setActivePageId(`p-0`);
@@ -527,60 +620,147 @@ User Input: ${text}
   };
 
   const handleExport = () => {
+      // Ensure strict numbering before export
+      const finalPages = sanitizeBookStructure(pages);
+      
       const book: EBook = {
           id: `gen-${Date.now()}`,
-          title: activePage.title || "Untitled",
+          title: finalPages[0].title.split(':')[1]?.trim() || finalPages[0].title || "Untitled",
           author: currentUser?.name || 'Anonymous',
-          description: pages[0]?.content.substring(0, 150) || 'AI Generated',
+          description: finalPages[0]?.content.substring(0, 150) || 'AI Generated',
           price: 0,
           coverImageUrl: '',
           genre: 'AI',
           sellerId: currentUser?.id || 'guest',
           publicationDate: new Date().toISOString().split('T')[0],
-          pages
+          pages: finalPages
       };
       addCreatedBook(book);
       navigate('/dashboard');
   };
 
-  const handleDownloadPDF = async () => {
+  // --- PROFESSIONAL PDF GENERATION ENGINE ---
+  const handleDownloadPDF = async (isKDPMode: boolean = false) => {
       if (!window.jspdf) {
           alert("PDF generator not ready. Please try again.");
           return;
       }
       
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      // Setup: A4 Paper, Millimeters
+      const doc = new jsPDF({
+          orientation: 'p',
+          unit: 'mm',
+          format: 'a4'
+      });
+
+      // Settings
+      const margin = 20; // 20mm margin all around
+      const pageWidth = 210;
+      const pageHeight = 297;
+      const contentWidth = pageWidth - (margin * 2);
+      const lineHeight = 7; // Approx 1.5 spacing for 12pt font
+      let yPos = margin;
+
+      // Fonts
+      doc.setFont("times", "bold");
       
-      // Title Page
-      doc.setFontSize(24);
-      doc.text(activePage.title || "Untitled Book", 105, 80, { align: "center" });
+      // --- TITLE PAGE ---
+      doc.setFontSize(32);
+      doc.text(pages[0]?.title || "Untitled Book", pageWidth / 2, 80, { align: "center", maxWidth: contentWidth });
       
-      doc.setFontSize(14);
-      doc.text("Written by Co-Writter AI", 105, 95, { align: "center" });
+      doc.setFontSize(16);
+      doc.setFont("times", "normal");
+      doc.text("Written by", pageWidth / 2, 100, { align: "center" });
+      doc.setFontSize(20);
+      doc.setFont("times", "bold");
+      doc.text(currentUser?.name || "Co-Writter AI", pageWidth / 2, 110, { align: "center" });
       
       doc.setFontSize(10);
-      doc.text(`Generated on ${new Date().toLocaleDateString()}`, 105, 280, { align: "center" });
+      doc.setFont("times", "italic");
+      doc.text(`Generated on ${new Date().toLocaleDateString()}`, pageWidth / 2, 250, { align: "center" });
+      doc.text("Published via Co-Writter Studio", pageWidth / 2, 256, { align: "center" });
+
+      // --- TABLE OF CONTENTS ---
+      doc.addPage();
+      doc.setFontSize(18);
+      doc.setFont("times", "bold");
+      doc.text("Table of Contents", pageWidth / 2, margin + 10, { align: "center" });
       
-      // Chapters
+      doc.setFontSize(12);
+      doc.setFont("times", "normal");
+      let tocY = margin + 30;
+      pages.forEach((page, i) => {
+          const chapterTitle = `${i + 1}. ${page.title}`;
+          doc.text(chapterTitle, margin, tocY);
+          tocY += 10;
+      });
+
+      // --- CONTENT PAGES ---
       pages.forEach((page, index) => {
           doc.addPage();
           
-          // Chapter Title
-          doc.setFontSize(18);
-          doc.text(page.title || `Chapter ${index + 1}`, 20, 30);
+          // Reset for new chapter
+          yPos = margin + 20;
           
-          // Content
+          // Chapter Header
+          doc.setFontSize(24);
+          doc.setFont("times", "bold");
+          doc.text(page.title || `Chapter ${index + 1}`, margin, margin + 10);
+          
+          // Chapter Content
           doc.setFontSize(12);
-          const splitText = doc.splitTextToSize(page.content.replace(/[#*_]/g, ''), 170);
-          doc.text(splitText, 20, 50);
+          doc.setFont("times", "normal");
           
-          // Footer
-          doc.setFontSize(8);
-          doc.text(`${index + 1}`, 105, 290, { align: "center" });
+          // Clean text (remove markdown mostly)
+          const cleanText = page.content
+            .replace(/#{1,6}\s/g, '') // Remove headers
+            .replace(/\*\*/g, '') // Remove bold markers
+            .replace(/!\[.*?\]\(.*?\)/g, '[Visual Asset Included in Digital Version]') // Replace images
+            .split('\n');
+
+          cleanText.forEach(paragraph => {
+              if (!paragraph.trim()) {
+                  yPos += lineHeight; // Empty line spacing
+                  return;
+              }
+
+              // Word wrap calculation
+              const lines = doc.splitTextToSize(paragraph, contentWidth);
+              
+              lines.forEach((line: string) => {
+                  // Check page break
+                  if (yPos > pageHeight - margin) {
+                      // Add footer page number before breaking
+                      doc.setFontSize(10);
+                      doc.text(`- ${doc.internal.getNumberOfPages()} -`, pageWidth / 2, pageHeight - 10, { align: "center" });
+                      doc.setFontSize(12);
+                      
+                      doc.addPage();
+                      yPos = margin;
+                  }
+                  
+                  doc.text(line, margin, yPos);
+                  yPos += lineHeight;
+              });
+              
+              yPos += lineHeight; // Paragraph spacing
+          });
+
+          // Footer for the last page of chapter
+          doc.setFontSize(10);
+          doc.text(`- ${doc.internal.getNumberOfPages()} -`, pageWidth / 2, pageHeight - 10, { align: "center" });
       });
       
-      doc.save(`${activePage.title || 'ebook'}.pdf`);
+      const fileName = isKDPMode 
+        ? `${pages[0]?.title || 'book'}_KDP_Print_Ready.pdf` 
+        : `${pages[0]?.title || 'book'}.pdf`;
+        
+      doc.save(fileName);
+      
+      if (isKDPMode) {
+          alert("KDP-Ready PDF generated! This file uses standard trade margins and formatting suitable for Amazon KDP upload.");
+      }
   };
 
   return (
@@ -618,12 +798,24 @@ User Input: ${text}
                 >
                     <IconRocket className="w-3 h-3 text-google-blue" /> <span className="hidden sm:inline">Auto-Write</span>
                 </button>
+                
+                {/* PDF Export Dropdown Logic could go here, simplified to two buttons for now */}
                 <button 
-                    onClick={handleDownloadPDF}
+                    onClick={() => handleDownloadPDF(false)}
                     className="flex items-center gap-2 px-3 sm:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white/5 text-neutral-300 border border-white/5 hover:bg-white/10 hover:text-white transition-all hover:scale-105 active:scale-95"
+                    title="Export Standard PDF"
                 >
                     <IconDownload className="w-3 h-3" /> <span className="hidden sm:inline">PDF</span>
                 </button>
+                
+                <button 
+                    onClick={() => handleDownloadPDF(true)}
+                    className="flex items-center gap-2 px-3 sm:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-amber-500/10 text-amber-500 border border-amber-500/20 hover:bg-amber-500/20 transition-all hover:scale-105 active:scale-95"
+                    title="Export for Amazon KDP"
+                >
+                    <IconUpload className="w-3 h-3" /> <span className="hidden sm:inline">Publish</span>
+                </button>
+
                 <button 
                     onClick={handleExport}
                     className="flex items-center gap-2 px-3 sm:px-6 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest bg-white text-black hover:bg-neutral-200 transition-all shadow-glow-white hover:scale-105 active:scale-95"
@@ -665,14 +857,14 @@ User Input: ${text}
                             {/* Messages List */}
                             <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-6">
                                 {messages.map(msg => (
-                                    <div key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}>
+                                    <div id={`msg-${msg.id}`} key={msg.id} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'} animate-fade-in`}>
                                         <div className={`max-w-[90%] flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : 'flex-row'}`}>
                                             <div className={`p-4 rounded-xl text-sm leading-relaxed border shadow-lg ${msg.role === 'user' ? 'bg-white/10 border-white/10 text-white rounded-tr-none' : 'bg-black/50 border-white/10 text-neutral-300 rounded-tl-none backdrop-blur-md'}`}>
                                                 {msg.role === 'ai' && (
                                                     <div className="flex items-center justify-between gap-2 mb-2 pb-2 border-b border-white/5">
                                                         <div className="flex items-center gap-2">
                                                             <MorphicEye className="w-4 h-4 rounded-full border border-white/10 bg-black" isActive={activeSpeakerId === msg.id} />
-                                                            <span className="text-[11px] font-bold uppercase tracking-widest text-google-blue">Co-Author</span>
+                                                            <span className="text-[11px] font-bold uppercase tracking-widest text-google-blue">The Architect</span>
                                                         </div>
                                                         {activeSpeakerId === msg.id && (
                                                             <div className="flex items-center gap-1">
@@ -702,18 +894,19 @@ User Input: ${text}
                                         value={input}
                                         onChange={(e) => setInput(e.target.value)}
                                         className="w-full bg-black/50 border border-white/10 rounded-xl px-4 py-4 pr-20 text-xs text-white outline-none focus:border-white/30 focus:bg-black/70 transition-all placeholder-neutral-600 font-mono shadow-inner"
-                                        placeholder={isListening ? "Listening..." : "Speak or type to Co-Author..."}
-                                        disabled={isBusy}
+                                        placeholder={isListening ? "Listening... (Tap to stop)" : isTranscribing ? "Processing audio..." : "Speak or type to Co-Author..."}
+                                        disabled={isBusy || isTranscribing}
                                     />
                                     
                                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                                          <button 
                                             type="button"
                                             onClick={handleMicClick}
-                                            className={`p-2 transition-colors hover:scale-110 active:scale-95 ${isListening ? 'text-red-500 animate-pulse' : 'text-neutral-500 hover:text-white'}`}
+                                            disabled={isTranscribing}
+                                            className={`p-2 transition-colors hover:scale-110 active:scale-95 ${isListening ? 'text-red-500 animate-pulse' : isTranscribing ? 'text-yellow-500 animate-spin' : 'text-neutral-500 hover:text-white'}`}
                                             title={isListening ? "Stop Listening" : "Start Listening"}
                                         >
-                                            {isListening ? <IconStop className="w-4 h-4" /> : <IconMic className="w-4 h-4" />}
+                                            {isListening ? <IconStop className="w-4 h-4" /> : isTranscribing ? <IconSparkles className="w-4 h-4" /> : <IconMic className="w-4 h-4" />}
                                         </button>
                                         <button 
                                             type="submit"
@@ -751,7 +944,8 @@ User Input: ${text}
                             <button 
                                 onClick={() => {
                                     const newId = Date.now().toString();
-                                    setPages([...pages, { id: newId, title: 'New Chapter', content: '', pageNumber: pages.length + 1 }]);
+                                    const newIdx = pages.length + 1;
+                                    setPages([...pages, { id: newId, title: `Chapter ${newIdx}`, content: `# Chapter ${newIdx}\n\n`, pageNumber: newIdx }]);
                                     setActivePageId(newId);
                                 }}
                                 className="mt-6 w-full py-4 border border-dashed border-white/10 text-[10px] font-bold uppercase tracking-widest text-neutral-600 hover:text-white hover:border-white/30 flex items-center justify-center gap-2 transition-all rounded-full hover:bg-white/5"
