@@ -3,17 +3,12 @@
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { APP_NAME, GOOGLE_CLIENT_ID } from '../constants';
+import { APP_NAME } from '../constants';
 import { UserType, User } from '../types';
 import MorphicEye from '../components/MorphicEye';
+import { useGoogleLogin } from '@react-oauth/google';
 
 const { useNavigate, Link } = ReactRouterDOM as any;
-
-declare global {
-  interface Window {
-    google: any;
-  }
-}
 
 // Official Colored Google "G" Icon
 const GoogleIcon = () => (
@@ -49,117 +44,103 @@ const LoginPage: React.FC = () => {
     }
   }, [currentUser, userType, navigate]);
 
+  const login = useGoogleLogin({
+    onSuccess: async (tokenResponse) => {
+      try {
+        // Fetch user details using the access token
+        const userInfoRes = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+          headers: {
+            'Authorization': `Bearer ${tokenResponse.access_token}`
+          }
+        });
+        const userInfo = await userInfoRes.json();
+
+        // Construct User Object
+        const googleUser: User = {
+          id: `google_${userInfo.sub}`,
+          name: userInfo.name,
+          email: userInfo.email,
+          purchaseHistory: [],
+          wishlist: [],
+          isVerified: false,
+          profileImageUrl: userInfo.picture
+        };
+
+        // Login
+        setCurrentUser(googleUser, UserType.USER);
+        navigate('/dashboard');
+      } catch (error) {
+        console.error("Failed to fetch user info", error);
+        alert("Authentication failed during profile retrieval.");
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Google Auth Error:", error);
+      setIsLoading(false);
+    }
+  });
+
   const handleCustomGoogleLogin = () => {
     setIsLoading(true);
-    
-    if (!window.google || !window.google.accounts || !window.google.accounts.oauth2) {
-        console.error("Google Sign-In script not loaded yet.");
-        alert("System initializing... Please try again in a moment.");
-        setIsLoading(false);
-        return;
-    }
-
-    const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email',
-        callback: async (tokenResponse: any) => {
-            if (tokenResponse && tokenResponse.access_token) {
-                try {
-                    // Fetch user details using the access token
-                    const userInfoRes = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
-                        headers: {
-                            'Authorization': `Bearer ${tokenResponse.access_token}`
-                        }
-                    });
-                    const userInfo = await userInfoRes.json();
-                    
-                    // Construct User Object
-                    const googleUser: User = {
-                        id: `google_${userInfo.sub}`,
-                        name: userInfo.name,
-                        email: userInfo.email,
-                        purchaseHistory: [],
-                        wishlist: [],
-                        isVerified: false,
-                        profileImageUrl: userInfo.picture
-                    };
-
-                    // Login
-                    setCurrentUser(googleUser, UserType.USER);
-                    navigate('/dashboard');
-                } catch (error) {
-                    console.error("Failed to fetch user info", error);
-                    alert("Authentication failed during profile retrieval.");
-                } finally {
-                    setIsLoading(false);
-                }
-            } else {
-                setIsLoading(false);
-            }
-        },
-        error_callback: (err: any) => {
-            console.error("Google Auth Error:", err);
-            setIsLoading(false);
-        }
-    });
-
-    client.requestAccessToken();
+    login();
   };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative font-sans selection:bg-white/20">
-        
-        {/* Background is handled globally by App.tsx to ensure Antigravity consistency */}
 
-        <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
-            
-            {/* Morphic Eye Identity */}
-            <div className="mb-10 scale-125 animate-float-delayed">
-                 <MorphicEye className="w-24 h-24 border border-white/30 bg-black shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-full" />
-            </div>
+      {/* Background is handled globally by App.tsx to ensure Antigravity consistency */}
 
-            <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,0.8)] rounded-[32px] relative overflow-hidden transition-all duration-500 hover:border-white/20 hover:shadow-[0_0_60px_rgba(255,255,255,0.05)]">
-                
-                {/* Top Shine */}
-                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+      <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
 
-                <div className="text-center mb-10">
-                    <h1 className="text-2xl font-black tracking-tighter text-white mb-2">{APP_NAME}</h1>
-                    <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-[0.2em]">Writing Platform</p>
-                </div>
-
-                {/* Custom Antigravity Google Button */}
-                <div className="mb-6 relative group">
-                    {/* Hover Glow Background */}
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                    
-                    <button 
-                        onClick={handleCustomGoogleLogin}
-                        disabled={isLoading}
-                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        {isLoading ? (
-                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        ) : (
-                            <GoogleIcon />
-                        )}
-                        <span>Continue with Google</span>
-                    </button>
-                </div>
-
-                <div className="mt-6 pt-6 border-t border-white/5 text-center">
-                    <Link to="/" className="text-neutral-600 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">
-                        Cancel
-                    </Link>
-                </div>
-            </div>
-
-            <div className="mt-8 text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
-                <p className="text-[9px] text-neutral-500 font-mono tracking-widest">
-                    POWERED BY AI
-                </p>
-            </div>
+        {/* Morphic Eye Identity */}
+        <div className="mb-10 scale-125 animate-float-delayed">
+          <MorphicEye className="w-24 h-24 border border-white/30 bg-black shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-full" />
         </div>
+
+        <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,0.8)] rounded-[32px] relative overflow-hidden transition-all duration-500 hover:border-white/20 hover:shadow-[0_0_60px_rgba(255,255,255,0.05)]">
+
+          {/* Top Shine */}
+          <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
+
+          <div className="text-center mb-10">
+            <h1 className="text-2xl font-black tracking-tighter text-white mb-2">{APP_NAME}</h1>
+            <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-[0.2em]">Writing Platform</p>
+          </div>
+
+          {/* Custom Antigravity Google Button */}
+          <div className="mb-6 relative group">
+            {/* Hover Glow Background */}
+            <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
+
+            <button
+              onClick={handleCustomGoogleLogin}
+              disabled={isLoading}
+              className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              ) : (
+                <GoogleIcon />
+              )}
+              <span>Continue with Google</span>
+            </button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-white/5 text-center">
+            <Link to="/" className="text-neutral-600 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">
+              Cancel
+            </Link>
+          </div>
+        </div>
+
+        <div className="mt-8 text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
+          <p className="text-[9px] text-neutral-500 font-mono tracking-widest">
+            POWERED BY AI
+          </p>
+        </div>
+      </div>
     </div>
   );
 };
