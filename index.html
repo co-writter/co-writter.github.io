@@ -11,7 +11,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
   <script>
     tailwind.config = {
-Mode: 'class',
+      darkMode: 'class',
       theme: {
         container: {
           center: true,
@@ -88,16 +88,18 @@ Mode: 'class',
               "100%": { transform: "translateY(0)", opacity: "1" }
             },
             "text-reveal": {
-                       acity: "0", transform: "translateY(10px)", filter: "blur(10px)" },
-               00%": { opacity: "1", transform: "translateY(0)", filter: "blur(0px)" }
+              "0%": { opacity: "0", transform: "translateY(10px)", filter: "blur(10px)" },
+              "100%": { opacity: "1", transform: "translateY(0)", filter: "blur(0px)" }
             },
             "warp-out": {
-               0%": { opacity: "1", transform: "scale(1)", filter: "bl                          "100%": { opacity: "0", transform: "scale(1.1)", filter: "blur(20px)" },
+              "0%": { opacity: "1", transform: "scale(1)", filter: "blur(0px)" },
+              "100%": { opacity: "0", transform: "scale(1.1)", filter: "blur(20px)" },
             },
             "slide-up": {
-               "0%": { opacity: "0", transform: "translateY(20px)" },
-               "100%": { opacity: "1", transform: "translateY(0)" },           },
-            "s{
+              "0%": { opacity: "0", transform: "translateY(20px)" },
+              "100%": { opacity: "1", transform: "translateY(0)" },
+            },
+            "shine": {
               "0%": { backgroundPosition: "200% center" },
               "100%": { backgroundPosition: "-200% center" }
             }
@@ -109,22 +111,7 @@ Mode: 'class',
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
-  <script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.sh/@google/genai@^1.6.0",
-    "react/": "https://esm.sh/react@^19.1.0/",
-    "react": "https://esm.sh/react@^19.1.0",
-    "react-router-dom": "https://esm.sh/react-router-dom@^7.6.2",
-    "recharts": "https://esm.sh/recharts@^3.0.0",
-    "react-dom/": "https://esm.sh/react-dom@^19.1.0/",
-    "react-pdf": "https://esm.sh/react-pdf@9.1.0?external=react,react-dom",
-    "pdfjs-dist": "https://esm.sh/pdfjs-dist@4.4.168",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
-  }
-}
-</script>
+
   <style>
     /* Safe Area for iPhone X+ */
     body {
@@ -139,7 +126,7 @@ Mode: 'class',
       padding-top: env(safe-area-inset-top);
     }
   </style>
-
+  <link rel="stylesheet" href="/index.css">
 </head>
 
 <body class="selection:bg-white selection:text-black antialiased bg-black">
