@@ -1,9 +1,8 @@
 
-
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { IconCheck, IconSparkles, RAZORPAY_KEY_ID, APP_NAME, IconStar, IconBook, IconRocket } from '../constants';
+import { IconCheck, IconSparkles, RAZORPAY_KEY_ID, APP_NAME, IconStar, IconBook, IconRocket, IconFeather } from '../constants';
 import { UserType } from '../types';
 
 const { useNavigate } = ReactRouterDOM as any;
@@ -183,7 +182,8 @@ const PricingPage: React.FC = () => {
 
                         <div className="flex items-center gap-3 mb-4 relative z-10">
                             <div className="w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-lg">
-                                <IconSparkles className="w-5 h-5" />
+                                {/* Updated robust Feather icon usage */}
+                                <IconFeather className="w-5 h-5" />
                             </div>
                             <h3 className="text-xl font-bold text-white">Writer</h3>
                         </div>

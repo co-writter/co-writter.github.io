@@ -35,7 +35,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
 
   return (
     <div 
-      className="group relative bg-black/40 backdrop-blur-sm rounded-[20px] overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-300 cursor-pointer flex flex-col h-full hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)]"
+      className="group relative bg-black/40 backdrop-blur-sm rounded-[20px] overflow-hidden border border-white/10 hover:border-white/30 transition-all duration-500 ease-obsidian cursor-pointer flex flex-col h-full hover:-translate-y-2 hover:shadow-[0_20px_40px_-10px_rgba(0,0,0,0.5)] will-change-transform"
       onClick={handleCardClick}
     >
       {/* Image Container */}
@@ -43,12 +43,12 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
         <img 
             src={book.coverImageUrl || 'https://picsum.photos/400/600'} 
             alt={`Cover of ${book.title}`} 
-            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out opacity-90 group-hover:opacity-100"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-obsidian opacity-90 group-hover:opacity-100 will-change-transform"
             loading="lazy"
         />
         
         {/* Overlay Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity"></div>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity duration-500"></div>
 
         {/* Badges */}
         <div className="absolute top-3 left-3 flex flex-col gap-2">
@@ -79,7 +79,7 @@ const BookCard: React.FC<BookCardProps> = ({ book, onViewDetails }) => {
             
             <button 
                 onClick={handleAction}
-                className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all hover:scale-105 active:scale-95 ${
+                className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-2 transition-all duration-300 ease-obsidian hover:scale-105 active:scale-95 ${
                     isFree 
                     ? 'bg-white/10 text-white hover:bg-white hover:text-black border border-white/20' 
                     : 'bg-white text-black hover:bg-neutral-200 shadow-[0_0_15px_rgba(255,255,255,0.2)]'

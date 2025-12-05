@@ -30,7 +30,8 @@ const defaultAppContext: AppContextType = {
 const AppContext = createContext<AppContextType>(defaultAppContext);
 
 // Key for persisting app state in browser storage
-const STORAGE_KEY = 'cowritter_production_state_v1';
+// Updated to v4 to invalidate previous prototype/mock sessions and force clean Guest start for Production
+const STORAGE_KEY = 'cowritter_production_live_v4';
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   // 1. Initialize State from LocalStorage (Lazy Loading)
@@ -58,7 +59,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [allBooks, setAllBooks] = useState<EBook[]>(() => {
       try {
           const stored = localStorage.getItem(STORAGE_KEY);
-          return stored ? JSON.parse(stored).allBooks : mockEBooks;
+          // Fallback to mockEBooks only if storage is completely empty (first visit)
+          // otherwise keep the list empty or synced
+          if (!stored) return mockEBooks;
+          
+          const parsed = JSON.parse(stored);
+          return parsed.allBooks && parsed.allBooks.length > 0 ? parsed.allBooks : mockEBooks;
       } catch (e) { return mockEBooks; }
   });
 
