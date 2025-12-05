@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react';
 export default defineConfig({
   plugins: [react()],
   // IMPORTANT: Set base to './' for relative paths, essential for GitHub Pages (project site)
-  // or set it to '/repo-name/' if you prefer absolute paths.
+  // This allows the app to load assets regardless of the repo name.
   base: './', 
   build: {
     outDir: 'dist',

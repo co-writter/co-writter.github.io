@@ -169,13 +169,13 @@ const StorePage: React.FC = () => {
                 />
             </div>
 
-            {/* Filters - Grid on mobile for easier tapping */}
-            <div className="flex-1 grid grid-cols-2 md:flex md:flex-wrap md:justify-end gap-2">
+            {/* Filters - Scrollable Row on Mobile, Flex on Desktop */}
+            <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar md:flex-wrap md:justify-end pb-1 md:pb-0">
                 <CustomDropdown 
                     options={genreOptions}
                     value={selectedGenre}
                     onChange={setSelectedGenre}
-                    className="w-full md:w-auto min-w-0" 
+                    className="w-40 md:w-auto min-w-[140px] flex-shrink-0" 
                     placeholder="Genre"
                 />
                 
@@ -183,7 +183,7 @@ const StorePage: React.FC = () => {
                     options={priceOptions}
                     value={selectedPriceFilter}
                     onChange={(val) => setSelectedPriceFilter(val as any)}
-                    className="w-full md:w-auto min-w-0"
+                    className="w-40 md:w-auto min-w-[140px] flex-shrink-0"
                     placeholder="Price"
                 />
 
@@ -191,7 +191,7 @@ const StorePage: React.FC = () => {
                     options={sortOptions}
                     value={sortBy}
                     onChange={setSortBy}
-                    className="w-full col-span-2 md:w-auto min-w-0"
+                    className="w-40 md:w-auto min-w-[140px] flex-shrink-0"
                     placeholder="Sort By"
                 />
             </div>
@@ -220,12 +220,12 @@ const StorePage: React.FC = () => {
 
       {selectedBook && (
         <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="" size="lg">
-            <div className="flex flex-col md:flex-row h-full">
-                <div className="w-full md:w-5/12 bg-black/20 md:border-r border-white/5 relative group">
+            <div className="flex flex-col md:flex-row h-full max-h-[85vh] overflow-y-auto md:overflow-hidden">
+                <div className="w-full md:w-5/12 bg-black/20 md:border-r border-white/5 relative group shrink-0">
                     <img 
                         src={selectedBook.coverImageUrl} 
                         alt={selectedBook.title} 
-                        className="w-full h-full object-cover min-h-[400px] md:min-h-full opacity-90 group-hover:opacity-100 transition-opacity" 
+                        className="w-full h-full object-cover min-h-[300px] md:min-h-full opacity-90 group-hover:opacity-100 transition-opacity" 
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent opacity-60"></div>
                     <div className="absolute bottom-6 left-6 right-6">
@@ -242,20 +242,20 @@ const StorePage: React.FC = () => {
                     </div>
                 </div>
                 
-                <div className="w-full md:w-7/12 flex flex-col p-8 md:p-10 bg-black">
+                <div className="w-full md:w-7/12 flex flex-col p-6 md:p-10 bg-black">
                     <div className="mb-6">
-                        <h2 className="text-3xl md:text-4xl font-black text-white leading-[0.95] mb-2 tracking-tighter">{selectedBook.title}</h2>
+                        <h2 className="text-2xl md:text-4xl font-black text-white leading-[0.95] mb-2 tracking-tighter">{selectedBook.title}</h2>
                         <p className="text-base md:text-lg text-neutral-400 font-medium">by <span className="text-white">{selectedBook.author}</span></p>
                     </div>
 
                     <div className="flex-grow">
                         <h4 className="text-xs font-bold text-neutral-600 uppercase tracking-widest mb-3 border-b border-white/5 pb-1 w-fit">Synopsis</h4>
-                        <p className="text-neutral-300 text-sm leading-7 max-h-60 overflow-y-auto custom-scrollbar pr-4 font-light">
+                        <p className="text-neutral-300 text-sm leading-7 max-h-40 md:max-h-60 overflow-y-auto custom-scrollbar pr-4 font-light">
                             {selectedBook.description}
                         </p>
                     </div>
                     
-                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-between">
+                    <div className="mt-8 pt-8 border-t border-white/5 flex flex-col sm:flex-row gap-4 items-center justify-between">
                         <div>
                              <p className="text-[10px] text-neutral-500 uppercase font-bold tracking-widest mb-1">Price</p>
                              <p className="text-3xl md:text-4xl font-black text-white tracking-tighter">
@@ -264,7 +264,7 @@ const StorePage: React.FC = () => {
                         </div>
                         <button 
                             onClick={handleModalAction}
-                            className={`py-4 px-8 rounded-full font-bold transition-all duration-300 flex items-center gap-3 text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:scale-105 active:scale-95 ${
+                            className={`w-full sm:w-auto py-4 px-8 rounded-full font-bold transition-all duration-300 flex items-center justify-center gap-3 text-xs uppercase tracking-widest shadow-[0_0_30px_rgba(255,255,255,0.1)] hover:scale-105 active:scale-95 ${
                                 selectedBook.price === 0 
                                 ? 'bg-google-blue text-black hover:bg-white border border-transparent' 
                                 : 'bg-white text-black hover:bg-neutral-200'

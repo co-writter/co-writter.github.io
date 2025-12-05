@@ -13,20 +13,34 @@
 Co-Writter is architected as a **Single-Page Application (SPA)** that functions as a **Self-Replicating Publishing Platform**. Instead of deploying separate websites for every user, the application uses a **Universal Hosting Pattern** on GitHub Pages.
 
 ### The Core Loop
-1.  **The Engine:** The React App (`index.html` + `assets`) is hosted at the root.
-2.  **The Database:** The GitHub Repository itself acts as the database. User profiles and book catalogs are stored as **JSON files** in the `public/data/users/` directory.
-3.  **The Routing:** The app uses **HashRouting** to dynamically hydrate a generic template based on the URL hash.
+1.  **The Engine:** The React App (`index.html` + `assets`) is hosted at the root of `co-writter.github.io`.
+2.  **The Routing:** The app uses **HashRouting** (`/#/`) to handle navigation. This bypasses GitHub Pages' limitation of not supporting history mode (pushState) for single-page apps without a custom 404 handler.
+3.  **The Sub-Site Strategy:** 
+    *   To allow a user to have "their own site", we use the route `/#/site/:username`.
+    *   The `HostingPreviewPage` component reads this parameter.
+    *   It fetches the specific user's configuration and books from a central data store (simulated via LocalStorage/JSON).
+    *   It renders a *completely different theme and layout*, making it look like a standalone website.
 
 > **Example:**
 > When a visitor navigates to `https://co-writter.github.io/#/site/johndoe`:
-> 1. The SPA loads.
-> 2. It parses `:username` (johndoe).
-> 3. It fetches `https://raw.githubusercontent.com/co-writter/co-writter.github.io/main/public/data/users/johndoe.json`.
-> 4. It renders the **HostingPreviewPage** with John's specific theme, bio, and books.
+> 1. The main SPA loads.
+> 2. It detects the `/site/johndoe` route.
+> 3. It hides the main Co-Writter navbar.
+> 4. It loads John Doe's "Dark Minimal" theme and specific book list.
 
 ---
 
-## 2. Tech Stack & Dependencies
+## 2. Mobile Optimization Strategy
+
+The app has been optimized for "App-Like" behavior on mobile browsers:
+*   **Viewport Handling:** `viewport-fit=cover` and safe-area padding for notched devices.
+*   **Touch Targets:** Buttons are sized for fingers (>44px).
+*   **Studio Layout:** The Ebook Studio intelligently switches between "Chat" and "Editor" tabs on mobile, as a 3-pane layout is impossible on small screens.
+*   **Bottom Navigation:** The Dashboard uses a sticky bottom bar on mobile for easy thumb access.
+
+---
+
+## 3. Tech Stack & Dependencies
 
 **Frontend Core:**
 *   **Framework:** React 18 (via Vite)
@@ -41,113 +55,42 @@ Co-Writter is architected as a **Single-Page Application (SPA)** that functions 
     *   `gemini-2.5-flash-image` (Cover Generation)
     *   `gemini-2.5-flash-preview-tts` (Audio Synthesis)
 
-**Commerce & Infrastructure:**
-*   **Payments:** Razorpay (Client-side integration)
-*   **Hosting:** GitHub Pages (Static)
-*   **Data:** GitHub Repository API (JSON Storage)
-
 ---
 
-## 3. Directory Structure
+## 4. Deployment Instructions
 
-```text
-/
-├── public/
-│   ├── vite.svg
-│   └── data/               <-- THE "DATABASE"
-│       └── users/
-│           ├── admin.json  <-- Example Profile
-│           └── [user].json <-- User-generated Profiles
-├── src/
-│   ├── components/         <-- UI Building Blocks
-│   ├── contexts/           <-- Global State (User, Cart, AI Chat)
-│   ├── pages/
-│   │   ├── HostingPreviewPage.tsx <-- The Universal Store Template
-│   │   └── EbookStudioPage.tsx    <-- The Writing Engine
-│   ├── services/
-│   │   ├── geminiService.ts       <-- AI Logic
-│   │   └── cloudService.ts        <-- GitHub/Google API Logic
-│   ├── types.ts
-│   ├── constants.tsx
-│   ├── App.tsx
-│   └── index.tsx
-├── index.html              <-- Entry Point (Tailwind Config Injection)
-├── vite.config.ts          <-- Build Config (base: './')
-└── tsconfig.json
-```
+To deploy this to GitHub Pages:
 
----
+### Step 1: Prep
+Ensure `vite.config.ts` has `base: './'`. This is crucial for relative asset loading.
 
-## 4. Deployment Strategy (Automated)
-
-To make this "Production Ready", the **Google-Antigravity-IDE** must execute the following pipeline:
-
-### Step A: Build Configuration
-The `vite.config.ts` **MUST** have the base set to relative path `./` to ensure assets load correctly on GitHub Pages sub-directories.
-
-```typescript
-// vite.config.ts
-export default defineConfig({
-  base: './', // CRITICAL for GitHub Pages
-  build: { outDir: 'dist' }
-});
-```
-
-### Step B: Environment Variables
-Create a `.env` file (or set GitHub Secrets) with the following keys. **DO NOT** commit real keys to public repos.
-
-```env
-VITE_API_KEY=your_google_gemini_api_key
-VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
-VITE_GOOGLE_CLIENT_ID=your_google_oauth_client_id
-```
-
-### Step C: The "Push" Command
-Run the build and deploy to the `gh-pages` branch.
-
+### Step 2: Build
+Run the build command to generate the `dist` folder.
 ```bash
 npm install
 npm run build
-# Using gh-pages package
-npx gh-pages -d dist
 ```
 
----
+### Step 3: Deploy (Manual)
+1.  Initialize a git repo if not done.
+2.  Commit your code.
+3.  Push to GitHub.
+4.  **Action:** Use a GitHub Action or the `gh-pages` package to push the `dist` folder to the `gh-pages` branch.
 
-## 5. The "Write-to-Repo" Feature (Advanced)
+**Using `gh-pages` package:**
+```bash
+npm install gh-pages --save-dev
+# Add to package.json scripts: "deploy": "gh-pages -d dist"
+npm run deploy
+```
 
-For the **Seller Dashboard** to publish changes live to the internet without a backend server, the app uses the **GitHub API**.
+### Step 4: Configure GitHub
+1.  Go to your Repository Settings > Pages.
+2.  Source: Deploy from branch.
+3.  Branch: `gh-pages` / `/root`.
+4.  Save.
 
-**Implementation Logic (`cloudService.ts`):**
-
-1.  **Auth:** User authenticates via GitHub OAuth (Personal Access Token or OAuth App).
-2.  **Commit:** The app constructs a `PUT` request to `https://api.github.com/repos/co-writter/co-writter.github.io/contents/public/data/users/{username}.json`.
-3.  **Payload:**
-    ```json
-    {
-      "message": "Update site configuration for {username}",
-      "content": "BASE64_ENCODED_JSON_STRING",
-      "sha": "EXISTING_FILE_SHA_IF_UPDATE"
-    }
-    ```
-4.  **Live:** Within 60 seconds (GitHub Pages cache time), the URL `/#/site/{username}` reflects the new data.
-
----
-
-## 6. Safety & Verification
-
-*   **SanitizeBookStructure:** The `EbookStudioPage` includes a logic engine that enforces sequential chapter numbering (1, 2, 3...) and prevents empty titles before saving/exporting.
-*   **Context-Aware AI:** The `geminiService` injects the previous 1000 characters of the book context into every new prompt to ensure continuity.
-*   **Blue Tick Verification:** Logic exists in `AppContext` to verify sellers (`isVerified: true`), which adds a trusted checkmark to their profile on the storefront.
-
-## 7. Policies & Legal
-
-The application includes fully rendered policy pages required for Payment Gateway approval:
-*   `/privacy-policy` (Includes Google Core Data clauses)
-*   `/terms-and-conditions`
-*   `/shipping-policy` (Digital Goods)
-*   `/refund-policy` (No Refunds on Digital Downloads)
-*   `/contact` (Merchant details)
+Your site will be live at `https://your-username.github.io/repo-name`.
 
 ---
 
