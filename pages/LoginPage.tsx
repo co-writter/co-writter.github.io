@@ -55,8 +55,21 @@ const LoginPage: React.FC = () => {
       navigate('/dashboard');
     }
 
-    // Handle OAuth redirect without hash fragment
-    const params = new URLSearchParams(window.location.search);
+    // Handle OAuth redirect, which might be in the hash or search part of the URL
+    let params;
+    const hash = window.location.hash;
+    const search = window.location.search;
+    
+    // Google's redirect for SPA with hash routing can put the params in the hash
+    // e.g. https://.../#/login?access_token=...
+    if (hash.includes('?')) {
+        const queryString = hash.substring(hash.indexOf('?'));
+        params = new URLSearchParams(queryString);
+    } else {
+        // Fallback for standard URL query params
+        params = new URLSearchParams(search);
+    }
+    
     const accessToken = params.get('access_token');
     const error = params.get('error');
 
@@ -88,8 +101,9 @@ const LoginPage: React.FC = () => {
           alert("Authentication failed during profile retrieval from redirect.");
         } finally {
           setIsLoading(false);
-          // Clean the URL to remove OAuth parameters
-          window.history.replaceState({}, document.title, window.location.pathname);
+          // Clean the URL to remove OAuth parameters from hash or search
+          const cleanUrl = window.location.pathname + window.location.hash.split('?')[0];
+          window.history.replaceState({}, document.title, cleanUrl);
         }
       };
       processGoogleToken();
@@ -97,7 +111,8 @@ const LoginPage: React.FC = () => {
       console.error("Google Auth Error from redirect:", error);
       alert("Authentication failed: " + error);
       // Clean the URL even if there's an error
-      window.history.replaceState({}, document.title, window.location.pathname);
+      const cleanUrl = window.location.pathname + window.location.hash.split('?')[0];
+      window.history.replaceState({}, document.title, cleanUrl);
     }
   }, [currentUser, userType, navigate, setCurrentUser]);
 
