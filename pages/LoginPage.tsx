@@ -54,7 +54,52 @@ const LoginPage: React.FC = () => {
     if (currentUser && userType !== UserType.GUEST) {
       navigate('/dashboard');
     }
-  }, [currentUser, userType, navigate]);
+
+    // Handle OAuth redirect without hash fragment
+    const params = new URLSearchParams(window.location.search);
+    const accessToken = params.get('access_token');
+    const error = params.get('error');
+
+    if (accessToken) {
+      setIsLoading(true);
+      const processGoogleToken = async () => {
+        try {
+          const userInfoRes = await fetch(`https://www.googleapis.com/oauth2/v3/userinfo`, {
+            headers: {
+              'Authorization': `Bearer ${accessToken}`
+            }
+          });
+          const userInfo = await userInfoRes.json();
+
+          const googleUser: User = {
+            id: `google_${userInfo.sub}`,
+            name: userInfo.name,
+            email: userInfo.email,
+            purchaseHistory: [],
+            wishlist: [],
+            isVerified: false,
+            profileImageUrl: userInfo.picture
+          };
+
+          setCurrentUser(googleUser, UserType.USER);
+          navigate('/dashboard');
+        } catch (err) {
+          console.error("Failed to fetch user info from redirect", err);
+          alert("Authentication failed during profile retrieval from redirect.");
+        } finally {
+          setIsLoading(false);
+          // Clean the URL to remove OAuth parameters
+          window.history.replaceState({}, document.title, window.location.pathname);
+        }
+      };
+      processGoogleToken();
+    } else if (error) {
+      console.error("Google Auth Error from redirect:", error);
+      alert("Authentication failed: " + error);
+      // Clean the URL even if there's an error
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, [currentUser, userType, navigate, setCurrentUser]);
 
   const handleCustomGoogleLogin = () => {
     setIsLoading(true);
