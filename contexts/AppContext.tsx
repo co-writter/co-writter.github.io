@@ -26,10 +26,7 @@ const defaultAppContext: AppContextType = {
   handleEmailLogin: async () => ({ success: false }),
   upgradeToSeller: () => {},
   verifyUser: () => {},
-  // API Key Modal
-  showApiKeyModal: false,
-  openApiKeyModal: () => {},
-  closeApiKeyModal: () => {},
+  // API Key Modal - No longer managed here
 };
 
 const AppContext = createContext<AppContextType>(defaultAppContext);
@@ -72,7 +69,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const theme = 'dark';
   const [geminiChat, setGeminiChat] = useState<Chat | null>(null);
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
 
   // --- PERSISTENCE ---
   useEffect(() => {
@@ -80,16 +76,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(stateToSave));
   }, [currentUser, userType, cart, allBooks]);
 
-  // --- API KEY MODAL LOGIC ---
-  useEffect(() => {
-    const key = localStorage.getItem('gemini_api_key');
-    if (!key) {
-      setShowApiKeyModal(true);
-    }
-  }, []);
-
-  const openApiKeyModal = useCallback(() => setShowApiKeyModal(true), []);
-  const closeApiKeyModal = useCallback(() => setShowApiKeyModal(false), []);
+  // API Key Modal logic is removed.
 
   // --- CONTEXT FUNCTIONS (MEMOIZED) ---
 
@@ -116,14 +103,19 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     if (!geminiChat) {
       try {
         console.log("Initializing Gemini Chat from AppContext...");
-        const chatInstance = await initializeGeminiChat();
+        // Use the API key from environment variables
+        const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+        if (!geminiApiKey) {
+          throw new Error("Gemini API key is not set in environment variables.");
+        }
+        const chatInstance = await initializeGeminiChat(geminiApiKey);
         setGeminiChat(chatInstance);
       } catch (error) {
         console.error("Failed to initialize chat, likely due to missing/invalid API key.", error);
-        openApiKeyModal();
+        // openApiKeyModal(); // Removed as modal is no longer used
       }
     }
-  }, [geminiChat, openApiKeyModal]);
+  }, [geminiChat]);
 
   const toggleChatbot = useCallback(() => {
     setIsChatbotOpen(prev => {
@@ -236,7 +228,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
   }, [currentUser]);
 
-  const contextValue = { currentUser, userType, setCurrentUser, cart, addToCart, removeFromCart, clearCart, theme, geminiChat, initializeChat, isChatbotOpen, toggleChatbot, updateSellerCreatorSite, allBooks, addCreatedBook, updateEBook, handleGoogleLogin, handleEmailLogin, upgradeToSeller, verifyUser, showApiKeyModal, openApiKeyModal, closeApiKeyModal };
+  const contextValue = { currentUser, userType, setCurrentUser, cart, addToCart, removeFromCart, clearCart, theme, geminiChat, initializeChat, isChatbotOpen, toggleChatbot, updateSellerCreatorSite, allBooks, addCreatedBook, updateEBook, handleGoogleLogin, handleEmailLogin, upgradeToSeller, verifyUser };
 
   return (
     <AppContext.Provider value={contextValue}>

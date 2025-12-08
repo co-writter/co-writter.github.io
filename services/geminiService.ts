@@ -50,9 +50,9 @@ export const analyzePdfContent = async (pdfBase64: string): Promise<{title?: str
     } catch (e) { console.error("PDF Analysis failed", e); return null; }
 };
 
-export const createStudioSession = (initialContext: string): Chat | null => {
+export const createStudioSession = (initialContext: string, apiKey: string): Chat | null => {
     try {
-        const ai = getGenAIClient();
+        const ai = new GoogleGenAI({ apiKey: apiKey });
         return ai.chats.create({ model: GEMINI_TEXT_MODEL, config: { systemInstruction: `IDENTITY: You are The Architect... CONTEXT: ${initialContext}`, tools: [{ functionDeclarations: [writeContentTool, proposeBlueprintTool, generateImageTool] }] } });
     } catch (e) { console.error("Failed to create studio session", e); return null; }
 };
@@ -83,8 +83,8 @@ export const generateBookCover = async (prompt: string, style: string = 'Cinemat
   } catch (error) { return { error: "Service unavailable." }; }
 };
 
-export const initializeGeminiChat = async (): Promise<Chat | null> => {
-    return createStudioSession("Global Chat Context");
+export const initializeGeminiChat = async (apiKey: string): Promise<Chat | null> => {
+    return createStudioSession("Global Chat Context", apiKey);
 };
 
 export const generateSpeech = async (text: string, voiceName: string = 'Kore'): Promise<string | null> => {

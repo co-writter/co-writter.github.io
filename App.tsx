@@ -60,24 +60,13 @@ const AnimatedRoutes = () => {
 };
 
 import { useAppContext } from './contexts/AppContext';
-import ApiKeyModal from './components/ApiKeyModal';
 
 const App: React.FC = () => {
-  const { showApiKeyModal, closeApiKeyModal } = useAppContext();
-
-  const handleApiKeySaved = () => {
-    closeApiKeyModal();
-    // Force a reload to ensure all services are re-initialized with the new key.
-    window.location.reload();
-  };
 
   return (
     <AppProvider>
       <HashRouter>
-        {/* The API Key Modal is now controlled by the AppContext */}
-        <ApiKeyModalWrapper />
-
-        <div className={`flex flex-col min-h-screen bg-black font-sans text-foreground overflow-x-hidden relative ${showApiKeyModal ? 'blur-sm' : ''}`}>
+        <div className="flex flex-col min-h-screen bg-black font-sans text-foreground overflow-x-hidden relative">
           
           {/* === GLOBAL ANTIGRAVITY THEME BACKGROUND === */}
           <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
@@ -102,17 +91,5 @@ const App: React.FC = () => {
     </AppProvider>
   );
 };
-
-// A helper component to use the context within the provider's scope
-const ApiKeyModalWrapper: React.FC = () => {
-  const { showApiKeyModal, closeApiKeyModal } = useAppContext();
-  
-  const handleApiKeySaved = () => {
-    closeApiKeyModal();
-    window.location.reload();
-  };
-
-  return showApiKeyModal ? <ApiKeyModal onSave={handleApiKeySaved} /> : null;
-}
 
 export default App;
