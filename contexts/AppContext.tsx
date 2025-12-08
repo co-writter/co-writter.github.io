@@ -23,6 +23,7 @@ const defaultAppContext: AppContextType = {
   addCreatedBook: () => {},
   updateEBook: () => {}, 
   handleGoogleLogin: () => {},
+  handleEmailLogin: async () => ({ success: false }),
   upgradeToSeller: () => {},
   verifyUser: () => {},
 };
@@ -30,7 +31,6 @@ const defaultAppContext: AppContextType = {
 const AppContext = createContext<AppContextType>(defaultAppContext);
 
 // Key for persisting app state in browser storage
-// Updated to v4 to invalidate previous prototype/mock sessions and force clean Guest start for Production
 const STORAGE_KEY = 'cowritter_production_live_v4';
 
 export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -180,6 +180,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // --- AUTH METHODS ---
+
   const handleGoogleLogin = (credentialResponse: any) => {
     try {
         const token = credentialResponse.credential;
@@ -226,6 +228,54 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  // ADDED: Email Login for Admin/Owner and Paid Writers
+  const handleEmailLogin = async (inputEmail: string, inputPass: string): Promise<{success: boolean, message?: string}> => {
+      
+      const email = inputEmail.trim();
+      const password = inputPass.trim();
+
+      // 1. Secure Admin Login (Using Environment Variables with Fallback)
+      // Ideally, define VITE_ADMIN_USER and VITE_ADMIN_PASS in your .env file
+      let adminUser = 'opendev-labs';
+      let adminPass = 'co-pass-access';
+      
+      // Use try-catch for environment variable access to prevent crash in certain environments
+      try {
+          if (typeof import.meta !== 'undefined' && import.meta.env) {
+              adminUser = import.meta.env.VITE_ADMIN_USER || adminUser;
+              adminPass = import.meta.env.VITE_ADMIN_PASS || adminPass;
+          }
+      } catch (e) {
+          console.warn("Could not access env vars, using defaults.");
+      }
+
+      if (email === adminUser && password === adminPass) {
+          const adminProfile = mockUsers['seller_opendev'];
+          if (adminProfile) {
+              setCurrentUser(adminProfile as Seller, UserType.SELLER);
+              return { success: true };
+          } else {
+              return { success: false, message: "Admin profile configuration missing." };
+          }
+      }
+
+      // 2. Check for other paid writers in Mock DB
+      const foundUserEntry = Object.values(mockUsers).find(user => user.email === email);
+      
+      if (foundUserEntry) {
+          if ('uploadedBooks' in foundUserEntry) {
+               // In a real app, you would hash and verify the password here.
+               // For this demo, we assume the password matches if the email exists as a seller.
+               setCurrentUser(foundUserEntry as Seller, UserType.SELLER);
+               return { success: true };
+          } else {
+              return { success: false, message: "This email is not registered as a Writer account." };
+          }
+      }
+
+      return { success: false, message: "Invalid credentials." };
+  };
+
   const upgradeToSeller = () => {
     if (currentUser && userType === UserType.USER) {
         const user = currentUser as User;
@@ -266,7 +316,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   };
 
   return (
-    <AppContext.Provider value={{ currentUser, userType, setCurrentUser, cart, addToCart, removeFromCart, clearCart, theme, geminiChat, initializeChat, isChatbotOpen, toggleChatbot, updateSellerCreatorSite, allBooks, addCreatedBook, updateEBook, handleGoogleLogin, upgradeToSeller, verifyUser }}>
+    <AppContext.Provider value={{ currentUser, userType, setCurrentUser, cart, addToCart, removeFromCart, clearCart, theme, geminiChat, initializeChat, isChatbotOpen, toggleChatbot, updateSellerCreatorSite, allBooks, addCreatedBook, updateEBook, handleGoogleLogin, handleEmailLogin, upgradeToSeller, verifyUser }}>
       {children}
     </AppContext.Provider>
   );

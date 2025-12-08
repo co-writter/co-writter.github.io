@@ -47,19 +47,6 @@ export const mockEBooks: EBook[] = [
   }
 ];
 
-export const mockUser: User = {
-  id: 'user_admin',
-  name: 'Admin User',
-  username: '@admin',
-  email: 'admin@cowritter.com',
-  purchaseHistory: [mockEBooks[0]], 
-  wishlist: [],
-  isVerified: true,
-  profileImageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
-  coverImageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200',
-  bio: "System Administrator and First Node."
-};
-
 const defaultCreatorSiteConfig: CreatorSiteConfig = {
   isEnabled: true,
   slug: 'admin',
@@ -70,6 +57,7 @@ const defaultCreatorSiteConfig: CreatorSiteConfig = {
   showcasedBookIds: ['manual-01'], 
 };
 
+// Standard Admin/Seller
 export const mockSeller: Seller = {
   id: 'seller_admin',
   name: 'Co-Writter Official',
@@ -84,9 +72,44 @@ export const mockSeller: Seller = {
   bio: "The official account for Co-Writter updates and documentation."
 };
 
+// ROOT OWNER ADMIN
+export const mockOwner: Seller = {
+    id: 'seller_opendev',
+    name: 'OpenDev Labs',
+    username: '@opendev',
+    email: 'opendev-labs', // Login Identifier
+    payoutEmail: 'opendev-labs@gmail.com',
+    uploadedBooks: [],
+    creatorSite: {
+        isEnabled: true,
+        slug: 'opendev',
+        theme: 'tech-vibrant',
+        displayName: 'OpenDev Labs',
+        tagline: 'System Architecture',
+        showcasedBookIds: []
+    },
+    isVerified: true,
+    isAdmin: true, // Key Flag
+    bio: "Platform Administrator"
+};
+
+export const mockUser: User = {
+  id: 'user_admin',
+  name: 'Admin User',
+  username: '@admin',
+  email: 'admin@cowritter.com',
+  purchaseHistory: [mockEBooks[0]], 
+  wishlist: [],
+  isVerified: true,
+  profileImageUrl: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?auto=format&fit=crop&q=80&w=200',
+  coverImageUrl: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1200',
+  bio: "System Administrator and First Node."
+};
+
 export const mockUsers: Record<string, User | Seller> = {
   'user_admin': mockUser,
   'seller_admin': mockSeller,
+  'seller_opendev': mockOwner, // Admin Login
   'guest': { id: 'guest', name: 'Guest', email: ''} as User, 
 };
 

@@ -59,6 +59,7 @@ export interface Seller {
   uploadedBooks: EBook[];
   creatorSite?: CreatorSiteConfig;
   isVerified?: boolean; // Added for Blue Tick
+  isAdmin?: boolean; // ADDED: For the Owner (subatomicerror@gmail.com)
   // Social Profile Fields
   username?: string;
   profileImageUrl?: string;
@@ -100,6 +101,7 @@ export interface AppContextType {
   addCreatedBook: (book: EBook) => void; // For AI eBook creation
   updateEBook: (book: EBook) => void; // Added for editing eBooks
   handleGoogleLogin: (credentialResponse: any) => void; // Added for Google Login
+  handleEmailLogin: (email: string, password: string) => Promise<{success: boolean, message?: string}>; // ADDED: Email Login
   upgradeToSeller: () => void; // Upgrade User to Seller
   verifyUser: () => void; // Added for Blue Tick Verification
 }

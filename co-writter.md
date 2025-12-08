@@ -1,97 +1,151 @@
+# Co-Writter: The AI Publishing Platform
 
-# Co-Writter: Production Blueprint (v2.0)
+## 🚀 Deployment Guide
 
-**Project Name:** Co-Writter
-**Codename:** Antigravity Engine
-**Repository:** `co-writter/co-writter.github.io`
-**Live URL:** `https://co-writter.github.io`
+**Target URL:** `https://co-writter.github.io/`
+**Repository:** `https://github.com/co-writter/co-writter.github.io.git`
 
----
+Follow these steps to set up the project locally, verify it works, and then deploy it to GitHub Pages using a Personal Access Token (PAT).
 
-## 1. Executive Architecture: "The Universal Engine"
+### Prerequisites
+1.  **Node.js** installed on your computer.
+2.  **Git** installed on your computer.
+3.  The project folder unzipped (downloaded from Google AI Studio).
 
-Co-Writter is architected as a **Single-Page Application (SPA)** that functions as a **Self-Replicating Publishing Platform**. Instead of deploying separate websites for every user, the application uses a **Universal Hosting Pattern** on GitHub Pages.
+### Step 1: Local Setup & Verification
 
-### The Core Loop
-1.  **The Engine:** The React App (`index.html` + `assets`) is hosted at the root of `co-writter.github.io`.
-2.  **The Routing:** The app uses **HashRouting** (`/#/`) to handle navigation. This bypasses GitHub Pages' limitation of not supporting history mode (pushState) for single-page apps without a custom 404 handler.
-3.  **The Sub-Site Strategy:** 
-    *   To allow a user to have "their own site", we use the route `/#/site/:username`.
-    *   The `HostingPreviewPage` component reads this parameter.
-    *   It fetches the specific user's configuration and books from a central data store (simulated via LocalStorage/JSON).
-    *   It renders a *completely different theme and layout*, making it look like a standalone website.
+Before deploying, ensure the app runs correctly on your machine.
 
-> **Example:**
-> When a visitor navigates to `https://co-writter.github.io/#/site/johndoe`:
-> 1. The main SPA loads.
-> 2. It detects the `/site/johndoe` route.
-> 3. It hides the main Co-Writter navbar.
-> 4. It loads John Doe's "Dark Minimal" theme and specific book list.
+1.  **Open Terminal**: Open your command prompt or terminal inside the unzipped project folder.
+2.  **Install Dependencies**:
+    ```bash
+    npm install
+    ```
+3.  **Run Development Server**:
+    ```bash
+    npm run dev
+    ```
+4.  **Verify**: Open your browser and go to the URL shown (usually `http://localhost:5173/` or `http://localhost:3000/`).
+    *   If the app loads and functions correctly, proceed to deployment.
+    *   Press `Ctrl + C` in the terminal to stop the server.
 
----
+### Step 2: GitHub Configuration
+1.  Log into GitHub as **co-writter** (or your username).
+2.  Create a **New Repository**.
+3.  Repository name: **`co-writter.github.io`** (Must be exact for root domain hosting).
+4.  Set visibility to **Public**.
+5.  **Do not** initialize with README/gitignore. Create the repository.
 
-## 2. Mobile Optimization Strategy
+### Step 3: Generate Access Token (PAT)
+*If you haven't already:*
+1.  Go to **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
+2.  Generate new token.
+3.  Scopes: Check **`repo`** (Full control) and **`workflow`**.
+4.  **Copy the token** (e.g., `ghp_...`).
 
-The app has been optimized for "App-Like" behavior on mobile browsers:
-*   **Viewport Handling:** `viewport-fit=cover` and safe-area padding for notched devices.
-*   **Touch Targets:** Buttons are sized for fingers (>44px).
-*   **Studio Layout:** The Ebook Studio intelligently switches between "Chat" and "Editor" tabs on mobile, as a 3-pane layout is impossible on small screens.
-*   **Bottom Navigation:** The Dashboard uses a sticky bottom bar on mobile for easy thumb access.
+### Step 4: Deploy to GitHub
+Back in your terminal inside the project folder:
 
----
+1.  **Initialize Git:**
+    ```bash
+    git init
+    ```
 
-## 3. Tech Stack & Dependencies
+2.  **Set Remote with Token:**
+    *Replace `YOUR_TOKEN_HERE` with your actual token.*
+    ```bash
+    git remote add origin https://YOUR_TOKEN_HERE@github.com/co-writter/co-writter.github.io.git
+    ```
 
-**Frontend Core:**
-*   **Framework:** React 18 (via Vite)
-*   **Language:** TypeScript
-*   **Styling:** Tailwind CSS (CDN/Configured), Anime.js (Animations)
-*   **Routing:** React Router DOM v6 (HashRouter)
+3.  **Install Deployer:**
+    ```bash
+    npm install gh-pages --save-dev
+    ```
 
-**AI & Neural Engine:**
-*   **SDK:** `@google/genai` (v1.6.0+)
-*   **Models:** 
-    *   `gemini-2.5-flash` (Reasoning, Writing, Logic)
-    *   `gemini-2.5-flash-image` (Cover Generation)
-    *   `gemini-2.5-flash-preview-tts` (Audio Synthesis)
+4.  **Build the Application:**
+    ```bash
+    npm run build
+    ```
+    *This creates a `dist` folder with the production code.*
 
----
+5.  **Deploy to GitHub Pages:**
+    ```bash
+    npx gh-pages -d dist
+    ```
+    *This pushes the `dist` folder to a `gh-pages` branch on your repo.*
 
-## 4. Deployment Instructions
+6.  **Push Source Code (Optional but Recommended):**
+    ```bash
+    git add .
+    git commit -m "Initial upload"
+    git branch -M main
+    git push -u origin main
+    ```
 
-To deploy this to GitHub Pages:
-
-### Step 1: Prep
-Ensure `vite.config.ts` has `base: './'`. This is crucial for relative asset loading.
-
-### Step 2: Build
-Run the build command to generate the `dist` folder.
-```bash
-npm install
-npm run build
-```
-
-### Step 3: Deploy (Manual)
-1.  Initialize a git repo if not done.
-2.  Commit your code.
-3.  Push to GitHub.
-4.  **Action:** Use a GitHub Action or the `gh-pages` package to push the `dist` folder to the `gh-pages` branch.
-
-**Using `gh-pages` package:**
-```bash
-npm install gh-pages --save-dev
-# Add to package.json scripts: "deploy": "gh-pages -d dist"
-npm run deploy
-```
-
-### Step 4: Configure GitHub
-1.  Go to your Repository Settings > Pages.
-2.  Source: Deploy from branch.
-3.  Branch: `gh-pages` / `/root`.
-4.  Save.
-
-Your site will be live at `https://your-username.github.io/repo-name`.
+### Step 5: Verify Live Site
+1.  Go to your GitHub Repository > **Settings** > **Pages**.
+2.  Ensure **Source** is set to `Deploy from a branch`.
+3.  Branch: **`gh-pages`** | Folder: **`/ (root)`**.
+4.  Visit **[https://co-writter.github.io/](https://co-writter.github.io/)**.
+    *(Allow 1-2 minutes for the first load)*.
 
 ---
 
-**Ready for Launch Sequence.**
+## 🏗 Architecture & Technology
+
+**Co-Writter** is designed as a **Serverless Single Page Application (SPA)**. It leverages the client's browser for processing and connects directly to AI APIs, removing the need for a traditional backend database for the core demo.
+
+### Tech Stack
+*   **Frontend Framework**: React 18
+*   **Language**: TypeScript (Strict typing for robustness)
+*   **Build Tool**: Vite (High-performance bundling)
+*   **Styling**: Tailwind CSS + Custom Animations (Anime.js)
+*   **AI Engine**: Google Gemini API (`gemini-2.5-flash` for text, `gemini-2.5-flash-image` for visuals)
+*   **Routing**: React Router DOM (HashRouter for static hosting compatibility)
+*   **PDF Engine**: React-PDF + JSPDF
+
+### Data Flow
+1.  **User Session**: Stored in `localStorage` (Persists Cart, User Profile, Created Books).
+2.  **AI Operations**: Direct API calls from client to Google Gemini.
+3.  **File Handling**: Browser-based FileReader for PDF parsing; Base64 encoding for image generation.
+
+---
+
+## 🎨 UI/UX Component Breakdown
+
+### 1. Home Page (`/`)
+*   **Hero Section**: Anti-gravity floating elements with deep space gradients.
+*   **Features Grid**: Glassmorphic cards with hover-lift effects.
+*   **Tech Showcase**: Animated icons representing the modern stack.
+
+### 2. Ebook Studio (`/ebook-studio`)
+*   **Split Interface**:
+    *   **Left (Tools)**: Chatbot for brainstorming and Chapter Outline navigator.
+    *   **Right (Editor)**: Infinite canvas editor with "Slash Command" (`/`) support for inserting headers, quotes, or triggering AI generation.
+*   **AI Integration**: Highlight text to refine, or ask the Co-Author to write the next page.
+*   **Visuals**: Generate illustrations directly into the manuscript.
+
+### 3. The Store (`/store`)
+*   **Book Cards**: 3D-tilt reactive cards displaying cover art, price, and genre.
+*   **Filtering**: Real-time search and category filtering without page reloads.
+*   **Modal Preview**: Immersive book details view with backdrop blur.
+
+### 4. Reader Interface (`/read/:id`)
+*   **Adaptive Theme**: Switch between Light, Dark, and Sepia modes.
+*   **Typography Control**: Adjust font size and font family (Serif/Sans/Mono).
+*   **Dual Mode**:
+    *   **PDF Mode**: Renders uploaded PDFs with page navigation.
+    *   **Live Mode**: Renders Markdown content generated by the AI Studio.
+
+### 5. Dashboard (`/dashboard`)
+*   **Writer View**:
+    *   **Live Audience**: Simulated real-time visitor tracking with location and status.
+    *   **Analytics**: Area charts visualizing revenue trends.
+    *   **Site Config**: Deploy your own sub-site to GitHub Pages.
+*   **Reader View**:
+    *   **Library**: Grid view of purchased/downloaded books.
+    *   **Profile**: Manage user details and upgrade path.
+
+### 6. Hosting Preview (`/site/:username`)
+*   **Simulated Browser**: A meta-component that wraps the content in a fake browser window to preview how a user's deployed site looks.
+*   **Theme Engine**: Applies the user's selected theme (Minimal/Elegant/Tech) dynamically to the page body.

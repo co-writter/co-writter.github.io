@@ -1,9 +1,8 @@
 
-
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { APP_NAME, GOOGLE_CLIENT_ID } from '../constants';
+import { APP_NAME, GOOGLE_CLIENT_ID, IconRocket, IconUser } from '../constants';
 import { UserType, User } from '../types';
 import MorphicEye from '../components/MorphicEye';
 
@@ -38,9 +37,17 @@ const GoogleIcon = () => (
 );
 
 const LoginPage: React.FC = () => {
-  const { currentUser, userType, setCurrentUser } = useAppContext();
+  const { currentUser, userType, setCurrentUser, handleEmailLogin } = useAppContext();
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Login Mode: 'social' or 'email'
+  const [loginMode, setLoginMode] = useState<'social' | 'email'>('social');
+  
+  // Email Form State
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
 
   // If already logged in, redirect to dashboard
   React.useEffect(() => {
@@ -106,6 +113,26 @@ const LoginPage: React.FC = () => {
     client.requestAccessToken();
   };
 
+  const onEmailSubmit = async (e: React.FormEvent) => {
+      e.preventDefault();
+      setErrorMsg('');
+      setIsLoading(true);
+      
+      try {
+          const result = await handleEmailLogin(email.trim(), password.trim());
+          if (result.success) {
+              navigate('/dashboard');
+          } else {
+              setErrorMsg(result.message || "Login failed.");
+          }
+      } catch (err) {
+          console.error("Login Error:", err);
+          setErrorMsg("System error. Check console for details.");
+      } finally {
+          setIsLoading(false);
+      }
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 relative font-sans selection:bg-white/20">
         
@@ -123,29 +150,97 @@ const LoginPage: React.FC = () => {
                 {/* Top Shine */}
                 <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
 
-                <div className="text-center mb-10">
+                <div className="text-center mb-8">
                     <h1 className="text-2xl font-black tracking-tighter text-white mb-2">{APP_NAME}</h1>
                     <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-[0.2em]">Writing Platform</p>
                 </div>
 
-                {/* Custom Antigravity Google Button */}
-                <div className="mb-6 relative group">
-                    {/* Hover Glow Background */}
-                    <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
-                    
+                {/* --- TOGGLE TABS --- */}
+                <div className="flex bg-white/5 p-1 rounded-full mb-8 border border-white/5">
                     <button 
-                        onClick={handleCustomGoogleLogin}
-                        disabled={isLoading}
-                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                        onClick={() => setLoginMode('social')}
+                        className={`flex-1 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${loginMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
                     >
-                        {isLoading ? (
-                             <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                        ) : (
-                            <GoogleIcon />
-                        )}
-                        <span>Continue with Google</span>
+                        Reader
+                    </button>
+                    <button 
+                        onClick={() => setLoginMode('email')}
+                        className={`flex-1 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${loginMode === 'email' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+                    >
+                        Admin / Writer
                     </button>
                 </div>
+
+                {/* --- GOOGLE LOGIN (Social Mode) --- */}
+                {loginMode === 'social' && (
+                    <div className="animate-fade-in">
+                        <div className="mb-6 relative group">
+                            {/* Hover Glow Background */}
+                            <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
+                            
+                            <button 
+                                onClick={handleCustomGoogleLogin}
+                                disabled={isLoading}
+                                className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                {isLoading ? (
+                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                ) : (
+                                    <GoogleIcon />
+                                )}
+                                <span>Continue with Google</span>
+                            </button>
+                        </div>
+                        <p className="text-center text-[10px] text-neutral-500 px-4 leading-relaxed">
+                            By continuing, you agree to our Terms of Service and confirm you have read our Privacy Policy.
+                        </p>
+                    </div>
+                )}
+
+                {/* --- EMAIL LOGIN (Admin/Writer Mode) --- */}
+                {loginMode === 'email' && (
+                    <form onSubmit={onEmailSubmit} className="animate-fade-in space-y-4">
+                        <div>
+                            {/* Changed type="text" to support username-only logins (e.g. 'opendev-labs') */}
+                            <input 
+                                type="text" 
+                                placeholder="Email or Username" 
+                                value={email}
+                                onChange={e => setEmail(e.target.value)}
+                                className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40 placeholder-neutral-600 transition-colors"
+                                required
+                            />
+                        </div>
+                        <div>
+                            <input 
+                                type="password" 
+                                placeholder="Password" 
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40 placeholder-neutral-600 transition-colors"
+                                required
+                            />
+                        </div>
+
+                        {errorMsg && (
+                            <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded-lg border border-red-500/20 text-center">
+                                {errorMsg}
+                            </div>
+                        )}
+
+                        <button 
+                            type="submit"
+                            disabled={isLoading}
+                            className="w-full py-4 rounded-full bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                        >
+                            {isLoading ? 'Authenticating...' : 'Access Dashboard'}
+                        </button>
+                        
+                        <div className="text-center pt-2">
+                             <p className="text-[10px] text-neutral-600">Restricted access for Owners & Paid Writers.</p>
+                        </div>
+                    </form>
+                )}
 
                 <div className="mt-6 pt-6 border-t border-white/5 text-center">
                     <Link to="/" className="text-neutral-600 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">

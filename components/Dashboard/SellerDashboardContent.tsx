@@ -8,10 +8,11 @@ import {
     IconSettings, IconBook, IconSparkles, 
     IconEdit, IconWallet, IconCheck, IconRocket, 
     IconActivity, IconPlus, IconCloudUpload, IconGithub, IconLink,
-    IconUser, IconEye, IconClock, IconGlobe, IconPenTip
+    IconUser, IconEye, IconClock, IconGlobe, IconPenTip, IconDashboard
 } from '../../constants'; 
 import * as ReactRouterDOM from 'react-router-dom';
 import { saveUserDataToGitHub } from '../../services/cloudService';
+import { mockUsers } from '../../services/mockData';
 
 const { Link, useNavigate } = ReactRouterDOM as any;
 
@@ -27,7 +28,7 @@ const mockVisitors = [
 export const SellerDashboardContent: React.FC = () => {
   const { currentUser, updateSellerCreatorSite, addCreatedBook, verifyUser, setCurrentUser, userType } = useAppContext();
   const seller = currentUser as Seller; 
-  const [activeTab, setActiveTab] = useState<'overview' | 'studio' | 'audience' | 'settings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'studio' | 'audience' | 'settings' | 'admin'>('overview');
   const navigate = useNavigate();
   const [isDeploying, setIsDeploying] = useState(false);
   const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
@@ -110,6 +111,9 @@ export const SellerDashboardContent: React.FC = () => {
     </button>
   );
 
+  // OWNER CHECK
+  const isOwner = seller.isAdmin === true || seller.email === 'subatomicerror@gmail.com';
+
   return (
     <div className="h-screen w-full bg-[#0b0b0b] font-sans text-white pt-16 flex overflow-hidden">
         
@@ -123,6 +127,14 @@ export const SellerDashboardContent: React.FC = () => {
                 <SidebarItem id="studio" label="Upload & Manage" icon={IconCloudUpload} />
                 <div className="my-4 border-t border-white/5 mx-6"></div>
                 <SidebarItem id="settings" label="Site Settings" icon={IconSettings} />
+                
+                {/* Admin Only Tab */}
+                {isOwner && (
+                    <>
+                        <div className="my-4 border-t border-white/5 mx-6"></div>
+                        <SidebarItem id="admin" label="System Admin" icon={IconDashboard} />
+                    </>
+                )}
             </nav>
 
             <div className="p-6 border-t border-white/5">
@@ -145,7 +157,9 @@ export const SellerDashboardContent: React.FC = () => {
                             {seller.name}
                             {seller.isVerified && <IconCheck className="w-3 h-3 text-[#34a853]" />}
                         </p>
-                        <p className="text-xs text-neutral-500 truncate">Writer Account</p>
+                        <p className="text-xs text-neutral-500 truncate">
+                            {isOwner ? 'System Owner' : 'Writer Account'}
+                        </p>
                     </div>
                  </div>
             </div>
@@ -158,10 +172,11 @@ export const SellerDashboardContent: React.FC = () => {
                  {/* Header */}
                  <div className="mb-8 flex justify-between items-center">
                     <h1 className="text-xl md:text-2xl font-normal text-white">
-                        {activeTab === 'overview' && 'Dashboard Overview'}
+                        {activeTab === 'overview' && (isOwner ? 'Global Overview' : 'Dashboard Overview')}
                         {activeTab === 'audience' && 'Live Audience'}
                         {activeTab === 'studio' && 'Content Manager'}
                         {activeTab === 'settings' && 'Site Configuration'}
+                        {activeTab === 'admin' && 'System Administration'}
                     </h1>
                     {activeTab === 'overview' && (
                         <button 
@@ -179,9 +194,9 @@ export const SellerDashboardContent: React.FC = () => {
                         {/* Stats Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {[
-                                { label: "Revenue", value: "₹24,500", icon: IconWallet, color: "text-[#81c995]" },
-                                { label: "Total Readers", value: "1,240", icon: IconActivity, color: "text-[#a8c7fa]" },
-                                { label: "Active Books", value: myUploadedBooks.length.toString(), icon: IconBook, color: "text-[#fdd663]" }
+                                { label: "Revenue", value: isOwner ? "₹1,240,500" : "₹24,500", icon: IconWallet, color: "text-[#81c995]" },
+                                { label: "Total Visitors", value: isOwner ? "84,320" : "1,240", icon: IconActivity, color: "text-[#a8c7fa]" },
+                                { label: isOwner ? "Total Books" : "Active Books", value: isOwner ? "342" : myUploadedBooks.length.toString(), icon: IconBook, color: "text-[#fdd663]" }
                             ].map((stat, i) => (
                                 <div key={i} className="bg-[#1e1e1e] p-6 rounded-3xl border border-white/5">
                                     <div className="flex items-start justify-between mb-4">
@@ -198,36 +213,38 @@ export const SellerDashboardContent: React.FC = () => {
 
                         {/* Chart Area */}
                         <div className="bg-[#1e1e1e] rounded-3xl p-8 border border-white/5 h-[300px] md:h-[400px]">
-                            <AnalyticsChart className="w-full h-full" />
+                            <AnalyticsChart className="w-full h-full" title={isOwner ? "Platform Revenue" : "Revenue Trend"} />
                         </div>
 
                         {/* Recent Books List */}
-                        <div className="bg-[#1e1e1e] rounded-3xl overflow-hidden border border-white/5">
-                            <div className="px-6 md:px-8 py-6 border-b border-white/5 flex justify-between items-center">
-                                <h3 className="text-lg font-medium">Recent Uploads</h3>
-                                <button onClick={() => setActiveTab('studio')} className="text-sm text-[#81c995] font-bold hover:underline">View All</button>
-                            </div>
-                            <div className="divide-y divide-white/5">
-                                {myUploadedBooks.slice(0, 5).map(book => (
-                                    <div key={book.id} className="px-6 md:px-8 py-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
-                                        <div className="flex items-center gap-4">
-                                            <img src={book.coverImageUrl} className="w-10 h-14 object-cover rounded bg-black" alt="" />
-                                            <div>
-                                                <p className="font-bold text-sm text-white group-hover:text-[#a8c7fa] transition-colors line-clamp-1">{book.title}</p>
-                                                <p className="text-xs text-neutral-500">₹{book.price}</p>
+                        {!isOwner && (
+                            <div className="bg-[#1e1e1e] rounded-3xl overflow-hidden border border-white/5">
+                                <div className="px-6 md:px-8 py-6 border-b border-white/5 flex justify-between items-center">
+                                    <h3 className="text-lg font-medium">Recent Uploads</h3>
+                                    <button onClick={() => setActiveTab('studio')} className="text-sm text-[#81c995] font-bold hover:underline">View All</button>
+                                </div>
+                                <div className="divide-y divide-white/5">
+                                    {myUploadedBooks.slice(0, 5).map(book => (
+                                        <div key={book.id} className="px-6 md:px-8 py-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
+                                            <div className="flex items-center gap-4">
+                                                <img src={book.coverImageUrl} className="w-10 h-14 object-cover rounded bg-black" alt="" />
+                                                <div>
+                                                    <p className="font-bold text-sm text-white group-hover:text-[#a8c7fa] transition-colors line-clamp-1">{book.title}</p>
+                                                    <p className="text-xs text-neutral-500">₹{book.price}</p>
+                                                </div>
+                                            </div>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-xs text-neutral-500 hidden sm:block">{new Date(book.publicationDate).toLocaleDateString()}</span>
+                                                <button onClick={() => navigate(`/edit-ebook/${book.id}`)} className="p-2 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white">
+                                                    <IconEdit className="w-4 h-4" />
+                                                </button>
                                             </div>
                                         </div>
-                                        <div className="flex items-center gap-4">
-                                            <span className="text-xs text-neutral-500 hidden sm:block">{new Date(book.publicationDate).toLocaleDateString()}</span>
-                                            <button onClick={() => navigate(`/edit-ebook/${book.id}`)} className="p-2 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white">
-                                                <IconEdit className="w-4 h-4" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
-                                {myUploadedBooks.length === 0 && <p className="p-8 text-center text-neutral-500 text-sm">No books uploaded yet.</p>}
+                                    ))}
+                                    {myUploadedBooks.length === 0 && <p className="p-8 text-center text-neutral-500 text-sm">No books uploaded yet.</p>}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
                 )}
                 
@@ -373,6 +390,53 @@ export const SellerDashboardContent: React.FC = () => {
                         </div>
                     </div>
                 )}
+
+                {/* --- ADMIN TAB (Owner Only) --- */}
+                {activeTab === 'admin' && isOwner && (
+                    <div className="animate-fade-in space-y-6">
+                        <div className="bg-[#1e1e1e] border border-white/5 rounded-3xl p-8">
+                            <h2 className="text-xl font-bold text-white mb-6">Registered Users</h2>
+                            <div className="overflow-x-auto">
+                                <table className="w-full text-left border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-white/10 text-neutral-500 text-xs uppercase tracking-widest">
+                                            <th className="py-4 px-2 font-bold">User</th>
+                                            <th className="py-4 px-2 font-bold">Email</th>
+                                            <th className="py-4 px-2 font-bold">Role</th>
+                                            <th className="py-4 px-2 font-bold text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="text-sm">
+                                        {Object.values(mockUsers).filter(u => u.id !== 'guest').map((user) => (
+                                            <tr key={user.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                                <td className="py-4 px-2 font-medium text-white flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs">
+                                                        {user.profileImageUrl ? <img src={user.profileImageUrl} alt="" className="w-full h-full rounded-full"/> : user.name[0]}
+                                                    </div>
+                                                    {user.name}
+                                                </td>
+                                                <td className="py-4 px-2 text-neutral-400">{user.email}</td>
+                                                <td className="py-4 px-2">
+                                                    <span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${
+                                                        (user as Seller).isAdmin ? 'bg-purple-900/30 text-purple-400 border border-purple-500/20' : 
+                                                        'uploadedBooks' in user ? 'bg-blue-900/30 text-blue-400 border border-blue-500/20' : 
+                                                        'bg-white/5 text-neutral-500'
+                                                    }`}>
+                                                        {(user as Seller).isAdmin ? 'Admin' : 'uploadedBooks' in user ? 'Writer' : 'Reader'}
+                                                    </span>
+                                                </td>
+                                                <td className="py-4 px-2 text-right">
+                                                    <button className="text-xs text-neutral-500 hover:text-white underline">Manage</button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
             </div>
         </main>
 
@@ -382,6 +446,7 @@ export const SellerDashboardContent: React.FC = () => {
             <MobileNavItem id="audience" label="Visitors" icon={IconUser} />
             <MobileNavItem id="studio" label="Content" icon={IconCloudUpload} />
             <MobileNavItem id="settings" label="Config" icon={IconSettings} />
+            {isOwner && <MobileNavItem id="admin" label="Admin" icon={IconDashboard} />}
         </div>
     </div>
   );

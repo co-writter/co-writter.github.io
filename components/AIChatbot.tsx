@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { 
-    IconChevronDown, IconSend
+    IconChevronDown, IconSend, IconPlus, IconMic
 } from '../../constants';
 import * as ReactRouterDOM from 'react-router-dom';
 import { GenerateContentResponse } from '@google/genai';
@@ -23,6 +24,7 @@ const AIChatbot: React.FC = () => {
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const location = useLocation();
 
   useEffect(() => {
@@ -35,19 +37,28 @@ const AIChatbot: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isChatbotOpen]);
 
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = Math.min(textareaRef.current.scrollHeight, 120) + 'px';
+    }
+  }, [userInput]);
+
   // Hide global chatbot on Studio page to avoid UI overlap with Studio Agent
   if (location.pathname === '/ebook-studio') {
       return null;
   }
 
-  const handleSendMessage = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSendMessage = async (e?: React.FormEvent) => {
+    e?.preventDefault();
     if (!userInput.trim() || !geminiChat || isAiProcessing) return;
     
     const userMsg: ChatMessage = { id: Date.now().toString(), role: 'user', text: userInput };
     setMessages(prev => [...prev, userMsg]);
     const currentInput = userInput;
     setUserInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto'; // Reset height
     setIsAiProcessing(true);
 
     const aiMsgId = (Date.now() + 1).toString();
@@ -72,6 +83,13 @@ const AIChatbot: React.FC = () => {
     } finally {
         setIsAiProcessing(false);
     }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          handleSendMessage();
+      }
   };
 
   if (!isChatbotOpen) return null;
@@ -124,18 +142,47 @@ const AIChatbot: React.FC = () => {
                 <div ref={messagesEndRef} />
              </div>
 
-             <form onSubmit={handleSendMessage} className="p-4 bg-white/5 border-t border-white/5 flex gap-2">
-                <input 
-                    className="flex-grow bg-black/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-google-blue/50 transition-colors placeholder-neutral-600"
-                    placeholder="Ask anything..."
-                    value={userInput}
-                    onChange={e => setUserInput(e.target.value)}
-                    disabled={isAiProcessing}
-                />
-                <button type="submit" disabled={!userInput.trim() || isAiProcessing} className="p-3 bg-white text-black rounded-xl hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
-                    <IconSend className="w-4 h-4" />
-                </button>
-             </form>
+             {/* Google Style Input Area */}
+             <div className="p-4 bg-gradient-to-t from-[#09090b] via-[#09090b] to-transparent">
+                <div className="w-full bg-[#1e1e1e] border border-white/10 rounded-[28px] p-2 pl-4 flex items-end gap-2 shadow-lg transition-all focus-within:bg-[#252525] focus-within:border-white/20">
+                    
+                    {/* Attachment Icon (Visual Only) */}
+                    <button className="w-8 h-8 mb-1 rounded-full bg-white/5 flex items-center justify-center text-neutral-400 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0">
+                        <IconPlus className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex-grow py-2">
+                        <textarea 
+                            ref={textareaRef}
+                            className="w-full bg-transparent text-white text-sm placeholder-neutral-500 resize-none focus:outline-none max-h-32 custom-scrollbar"
+                            placeholder="Ask anything..."
+                            rows={1}
+                            value={userInput}
+                            onKeyDown={handleKeyDown}
+                            onChange={e => setUserInput(e.target.value)}
+                            disabled={isAiProcessing}
+                            style={{ minHeight: '24px' }}
+                        />
+                    </div>
+
+                    {userInput.trim() ? (
+                        <button 
+                            onClick={(e) => handleSendMessage(e)}
+                            disabled={isAiProcessing} 
+                            className="w-10 h-10 mb-0.5 rounded-full bg-white text-black flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50 disabled:scale-100 flex-shrink-0"
+                        >
+                            <IconSend className="w-4 h-4" />
+                        </button>
+                    ) : (
+                        <div className="w-10 h-10 mb-0.5 rounded-full flex items-center justify-center text-neutral-500 flex-shrink-0">
+                            <IconMic className="w-5 h-5" />
+                        </div>
+                    )}
+                </div>
+                <div className="text-center mt-2">
+                     <p className="text-[9px] text-neutral-600">AI can make mistakes. Check important info.</p>
+                </div>
+             </div>
         </div>
     </div>
   );
