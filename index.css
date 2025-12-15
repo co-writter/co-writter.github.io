@@ -1,0 +1,16 @@
+/* Co-Writter - Minimal CSS */
+/* The application primarily uses Tailwind CSS via CDN */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  overflow-x: hidden;
+}
