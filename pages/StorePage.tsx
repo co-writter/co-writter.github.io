@@ -2,7 +2,7 @@
 import React, { useState, useMemo } from 'react';
 import BookCard from '../components/BookCard';
 import { EBook } from '../types';
-import { IconSparkles, IconShoppingCart, IconSearch, IconBook, IconStar } from '../constants';
+import { IconShoppingCart, IconSearch, IconBook, IconStar } from '../constants';
 import Modal from '../components/Modal'; 
 import CustomDropdown, { DropdownOption } from '../components/CustomDropdown';
 import { useAppContext } from '../contexts/AppContext';
@@ -134,42 +134,44 @@ const StorePage: React.FC = () => {
         </div>
       )}
 
-      {/* Floating Filter Bar - Mobile Optimized */}
+      {/* Floating Filter Bar - Refactored for Mobile Stability */}
       <div className="sticky top-20 z-30 mx-auto w-full mb-8 transition-all duration-300">
-        <div className="bg-black/90 backdrop-blur-xl border border-white/10 shadow-xl rounded-[24px] p-2 md:p-3 flex flex-col md:flex-row gap-2 md:gap-3">
+        <div className="bg-black/90 backdrop-blur-xl border border-white/10 shadow-xl rounded-[24px] p-2 md:p-3 flex flex-col md:flex-row gap-2 md:gap-3 items-stretch">
             
-            <div className="relative group w-full md:w-64 md:flex-shrink-0">
-                <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-white" />
+            {/* Search Input - Expanded */}
+            <div className="relative group w-full flex-grow">
+                <IconSearch className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-white transition-colors" />
                 <input 
                     type="text"
-                    placeholder="Search books..."
-                    className="w-full bg-white/5 border border-transparent focus:border-white/10 rounded-full py-3 pl-10 pr-4 text-white placeholder-neutral-500 focus:outline-none focus:bg-white/10 transition-all text-sm font-bold"
+                    placeholder="Search books, authors..."
+                    className="w-full h-full bg-white/5 border border-transparent focus:border-white/10 rounded-full py-3 pl-10 pr-4 text-white placeholder-neutral-500 focus:outline-none focus:bg-white/10 transition-all text-sm font-bold min-h-[48px]"
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                 />
             </div>
 
-            {/* Horizontal Scroll for Filters on Mobile */}
-            <div className="flex-1 flex overflow-x-auto gap-2 no-scrollbar pb-1 md:pb-0 items-center">
+            {/* Filters - Grid on Mobile (No clipping), Flex on Desktop */}
+            <div className="grid grid-cols-2 md:flex gap-2 w-full md:w-auto">
                 <CustomDropdown 
                     options={genreOptions}
                     value={selectedGenre}
                     onChange={setSelectedGenre}
-                    className="min-w-[140px] flex-shrink-0" 
-                    placeholder="Genre"
+                    className="w-full md:w-auto md:min-w-[160px]" 
+                    placeholder="Genres"
                 />
                 <CustomDropdown 
                     options={priceOptions}
                     value={selectedPriceFilter}
                     onChange={(val) => setSelectedPriceFilter(val as any)}
-                    className="min-w-[140px] flex-shrink-0"
+                    className="w-full md:w-auto md:min-w-[130px]"
                     placeholder="Price"
                 />
+                {/* Span full width on odd mobile grid row */}
                 <CustomDropdown 
                     options={sortOptions}
                     value={sortBy}
                     onChange={setSortBy}
-                    className="min-w-[140px] flex-shrink-0"
+                    className="col-span-2 md:col-span-1 w-full md:w-auto md:min-w-[150px]"
                     placeholder="Sort By"
                 />
             </div>

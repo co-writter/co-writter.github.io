@@ -1,5 +1,6 @@
 
-import React, { ReactNode } from 'react';
+import React, { ReactNode, useLayoutEffect, useRef } from 'react';
+import ReactDOM from 'react-dom';
 import { IconX } from '../constants';
 
 interface ModalProps {
@@ -11,6 +12,16 @@ interface ModalProps {
 }
 
 const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 'md' }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  // Reset scroll position when modal opens
+  // Using useLayoutEffect to ensure it happens before paint
+  useLayoutEffect(() => {
+    if (isOpen && contentRef.current) {
+        contentRef.current.scrollTop = 0;
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   const sizeClasses = {
@@ -21,7 +32,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
     full: 'max-w-[95vw] h-[95vh]'
   };
 
-  return (
+  // Use Portal to render modal at document body level
+  // This bypasses parent transforms (like animate-page-enter) that break fixed positioning
+  return ReactDOM.createPortal(
     <div 
       className="fixed inset-0 bg-black/90 backdrop-blur-xl flex items-center justify-center z-[100] p-4 transition-opacity duration-300 ease-in-out animate-fade-in" 
       onClick={onClose}
@@ -46,11 +59,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, title, children, size = 
             </div>
         )}
         
-        <div className="p-0 overflow-y-auto custom-scrollbar flex-1">
+        <div ref={contentRef} className="p-0 overflow-y-auto custom-scrollbar flex-1">
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

@@ -41,6 +41,8 @@ const Navbar: React.FC = () => {
       { label: 'Plans', path: '/pricing', icon: <IconBook className="w-5 h-5"/> },
   ];
 
+  const isHomePage = location.pathname === '/';
+
   return (
     <>
     {/* Fixed Header with consistent Glassmorphism style - Fixed to Viewport */}
@@ -71,10 +73,26 @@ const Navbar: React.FC = () => {
             {/* Right Actions */}
             <div className="flex items-center gap-4 z-50">
                 
-                {/* Cart */}
+                {/* 
+                    Dynamic Action Icon Logic:
+                    1. Mobile Home: Show Store Icon (to guide user to store).
+                    2. Desktop Home: Show Cart Icon (Store is already in center nav).
+                    3. Other Pages: Show Cart Icon.
+                */}
+                
+                {isHomePage && (
+                    <Link 
+                        to="/store" 
+                        className="relative w-10 h-10 flex md:hidden items-center justify-center text-neutral-400 hover:text-white transition-all hover:scale-110 active:scale-95 duration-200 ease-obsidian flex-shrink-0 overflow-visible group"
+                        aria-label="Go to Store"
+                    >
+                        <IconStore className="w-5 h-5 group-hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] transition-all" />
+                    </Link>
+                )}
+
                 <Link 
                     to="/checkout" 
-                    className="relative w-10 h-10 flex items-center justify-center text-neutral-400 hover:text-white transition-all hover:scale-110 active:scale-95 duration-200 ease-obsidian flex-shrink-0 overflow-visible group"
+                    className={`relative w-10 h-10 items-center justify-center text-neutral-400 hover:text-white transition-all hover:scale-110 active:scale-95 duration-200 ease-obsidian flex-shrink-0 overflow-visible group ${isHomePage ? 'hidden md:flex' : 'flex'}`}
                     aria-label="View Cart"
                 >
                     <IconShoppingCart className="w-5 h-5 group-hover:drop-shadow-[0_0_5px_rgba(255,255,255,0.5)] transition-all" />

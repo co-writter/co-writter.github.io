@@ -124,7 +124,7 @@ export const SellerDashboardContent: React.FC = () => {
             <nav className="flex-1 space-y-1 pr-4 mt-6">
                 <SidebarItem id="overview" label="Overview" icon={IconActivity} />
                 <SidebarItem id="audience" label="Audience" icon={IconUser} />
-                <SidebarItem id="studio" label="Upload & Manage" icon={IconCloudUpload} />
+                <SidebarItem id="studio" label="Content Manager" icon={IconCloudUpload} />
                 <div className="my-4 border-t border-white/5 mx-6"></div>
                 <SidebarItem id="settings" label="Site Settings" icon={IconSettings} />
                 
@@ -316,8 +316,68 @@ export const SellerDashboardContent: React.FC = () => {
 
                 {/* --- STUDIO TAB --- */}
                 {activeTab === 'studio' && (
-                    <div className="animate-fade-in max-w-4xl mx-auto">
-                        <BookUploadForm onBookUploaded={handleBookUploaded} />
+                    <div className="animate-fade-in max-w-5xl mx-auto space-y-12">
+                        
+                        {/* 1. Manuscript Manager Section */}
+                        <div className="bg-[#1e1e1e] border border-white/5 rounded-3xl overflow-hidden">
+                            <div className="p-8 border-b border-white/5 bg-white/[0.02]">
+                                <h2 className="text-xl font-bold text-white mb-1">Your Manuscripts</h2>
+                                <p className="text-sm text-neutral-500">Edit content, update pricing, or manage visual assets.</p>
+                            </div>
+                            
+                            <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
+                                {myUploadedBooks.length > 0 ? (
+                                    myUploadedBooks.map(book => (
+                                        <div key={book.id} className="p-6 flex flex-col sm:flex-row items-center gap-6 hover:bg-white/[0.02] transition-colors group">
+                                            <img 
+                                                src={book.coverImageUrl} 
+                                                alt={book.title} 
+                                                className="w-16 h-24 object-cover rounded-lg shadow-lg bg-[#0b0b0b] border border-white/10"
+                                            />
+                                            <div className="flex-1 text-center sm:text-left">
+                                                <h3 className="font-bold text-white text-lg mb-1 group-hover:text-blue-400 transition-colors">{book.title}</h3>
+                                                <div className="flex items-center justify-center sm:justify-start gap-3 text-xs text-neutral-500 mb-2">
+                                                    <span className="uppercase tracking-wider font-bold">{book.genre}</span>
+                                                    <span>•</span>
+                                                    <span className="font-mono">₹{book.price}</span>
+                                                </div>
+                                                <p className="text-xs text-neutral-600 line-clamp-1 max-w-md">{book.description}</p>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <button 
+                                                    onClick={() => navigate(`/read/${book.id}`)}
+                                                    className="p-3 rounded-full border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 transition-all"
+                                                    title="Read Preview"
+                                                >
+                                                    <IconEye className="w-5 h-5" />
+                                                </button>
+                                                <button 
+                                                    onClick={() => navigate(`/edit-ebook/${book.id}`)}
+                                                    className="px-6 py-3 rounded-full bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"
+                                                >
+                                                    <IconEdit className="w-4 h-4" /> Edit
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-12 text-center text-neutral-500">
+                                        <IconBook className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                                        <p>You haven't uploaded any books yet.</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* 2. Upload New Section */}
+                        <div>
+                            <div className="mb-6 flex items-center gap-4">
+                                <div className="h-px flex-1 bg-white/10"></div>
+                                <span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Create New</span>
+                                <div className="h-px flex-1 bg-white/10"></div>
+                            </div>
+                            <BookUploadForm onBookUploaded={handleBookUploaded} />
+                        </div>
                     </div>
                 )}
 
@@ -346,7 +406,7 @@ export const SellerDashboardContent: React.FC = () => {
                                 <div>
                                     <label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Username (Slug)</label>
                                     <div className="flex">
-                                        <span className="bg-[#151515] border border-r-0 border-white/10 text-neutral-500 px-3 py-3 text-sm rounded-l-lg hidden sm:block">co-writter.github.io/</span>
+                                        <span className="bg-[#151515] border border-r-0 border-white/10 text-neutral-500 px-3 py-3 text-sm rounded-l-lg hidden sm:block">ebook-engine.github.io/</span>
                                         <input name="slug" value={creatorSiteForm.slug} onChange={handleCreatorSiteFormChange} className="flex-1 bg-[#0b0b0b] border border-white/10 rounded-lg sm:rounded-l-none p-3 text-sm focus:outline-none focus:border-white/30 text-white" />
                                     </div>
                                 </div>

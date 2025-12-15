@@ -5,6 +5,12 @@ import { APP_NAME, ENGINE_NAME } from '../constants';
 
 const { Link, useLocation } = ReactRouterDOM as any;
 
+declare global {
+  interface Window {
+    anime: any;
+  }
+}
+
 const Footer: React.FC = () => {
   const location = useLocation();
   const waveRef = useRef<SVGSVGElement>(null);

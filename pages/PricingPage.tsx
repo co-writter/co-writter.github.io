@@ -48,7 +48,7 @@ const PricingPage: React.FC = () => {
 
         setIsProcessing(true);
 
-        const amount = billingCycle === 'monthly' ? 499 : 4999;
+        const amount = billingCycle === 'monthly' ? 444 : 4444;
         
         const options = {
             key: RAZORPAY_KEY_ID,
@@ -189,7 +189,7 @@ const PricingPage: React.FC = () => {
                         </div>
                         
                         <div className="mb-6 relative z-10">
-                            <span className="text-4xl font-black text-white">₹{billingCycle === 'monthly' ? '499' : '4,999'}</span>
+                            <span className="text-4xl font-black text-white">₹{billingCycle === 'monthly' ? '444' : '4,444'}</span>
                             <span className="text-neutral-500 ml-2">/ {billingCycle === 'monthly' ? 'mo' : 'yr'}</span>
                         </div>
 

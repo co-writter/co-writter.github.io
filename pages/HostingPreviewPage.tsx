@@ -87,7 +87,7 @@ const HostingPreviewPage: React.FC = () => {
       return (
           <div className="min-h-screen flex flex-col items-center justify-center bg-black text-white font-mono">
               <div className="w-16 h-16 border-4 border-white/20 border-t-white rounded-full animate-spin mb-4"></div>
-              <p className="uppercase tracking-widest text-xs">Resolving host: co-writter.github.io...</p>
+              <p className="uppercase tracking-widest text-xs">Resolving host: ebook-engine.github.io...</p>
           </div>
       );
   }
@@ -116,7 +116,7 @@ const HostingPreviewPage: React.FC = () => {
              </div>
              <div className="flex-1 bg-[#000] rounded px-3 py-0.5 flex items-center gap-2">
                  <IconGithub className="w-3 h-3 text-neutral-500"/>
-                 <span>https://co-writter.github.io/{siteConfig.slug}</span>
+                 <span>https://ebook-engine.github.io/{siteConfig.slug}</span>
              </div>
         </div>
 
@@ -199,7 +199,7 @@ const HostingPreviewPage: React.FC = () => {
             {/* Footer */}
             <footer className={`mt-32 pt-10 border-t text-center ${isLight ? 'border-neutral-200 text-neutral-400' : 'border-white/10 text-neutral-600'}`}>
                 <p className="text-xs font-mono">
-                    &copy; {new Date().getFullYear()} {siteConfig.displayName}. Hosted via Co-Writter.
+                    &copy; {new Date().getFullYear()} {siteConfig.displayName}. Hosted via Ebook-Engine.
                 </p>
             </footer>
         </div>

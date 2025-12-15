@@ -2,7 +2,7 @@
 import React from 'react'; // Required for JSX
 
 export const APP_NAME = "co-writter";
-export const ENGINE_NAME = "Google Gemini";
+export const ENGINE_NAME = "Co-Author";
 export const ACCENT_COLOR_CLASS = "brand-accent"; // Matches Tailwind config
 export const BG_DARK_CLASS = "brand-bg-dark";
 export const CARD_DARK_CLASS = "brand-card-dark";
@@ -187,6 +187,17 @@ export const IconMenu = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <line x1="4" y1="8" x2="20" y2="8"></line>
     <line x1="4" y1="16" x2="20" y2="16"></line>
+  </svg>
+);
+
+export const IconGrip = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="19" r="1" />
   </svg>
 );
 
@@ -458,5 +469,73 @@ export const IconInstagram = (props: React.SVGProps<SVGSVGElement>) => (
     <rect x="4" y="4" width="16" height="16" rx="4" />
     <circle cx="12" cy="12" r="3" />
     <line x1="16.5" y1="7.5" x2="16.5" y2="7.501" />
+  </svg>
+);
+
+// --- NEW EDITOR ICONS ---
+
+export const IconBold = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M7 5h6a3.5 3.5 0 0 1 0 7h-6z" />
+    <path d="M13 12h1a3.5 3.5 0 0 1 0 7h-7v-7" />
+  </svg>
+);
+
+export const IconItalic = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="11" y1="5" x2="17" y2="5" />
+    <line x1="7" y1="19" x2="13" y2="19" />
+    <line x1="14" y1="5" x2="10" y2="19" />
+  </svg>
+);
+
+export const IconUnderline = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M7 5v5a5 5 0 0 0 10 0v-5" />
+    <path d="M5 19h14" />
+  </svg>
+);
+
+export const IconList = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <line x1="9" y1="6" x2="20" y2="6" />
+    <line x1="9" y1="12" x2="20" y2="12" />
+    <line x1="9" y1="18" x2="20" y2="18" />
+    <line x1="5" y1="6" x2="5" y2="6.01" />
+    <line x1="5" y1="12" x2="5" y2="12.01" />
+    <line x1="5" y1="18" x2="5" y2="18.01" />
+  </svg>
+);
+
+export const IconQuote = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M10 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5" />
+    <path d="M19 11h-4a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h3a1 1 0 0 1 1 1v6c0 2.667 -1.333 4.333 -4 5" />
+  </svg>
+);
+
+export const IconH1 = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 18v-8l-2 2" />
+    <path d="M4 6v12" />
+    <path d="M12 6v12" />
+    <path d="M11 18h2" />
+    <path d="M3 18h2" />
+    <path d="M4 12h8" />
+    <path d="M3 6h2" />
+    <path d="M11 6h2" />
+  </svg>
+);
+
+export const IconH2 = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M17 12a2 2 0 1 1 4 0c0 .591 -.601 1.46 -1 2l-3 3h4" />
+    <path d="M4 6v12" />
+    <path d="M12 6v12" />
+    <path d="M11 18h2" />
+    <path d="M3 18h2" />
+    <path d="M4 12h8" />
+    <path d="M3 6h2" />
+    <path d="M11 6h2" />
   </svg>
 );

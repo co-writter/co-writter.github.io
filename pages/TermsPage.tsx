@@ -31,7 +31,7 @@ const TermsPage: React.FC = () => {
                 <section>
                     <h3 className="text-xl font-bold text-white mb-2">1. Agreement to Terms</h3>
                     <p>
-                        By accessing <span className="text-white font-mono">co-writter.github.io</span>, you agree to be bound by these Terms of Service. If you do not agree to abide by the terms of this Agreement, you are not authorized to use or access the Website.
+                        By accessing <span className="text-white font-mono">ebook-engine.github.io</span>, you agree to be bound by these Terms of Service. If you do not agree to abide by the terms of this Agreement, you are not authorized to use or access the Website.
                     </p>
                 </section>
 

@@ -1,11 +1,20 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { IconSparkles, IconImage } from '../constants';
+import { 
+    IconH1, IconH2, IconList, IconQuote, IconSparkles, IconImage, 
+    IconMinus, IconX, IconArrowUp
+} from '../constants';
+
+interface Block {
+    id: string;
+    type: 'h1' | 'h2' | 'p' | 'ul' | 'blockquote' | 'image' | 'image-prompt';
+    content: string;
+}
 
 interface NovelEditorProps {
   title: string;
   onTitleChange: (val: string) => void;
-  content: string;
+  content: string; // Markdown string
   onContentChange: (val: string) => void;
   onTriggerAI: (prompt: string) => void;
   onTriggerImageGen: (prompt: string) => void;
@@ -19,202 +28,416 @@ const NovelEditor: React.FC<NovelEditorProps> = ({
     onTriggerAI,
     onTriggerImageGen
 }) => {
-  const [showSlashMenu, setShowSlashMenu] = useState(false);
-  const [slashMenuIndex, setSlashMenuIndex] = useState(0);
-  const [slashFilter, setSlashFilter] = useState('');
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
+  // --- PARSER LOGIC ---
+  const parseMarkdown = (md: string): Block[] => {
+      if (!md) return [{ id: Date.now().toString(), type: 'p', content: '' }];
+      const lines = md.split('\n');
+      const blocks: Block[] = [];
+      
+      for (const line of lines) {
+          if (line.startsWith('# ')) blocks.push({ id: Math.random().toString(), type: 'h1', content: line.replace('# ', '') });
+          else if (line.startsWith('## ')) blocks.push({ id: Math.random().toString(), type: 'h2', content: line.replace('## ', '') });
+          else if (line.startsWith('- ')) blocks.push({ id: Math.random().toString(), type: 'ul', content: line.replace('- ', '') });
+          else if (line.startsWith('> ')) blocks.push({ id: Math.random().toString(), type: 'blockquote', content: line.replace('> ', '') });
+          else if (line.startsWith('![')) {
+              // Extract image url
+              const match = line.match(/\((.*?)\)/);
+              if (match) blocks.push({ id: Math.random().toString(), type: 'image', content: match[1] });
+          }
+          else blocks.push({ id: Math.random().toString(), type: 'p', content: line });
+      }
+      if (blocks.length === 0) blocks.push({ id: Date.now().toString(), type: 'p', content: '' });
+      return blocks;
+  };
 
-  const LINE_HEIGHT = 36; // px - Controls spacing of the lines
+  const serializeToMarkdown = (blocks: Block[]) => {
+      return blocks.map(b => {
+          if (b.type === 'h1') return `# ${b.content}`;
+          if (b.type === 'h2') return `## ${b.content}`;
+          if (b.type === 'ul') return `- ${b.content}`;
+          if (b.type === 'blockquote') return `> ${b.content}`;
+          if (b.type === 'image') return `![Image](${b.content})`;
+          if (b.type === 'image-prompt') return ''; // Temporary state, do not save
+          return b.content;
+      }).join('\n\n');
+  };
 
-  const allSlashCommands = [
-      { id: 'h1', label: 'Big Heading', icon: 'H1', template: '# ' },
-      { id: 'h2', label: 'Medium Heading', icon: 'H2', template: '## ' },
-      { id: 'bullet', label: 'Bullet List', icon: '•', template: '- ' },
-      { id: 'quote', label: 'Quote', icon: '“', template: '> ' },
-      { id: 'generate', label: 'Ask Co-Author', icon: <IconSparkles className="w-4 h-4" />, template: '' },
-      { id: 'image', label: 'Create Image', icon: <IconImage className="w-4 h-4" />, template: '' },
-  ];
+  // --- STATE ---
+  const [blocks, setBlocks] = useState<Block[]>(() => parseMarkdown(content));
+  const [activeBlockIndex, setActiveBlockIndex] = useState<number>(0);
+  
+  // Menu State
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [menuQuery, setMenuQuery] = useState('');
+  const [menuSelectedIndex, setMenuSelectedIndex] = useState(0);
+  
+  const blockRefs = useRef<(HTMLElement | null)[]>([]);
 
-  // Filter commands based on input
-  const slashCommands = allSlashCommands.filter(c => 
-      c.label.toLowerCase().includes(slashFilter) || c.id.includes(slashFilter)
-  );
-
-  // Auto-resize textarea
+  // --- SYNC ---
   useEffect(() => {
-    if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = textareaRef.current.scrollHeight + 'px';
-    }
+      const newMarkdown = serializeToMarkdown(blocks);
+      // Only sync if content actually changed (avoids loops with image-prompt)
+      if (newMarkdown !== content && !blocks.some(b => b.type === 'image-prompt')) {
+          onContentChange(newMarkdown);
+      }
+  }, [blocks]);
+
+  useEffect(() => {
+      // External content update (e.g. from AI generation completing)
+      const currentMd = serializeToMarkdown(blocks);
+      if (content !== currentMd) {
+          // If we have an active prompt, we might want to be careful, but generally AI updates override
+          setBlocks(parseMarkdown(content));
+      }
   }, [content]);
 
-  const executeCommand = (cmd: any) => {
-      const cursorPos = textareaRef.current?.selectionStart || content.length;
-      
-      // Find start of the current command word to replace it
-      let start = cursorPos - 1;
-      while (start >= 0 && !/\s/.test(content[start])) {
-          start--;
-      }
-      start++;
+  // --- MENU ITEMS ---
+  const MENU_ITEMS = [
+    { label: "Heading 1", type: 'h1', icon: IconH1, desc: "Big section header" },
+    { label: "Heading 2", type: 'h2', icon: IconH2, desc: "Medium subsection header" },
+    { label: "Bullet List", type: 'ul', icon: IconList, desc: "Simple bulleted list" },
+    { label: "Quote", type: 'blockquote', icon: IconQuote, desc: "Capture a quote" },
+    { label: "Text", type: 'p', icon: IconMinus, desc: "Plain text paragraph" },
+    { label: "Ask Co-Author", action: 'ai', icon: IconSparkles, desc: "Generate text with AI", highlight: true },
+    { label: "Generate Image", action: 'img', icon: IconImage, desc: "Create art from description", highlight: true },
+  ];
 
-      const textBefore = content.substring(0, start);
-      const textAfter = content.substring(cursorPos);
+  const filteredMenuItems = MENU_ITEMS.filter(item => 
+      item.label.toLowerCase().includes(menuQuery.toLowerCase()) || 
+      item.desc.toLowerCase().includes(menuQuery.toLowerCase())
+  );
+
+  // --- HANDLERS ---
+  const openMenu = () => {
+      // 1. Try Caret Position
+      const selection = window.getSelection();
+      if (selection && selection.rangeCount > 0) {
+          const range = selection.getRangeAt(0);
+          const rect = range.getBoundingClientRect();
+          
+          const editorContainer = blockRefs.current[activeBlockIndex]?.closest('.editor-container');
+          
+          if (editorContainer) {
+              const containerRect = editorContainer.getBoundingClientRect();
+              
+              setMenuPosition({
+                  // Position right below the cursor line with a small buffer
+                  top: (rect.bottom - containerRect.top) + 8, 
+                  left: (rect.left - containerRect.left)
+              });
+              setMenuOpen(true);
+              setMenuQuery('');
+              setMenuSelectedIndex(0);
+              return;
+          }
+      }
+
+      // 2. Fallback to Block Position (if selection fails)
+      const blockEl = blockRefs.current[activeBlockIndex];
+      if (blockEl) {
+          setMenuPosition({ 
+              top: blockEl.offsetTop + blockEl.clientHeight + 8, 
+              left: blockEl.offsetLeft 
+          });
+          setMenuOpen(true);
+          setMenuQuery('');
+          setMenuSelectedIndex(0);
+      }
+  };
+
+  const closeMenu = () => {
+      setMenuOpen(false);
+      setMenuQuery('');
+      setMenuSelectedIndex(0);
+  };
+
+  const executeCommand = (item: typeof MENU_ITEMS[0]) => {
+      const newBlocks = [...blocks];
       
-      if (cmd.id === 'generate') {
-          onTriggerAI("Continue writing from here...");
-          // Remove the slash command from text
-          onContentChange(textBefore + textAfter);
-      } else if (cmd.id === 'image') {
-          const lines = textBefore.trim().split('\n');
-          const lastLine = lines[lines.length - 1]?.trim() || "";
-          const defaultPrompt = lastLine.length > 0 ? (lastLine.length > 100 ? lastLine.substring(0, 100) + "..." : lastLine) : "Illustration of...";
-          
-          const imagePrompt = window.prompt("Describe the image or diagram:", defaultPrompt);
-          
-          if (imagePrompt) {
-              let finalPrompt = imagePrompt;
-              if (defaultPrompt.endsWith("...") && imagePrompt === defaultPrompt) {
-                  finalPrompt = lastLine; 
-              }
-              onTriggerImageGen(finalPrompt);
-              onContentChange(textBefore + `\n![Generating Visual: ${finalPrompt.substring(0, 25)}...]()\n` + textAfter);
+      // Clear the slash command text
+      newBlocks[activeBlockIndex].content = ''; 
+      
+      if (item.action) {
+          if (item.action === 'img') {
+              // Switch to inline prompt mode
+              newBlocks[activeBlockIndex].type = 'image-prompt';
+              setBlocks(newBlocks); // Update state to render input
+              closeMenu();
+              // Focus handled by autoFocus in render
           } else {
-               onContentChange(textBefore + textAfter);
+              setBlocks(newBlocks); // Commit clear
+              closeMenu();
+              // AI Text generation still uses window.prompt for now or could be enhanced later
+              const userPrompt = window.prompt("Instruction for Co-Author:");
+              if (userPrompt) onTriggerAI(userPrompt);
           }
       } else {
-          const insertText = cmd.template;
-          onContentChange(textBefore + insertText + textAfter);
+          // Change Block Type
+          newBlocks[activeBlockIndex].type = item.type as Block['type'];
+          setBlocks(newBlocks);
+          closeMenu();
+          setTimeout(() => blockRefs.current[activeBlockIndex]?.focus(), 0);
       }
-      setShowSlashMenu(false);
-      setSlashFilter('');
-      
-      // Re-focus
-      setTimeout(() => {
-        if(textareaRef.current) {
-            textareaRef.current.focus();
-            const newCursor = textBefore.length + cmd.template.length;
-            textareaRef.current.setSelectionRange(newCursor, newCursor);
-        }
-      }, 0);
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (showSlashMenu) {
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            setSlashMenuIndex(prev => (prev + 1) % slashCommands.length);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            setSlashMenuIndex(prev => (prev - 1 + slashCommands.length) % slashCommands.length);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (slashCommands.length > 0) {
-                executeCommand(slashCommands[slashMenuIndex]);
-            }
-        } else if (e.key === 'Escape') {
-            setShowSlashMenu(false);
-        }
-    }
+  const handleKeyDown = (e: React.KeyboardEvent, index: number) => {
+      // MENU NAVIGATION
+      if (menuOpen) {
+          if (e.key === 'ArrowDown') {
+              e.preventDefault();
+              setMenuSelectedIndex(prev => (prev + 1) % filteredMenuItems.length);
+              return;
+          }
+          if (e.key === 'ArrowUp') {
+              e.preventDefault();
+              setMenuSelectedIndex(prev => (prev - 1 + filteredMenuItems.length) % filteredMenuItems.length);
+              return;
+          }
+          if (e.key === 'Enter') {
+              e.preventDefault();
+              if (filteredMenuItems[menuSelectedIndex]) {
+                  executeCommand(filteredMenuItems[menuSelectedIndex]);
+              }
+              return;
+          }
+          if (e.key === 'Escape') {
+              e.preventDefault();
+              closeMenu();
+              return;
+          }
+      }
+
+      // EDITOR NAVIGATION
+      if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          const newBlock: Block = { id: Date.now().toString(), type: 'p', content: '' };
+          const newBlocks = [...blocks];
+          newBlocks.splice(index + 1, 0, newBlock);
+          setBlocks(newBlocks);
+          setActiveBlockIndex(index + 1);
+          setTimeout(() => blockRefs.current[index + 1]?.focus(), 0);
+      }
+      else if (e.key === 'Backspace' && blocks[index].content === '') {
+          e.preventDefault();
+          if (blocks.length > 1) {
+              const newBlocks = [...blocks];
+              newBlocks.splice(index, 1);
+              setBlocks(newBlocks);
+              setActiveBlockIndex(Math.max(0, index - 1));
+              setTimeout(() => blockRefs.current[Math.max(0, index - 1)]?.focus(), 0);
+          }
+      }
+      else if (e.key === 'ArrowUp' && !menuOpen) {
+          if (index > 0) {
+              e.preventDefault();
+              setActiveBlockIndex(index - 1);
+              blockRefs.current[index - 1]?.focus();
+          }
+      }
+      else if (e.key === 'ArrowDown' && !menuOpen) {
+          if (index < blocks.length - 1) {
+              e.preventDefault();
+              setActiveBlockIndex(index + 1);
+              blockRefs.current[index + 1]?.focus();
+          }
+      }
   };
 
-  const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      const newVal = e.target.value;
-      onContentChange(newVal);
-
-      const cursorPos = e.target.selectionStart;
+  const handleInput = (e: React.FormEvent<HTMLDivElement>, index: number) => {
+      const text = e.currentTarget.innerText;
+      const newBlocks = [...blocks];
+      newBlocks[index].content = text;
+      setBlocks(newBlocks);
       
-      // Find the "word" before cursor
-      let start = cursorPos - 1;
-      while (start >= 0 && !/\s/.test(newVal[start])) {
-          start--;
-      }
-      start++; // The character after the space
-
-      const currentWord = newVal.substring(start, cursorPos);
-
-      // Trigger if word starts with / and is either the first char of line or preceded by space
-      // AND we aren't just typing a path like /usr/bin (simple heuristic: length < 15)
-      if (currentWord.startsWith('/') && currentWord.length < 15) {
-          const filter = currentWord.substring(1).toLowerCase();
-          setSlashFilter(filter);
-          setShowSlashMenu(true);
-          setSlashMenuIndex(0);
+      // Trigger Menu
+      if (text.startsWith('/')) {
+          if (!menuOpen) openMenu();
+          setMenuQuery(text.substring(1));
+          setMenuSelectedIndex(0); 
       } else {
-          setShowSlashMenu(false);
+          if (menuOpen) closeMenu();
       }
+  };
+
+  // Helper to handle prompt submission from the inline input
+  const submitImagePrompt = (index: number, prompt: string) => {
+      if (!prompt.trim()) return;
+      onTriggerImageGen(prompt);
+      
+      // Update the block to a temporary "Generating" state
+      const newBlocks = [...blocks];
+      newBlocks[index] = { 
+          ...newBlocks[index], 
+          type: 'p', 
+          content: `*Creating visual: "${prompt}"...*` 
+      };
+      
+      // Add a new empty block below so user can keep typing
+      const newBlock: Block = { id: Date.now().toString(), type: 'p', content: '' };
+      newBlocks.splice(index + 1, 0, newBlock);
+      
+      setBlocks(newBlocks);
+      setActiveBlockIndex(index + 1);
+      setTimeout(() => blockRefs.current[index + 1]?.focus(), 0);
+  };
+
+  const cancelImagePrompt = (index: number) => {
+      const newBlocks = [...blocks];
+      newBlocks[index] = { ...newBlocks[index], type: 'p', content: '' };
+      setBlocks(newBlocks);
+      setTimeout(() => blockRefs.current[index]?.focus(), 0);
   };
 
   return (
-    <div className="w-full max-w-4xl mx-auto min-h-screen p-4 md:p-8 relative font-sans">
+    <div className="editor-container w-full max-w-4xl mx-auto min-h-screen relative font-sans flex flex-col pt-10 pb-32">
         
-        {/* Notebook Container */}
-        <div className="relative bg-[#121212] rounded-lg shadow-2xl min-h-[85vh] overflow-hidden border border-[#222]">
-            
-            {/* Title Area - Top of page */}
-            <div className="p-8 md:px-12 md:pt-12 md:pb-4 border-b border-[#222] bg-[#121212] relative z-10">
-                 <input 
-                    type="text" 
-                    value={title}
-                    onChange={(e) => onTitleChange(e.target.value)}
-                    className="w-full bg-transparent text-4xl md:text-5xl font-black text-white border-none outline-none placeholder-neutral-700 tracking-tighter leading-none"
-                    placeholder="Untitled Book"
-                />
-            </div>
+        {/* Title Area */}
+        <div className="px-12 mb-8 group">
+             <input 
+                type="text" 
+                value={title}
+                onChange={(e) => onTitleChange(e.target.value)}
+                className="w-full bg-transparent text-5xl font-bold text-white border-none outline-none placeholder-neutral-700 leading-tight"
+                placeholder="Untitled"
+            />
+        </div>
 
-            {/* Editor Area with Lines */}
-            <div className="relative w-full h-full pb-20">
-                {/* Visual Margin Line */}
-                <div className="absolute top-0 bottom-0 left-8 md:left-12 w-px bg-red-900/30 z-0 pointer-events-none h-full"></div>
-
-                <textarea 
-                    ref={textareaRef}
-                    value={content}
-                    onChange={handleInput}
-                    onKeyDown={handleKeyDown}
-                    className="w-full bg-transparent resize-none border-none outline-none text-lg text-neutral-300 placeholder-neutral-700 min-h-[70vh] font-serif relative z-10 pl-12 pr-8 md:pl-16 md:pr-16"
-                    placeholder="Start writing... (Type '/' for tools)"
-                    spellCheck={false}
-                    style={{ 
-                        lineHeight: `${LINE_HEIGHT}px`,
-                        backgroundImage: `linear-gradient(transparent ${LINE_HEIGHT - 1}px, #000000 ${LINE_HEIGHT}px)`,
-                        backgroundSize: `100% ${LINE_HEIGHT}px`,
-                        backgroundAttachment: 'local',
-                        paddingTop: '6px'
-                    }}
-                />
-
-                {/* Slash Command Menu */}
-                {showSlashMenu && slashCommands.length > 0 && (
-                    <div 
-                        ref={menuRef}
-                        className="absolute top-20 left-16 z-50 w-64 max-w-[80vw] bg-black/90 backdrop-blur-xl border border-white/20 shadow-[0_0_50px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up rounded-xl"
-                    >
-                        <div className="px-3 py-2 text-[9px] font-bold uppercase text-neutral-500 tracking-widest border-b border-white/10 bg-white/5">
-                            Tools
+        {/* Blocks Editor */}
+        <div className="px-12 relative flex-1">
+             {blocks.map((block, index) => (
+                 <div key={block.id} className="group relative mb-2">
+                     {/* Drag Handle Placeholder */}
+                     {block.type !== 'image-prompt' && (
+                        <div className="absolute -left-8 top-1 opacity-0 group-hover:opacity-100 cursor-grab text-neutral-600 hover:text-white transition-opacity select-none">
+                            <div className="w-6 h-6 flex items-center justify-center">::</div>
                         </div>
-                        {slashCommands.map((cmd, idx) => (
-                            <button
-                                key={cmd.id}
-                                onClick={() => executeCommand(cmd)}
-                                className={`w-full flex items-center gap-3 px-3 py-3 text-xs transition-colors ${idx === slashMenuIndex ? 'bg-white text-black' : 'text-neutral-300 hover:bg-white/5'}`}
-                            >
-                                <div className={`w-6 h-6 flex items-center justify-center font-bold text-[10px] rounded border ${idx === slashMenuIndex ? 'border-black/20 bg-black/5' : 'border-white/10 bg-white/5'}`}>
-                                    {typeof cmd.icon === 'string' ? cmd.icon : cmd.icon}
-                                </div>
-                                <span className="font-bold uppercase tracking-wide">{cmd.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                )}
-            </div>
+                     )}
+
+                     {block.type === 'image' ? (
+                         <div className="rounded-lg overflow-hidden border border-white/10 my-4 bg-black/20">
+                             <img src={block.content} alt="Generated" className="w-full h-auto" />
+                         </div>
+                     ) : block.type === 'image-prompt' ? (
+                         // INLINE IMAGE PROMPT INPUT
+                         <div className="my-4 p-1.5 pl-3 bg-[#151515] border border-white/20 rounded-full flex items-center gap-3 w-full max-w-xl shadow-2xl animate-fade-in focus-within:border-white/40 focus-within:ring-1 focus-within:ring-white/20 transition-all">
+                             <IconSparkles className="w-4 h-4 text-purple-400 flex-shrink-0" />
+                             <input 
+                                autoFocus
+                                type="text"
+                                placeholder="Describe the image (e.g. A cyberpunk city in rain)..."
+                                className="flex-1 bg-transparent border-none outline-none text-sm text-white placeholder-neutral-500 h-8 min-w-0"
+                                value={block.content}
+                                onChange={(e) => {
+                                    const newBlocks = [...blocks];
+                                    newBlocks[index].content = e.target.value;
+                                    setBlocks(newBlocks);
+                                }}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        submitImagePrompt(index, block.content);
+                                    }
+                                    if (e.key === 'Escape') {
+                                        e.preventDefault();
+                                        cancelImagePrompt(index);
+                                    }
+                                    if (e.key === 'ArrowUp') {
+                                        if (index > 0) { e.preventDefault(); blockRefs.current[index - 1]?.focus(); }
+                                    }
+                                    if (e.key === 'ArrowDown') {
+                                        if (index < blocks.length - 1) { e.preventDefault(); blockRefs.current[index + 1]?.focus(); }
+                                    }
+                                }}
+                             />
+                             <div className="flex items-center gap-2 pr-1">
+                                 <button 
+                                    onClick={() => submitImagePrompt(index, block.content)}
+                                    className="px-6 py-2 bg-white text-black rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-200 transition-all shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105 active:scale-95 flex-shrink-0"
+                                    title="Generate Visual"
+                                 >
+                                     ENTER
+                                 </button>
+                                 <button 
+                                    onClick={() => cancelImagePrompt(index)}
+                                    className="w-8 h-8 rounded-full text-neutral-500 hover:text-white flex items-center justify-center transition-colors hover:bg-white/10"
+                                    title="Cancel"
+                                 >
+                                     <IconX className="w-4 h-4" />
+                                 </button>
+                             </div>
+                         </div>
+                     ) : (
+                         <div
+                            ref={el => { blockRefs.current[index] = el; }}
+                            contentEditable
+                            suppressContentEditableWarning
+                            onKeyDown={(e) => handleKeyDown(e, index)}
+                            onInput={(e) => handleInput(e, index)}
+                            onFocus={() => setActiveBlockIndex(index)}
+                            className={`w-full outline-none empty:before:content-[attr(data-placeholder)] empty:before:text-neutral-700
+                                ${block.type === 'h1' ? 'text-4xl font-bold text-white mb-4 mt-6' : 
+                                  block.type === 'h2' ? 'text-2xl font-bold text-neutral-200 mb-3 mt-4' : 
+                                  block.type === 'ul' ? 'list-disc list-inside text-lg text-neutral-300 pl-4 border-l-2 border-transparent' :
+                                  block.type === 'blockquote' ? 'text-xl italic text-neutral-400 border-l-4 border-white/20 pl-4 py-2 my-4' :
+                                  'text-lg text-neutral-300 leading-relaxed'
+                                }
+                            `}
+                            data-placeholder={block.type === 'p' && index === 0 && blocks.length === 1 ? "Start writing or type '/' for commands..." : "Type '/' for commands"}
+                         >
+                             {block.content}
+                         </div>
+                     )}
+                 </div>
+             ))}
         </div>
 
-        {/* Floating Word Count */}
-        <div className="fixed bottom-8 right-8 text-neutral-500 text-[10px] font-mono pointer-events-none hidden md:block uppercase tracking-widest bg-black/80 backdrop-blur px-3 py-1.5 rounded border border-white/10 shadow-lg z-50">
-            {content.split(/\s+/).filter(w => w.length > 0).length} words
-        </div>
+        {/* Floating Slash Menu */}
+        {menuOpen && (
+            <div 
+                className="absolute z-50 w-72 bg-[#121212]/95 backdrop-blur-xl border border-white/10 rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.8)] overflow-hidden animate-slide-up origin-top-left flex flex-col ring-1 ring-white/10"
+                style={{ top: menuPosition.top, left: menuPosition.left }}
+            >
+                <div className="px-3 py-2 text-[10px] font-bold text-neutral-500 uppercase tracking-widest border-b border-white/5 flex justify-between items-center bg-white/[0.02]">
+                    <span>Blocks</span>
+                    <button onClick={closeMenu} className="hover:text-white transition-colors">
+                        <IconX className="w-3 h-3" />
+                    </button>
+                </div>
+                <div className="p-1 max-h-[320px] overflow-y-auto custom-scrollbar">
+                    {filteredMenuItems.length > 0 ? filteredMenuItems.map((item, idx) => (
+                        <button
+                            key={item.label}
+                            onMouseDown={(e) => {
+                                e.preventDefault(); // Prevent blur
+                                executeCommand(item);
+                            }}
+                            onMouseEnter={() => setMenuSelectedIndex(idx)}
+                            className={`w-full flex items-center gap-3 p-2 rounded-lg text-left transition-colors group cursor-pointer ${
+                                idx === menuSelectedIndex ? 'bg-white/10' : 'hover:bg-white/5'
+                            }`}
+                        >
+                            <div className={`w-10 h-10 rounded border flex items-center justify-center transition-colors shadow-sm ${
+                                item.highlight 
+                                ? 'bg-indigo-500/20 border-indigo-500/30 text-indigo-400' 
+                                : 'bg-white/5 border-white/10 text-white'
+                            }`}>
+                                <item.icon className="w-5 h-5" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className={`text-sm font-bold truncate ${item.highlight ? 'text-indigo-300' : 'text-white'}`}>
+                                    {item.label}
+                                </div>
+                                <div className="text-[10px] text-neutral-500 truncate">{item.desc}</div>
+                            </div>
+                        </button>
+                    )) : (
+                        <div className="p-4 text-center text-neutral-500 text-xs">No matching commands</div>
+                    )}
+                </div>
+            </div>
+        )}
+
     </div>
   );
 };

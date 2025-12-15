@@ -1,8 +1,9 @@
-# co-writter
+
+# Ebook-Studio by OpenDev Labs
 
 ## The Professional AI Publishing Platform
 
-Welcome to **co-writter**, the definitive platform for creating, refining, and selling digital literature. Powered by the proprietary **Co-Author** neural engine, this software bridges the gap between human creativity and machine intelligence.
+Welcome to **Ebook-Studio**, the definitive platform for creating, refining, and selling digital literature. Powered by the proprietary **Co-Author** neural engine, this software bridges the gap between human creativity and machine intelligence.
 
 ---
 
@@ -28,7 +29,7 @@ chmod +x run-ebook-engine.sh
 
 ## 🏗 Architecture & Core Systems
 
-**co-writter** is architected as a high-performance, serverless Single Page Application (SPA).
+**Ebook-Studio** is architected as a high-performance, serverless Single Page Application (SPA).
 
 *   **Frontend**: React 18 + Vite (TypeScript)
 *   **Neural Engine**: Co-Author (powered by Google Gemini 2.5 Flash)
@@ -36,7 +37,7 @@ chmod +x run-ebook-engine.sh
 *   **State Management**: React Context + LocalStorage Persistence
 
 ### The Co-Author Engine
-The heart of **co-writter** is **Co-Author**, an advanced AI agent designed for narrative consistency.
+The heart of Ebook-Studio is **Co-Author**, an advanced AI agent designed for narrative consistency.
 *   **Context Awareness**: Remembers previous chapters and character arcs.
 *   **Visual Synthesis**: Generates cover art and inline illustrations via Gemini 2.5 Image.
 *   **Spectral Analysis**: Analyzes PDF manuscripts for genre, tone, and pacing.
@@ -45,11 +46,11 @@ The heart of **co-writter** is **Co-Author**, an advanced AI agent designed for 
 
 ## 🌐 Deployment (GitHub Pages)
 
-To host your own instance of **co-writter**:
+To host your own instance of Ebook-Studio:
 
 1.  **Build**: `npm run build`
 2.  **Deploy**: Push the `dist` folder to your `gh-pages` branch.
-3.  **Access**: Visit `https://your-username.github.io/co-writter/`
+3.  **Access**: Visit `https://your-username.github.io/ebook-studio/`
 
 ---
 

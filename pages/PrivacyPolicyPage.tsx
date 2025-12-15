@@ -44,7 +44,7 @@ const PrivacyPolicyPage: React.FC = () => {
                         Introduction
                     </h2>
                     <p>
-                        At {APP_NAME}, accessible from <span className="text-white font-mono">co-writter.github.io</span>, the privacy of our visitors and creators is our top priority. This Privacy Policy document contains types of information that is collected and recorded by {APP_NAME} and how we use it.
+                        At {APP_NAME}, accessible from <span className="text-white font-mono">ebook-engine.github.io</span>, the privacy of our visitors and creators is our top priority. This Privacy Policy document contains types of information that is collected and recorded by {APP_NAME} and how we use it.
                     </p>
                 </section>
 
@@ -105,7 +105,7 @@ const PrivacyPolicyPage: React.FC = () => {
              {/* Footer Note */}
              <div className="mt-12 pt-8 border-t border-white/5 text-center">
                  <p className="text-xs text-neutral-600 uppercase tracking-widest">
-                     Protected by Co-Writter Secure Enclave
+                     Protected by Ebook-Engine Secure Enclave
                  </p>
              </div>
         </div>
