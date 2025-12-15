@@ -4,8 +4,8 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  // GitHub Pages deployment for username.github.io requires base: '/'
-  base: '/',
+  // Reverted to relative path './' to fix loading in subdirectories/previews
+  base: './',
   build: {
     outDir: 'dist',
     sourcemap: false,
