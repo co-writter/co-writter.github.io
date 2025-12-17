@@ -14,26 +14,72 @@ const CreatorSitePage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setIsLoading(true);
-    // Simulate fetching seller data by slug
-    // In a real app, this would be an API call: fetchSellerBySlug(slug)
-    const foundSeller = Object.values(mockUsers).find(
-      u => (u as Seller).creatorSite?.slug === slug && (u as Seller).id.startsWith('seller')
-    ) as Seller | undefined;
+    let unsubscribe = () => { };
 
-    if (foundSeller && foundSeller.creatorSite && foundSeller.creatorSite.isEnabled) {
-      setSeller(foundSeller);
-      setSiteConfig(foundSeller.creatorSite);
-      const booksToDisplay = mockEBooks.filter(book => 
-        foundSeller.creatorSite!.showcasedBookIds.includes(book.id) && book.sellerId === foundSeller.id
-      );
-      setShowcasedBooks(booksToDisplay);
-    } else {
-      setSeller(null);
-      setSiteConfig(null);
-      setShowcasedBooks([]);
+    const fetchCreator = async () => {
+      setIsLoading(true);
+      try {
+        // Dynamic import for performance
+        const { db } = await import('../services/firebase');
+        const { collection, query, where, getDocs } = await import('firebase/firestore');
+
+        // Query users where creatorSite.slug matches the URL slug
+        const q = query(
+          collection(db, "users"),
+          where("creatorSite.slug", "==", slug)
+        );
+
+        const querySnapshot = await getDocs(q);
+
+        if (!querySnapshot.empty) {
+          // Found the creator
+          const userDoc = querySnapshot.docs[0];
+          const userData = userDoc.data() as Seller;
+
+          if (userData.creatorSite && userData.creatorSite.isEnabled) {
+            setSeller(userData);
+            setSiteConfig(userData.creatorSite);
+
+            // For now, we are filtering the Mock EBooks because we don't have a 'books' collection 
+            // fully populated with sellerId matching the Auth IDs in this demo context.
+            // In a full production app, you would query the 'books' collection here.
+            // But since 'uploadedBooks' is often on the user object in this architecture:
+            const userBooks = userData.uploadedBooks || [];
+            setShowcasedBooks(userBooks);
+          } else {
+            setSeller(null);
+          }
+        } else {
+          // Fallback to Mock Data (Legacy/Demo support)
+          const foundSeller = Object.values(mockUsers).find(
+            u => (u as Seller).creatorSite?.slug === slug
+          ) as Seller | undefined;
+
+          if (foundSeller && foundSeller.creatorSite && foundSeller.creatorSite.isEnabled) {
+            setSeller(foundSeller);
+            setSiteConfig(foundSeller.creatorSite);
+            const booksToDisplay = mockEBooks.filter(book =>
+              foundSeller.creatorSite!.showcasedBookIds.includes(book.id) && book.sellerId === foundSeller.id
+            );
+            setShowcasedBooks(booksToDisplay);
+          } else {
+            setSeller(null);
+            setSiteConfig(null);
+            setShowcasedBooks([]);
+          }
+        }
+      } catch (error) {
+        console.error("Error fetching creator site:", error);
+        // Fallback on error
+        setSeller(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    if (slug) {
+      fetchCreator();
     }
-    setIsLoading(false);
   }, [slug]);
 
   useEffect(() => {
@@ -69,7 +115,7 @@ const CreatorSitePage: React.FC = () => {
       </div>
     );
   }
-  
+
   // Dynamic class for the main wrapper based on theme
   const themeWrapperClass = `theme-${siteConfig.theme}`;
 
@@ -77,10 +123,10 @@ const CreatorSitePage: React.FC = () => {
     <div className={`${themeWrapperClass} pt-20`}> {/* Added top padding for fixed navbar clearance if needed, though this page layout is custom */}
       <header className="creator-site-header">
         {siteConfig.profileImageUrl && (
-          <img 
-            src={siteConfig.profileImageUrl} 
-            alt={siteConfig.displayName || seller.name} 
-            className="creator-site-profile-img" 
+          <img
+            src={siteConfig.profileImageUrl}
+            alt={siteConfig.displayName || seller.name}
+            className="creator-site-profile-img"
           />
         )}
         <h1 className="creator-site-display-name">{siteConfig.displayName || seller.name}</h1>
@@ -98,7 +144,7 @@ const CreatorSitePage: React.FC = () => {
                   <p className="creator-site-book-author">By {book.author}</p>
                   <p className="creator-site-book-price">₹{book.price.toFixed(2)}</p>
                   {/* Link to the main store page for the book */}
-                  <Link 
+                  <Link
                     to={`/store?bookId=${book.id}`} // Or a more specific book detail page if it exists
                     className="creator-site-book-button"
                     target="_blank" // Open in new tab to keep creator site open
@@ -114,7 +160,7 @@ const CreatorSitePage: React.FC = () => {
           <p className="text-center text-lg col-span-full py-10">This creator hasn't showcased any eBooks yet.</p>
         )}
       </main>
-      
+
       <footer className="creator-site-footer">
         <p>&copy; {new Date().getFullYear()} {siteConfig.displayName || seller.name}. Powered by <Link to="/" target="_blank" rel="noopener noreferrer">{APP_NAME}</Link>.</p>
       </footer>

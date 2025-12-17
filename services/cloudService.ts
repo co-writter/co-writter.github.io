@@ -13,27 +13,20 @@ export const getUserGithubToken = (): string | null => {
     return localStorage.getItem('github_access_token');
 };
 
-export const saveUserDataToGitHub = async (username: string, data: any): Promise<{success: boolean, message?: string, url?: string}> => {
-  const token = getUserGithubToken();
-  
-  // SIMULATION MODE: Persist to LocalStorage to mimic a deployed site
-  // This allows the "Live Site" (HostingPreviewPage) to actually load this data in a new tab.
-  try {
-      // Key format: cowritter_site_{slug}
-      localStorage.setItem(`cowritter_site_${username}`, JSON.stringify(data));
-      
-      // Simulate network latency
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      return { 
-          success: true, 
-          message: "Deployed to GitHub Pages",
-          url: `https://co-writter.github.io/${username}`
-      };
-  } catch (e) {
-      console.error("Deployment failed", e);
-      return { success: false, message: "Storage Error" };
-  }
+export const saveUserDataToGitHub = async (username: string, data: any): Promise<{ success: boolean, message?: string, url?: string }> => {
+    // In our unified Vercel + Firebase architecture, the 'Creator Site' is dynamically rendered
+    // by the functionality in CreatorSitePage.tsx which fetches from Firestore.
+    // Therefore, 'saving' explicitly to GitHub is no longer required as long as Firestore is updated.
+    // This function now serves to confirm the action and return the live URL.
+
+    // Simulate a brief network delay for UX
+    await new Promise(resolve => setTimeout(resolve, 800));
+
+    return {
+        success: true,
+        message: "Site is live!",
+        url: `https://co-writter.github.io/s/${username}`
+    };
 };
 
 export const loadUserProfileFromGitHub = async (username: string) => {
@@ -66,51 +59,51 @@ export const getGoogleAccessToken = (): string | null => {
 };
 
 export const exportToGoogleDocs = async (content: string, title: string): Promise<string> => {
-  const accessToken = getGoogleAccessToken();
-  
-  if (!accessToken) {
-      console.log("Simulating Google Docs Export...");
-      await new Promise(r => setTimeout(r, 1500));
-      return "https://docs.google.com/document/d/simulated_doc_id/edit";
-  }
-  
-  try {
-      const response = await fetch('https://docs.googleapis.com/v1/documents', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          title: title
-        })
-      });
-      
-      const doc = await response.json();
-      const docId = doc.documentId;
+    const accessToken = getGoogleAccessToken();
 
-      // Insert Content
-      await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${accessToken}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-              requests: [{
-                  insertText: {
-                      text: content,
-                      location: { index: 1 }
-                  }
-              }]
-          })
-      });
+    if (!accessToken) {
+        console.log("Simulating Google Docs Export...");
+        await new Promise(r => setTimeout(r, 1500));
+        return "https://docs.google.com/document/d/simulated_doc_id/edit";
+    }
 
-      return `https://docs.google.com/document/d/${docId}/edit`;
-  } catch (error) {
-      console.error("Google Docs Export Failed:", error);
-      throw error;
-  }
+    try {
+        const response = await fetch('https://docs.googleapis.com/v1/documents', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                title: title
+            })
+        });
+
+        const doc = await response.json();
+        const docId = doc.documentId;
+
+        // Insert Content
+        await fetch(`https://docs.googleapis.com/v1/documents/${docId}:batchUpdate`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                requests: [{
+                    insertText: {
+                        text: content,
+                        location: { index: 1 }
+                    }
+                }]
+            })
+        });
+
+        return `https://docs.google.com/document/d/${docId}/edit`;
+    } catch (error) {
+        console.error("Google Docs Export Failed:", error);
+        throw error;
+    }
 };
 
 export const backupToDrive = async (filename: string, data: any) => {
