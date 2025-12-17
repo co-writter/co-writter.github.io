@@ -154,13 +154,13 @@ const Navbar: React.FC = () => {
                             ) : (
                                 <div className="flex items-center gap-3">
                                     <a
-                                        href="https://co-writter.vercel.app/login"
+                                        href="https://co-writter-studio.web.app/login"
                                         className="px-4 py-2 text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-white transition-colors hover:scale-105 duration-200"
                                     >
                                         Login
                                     </a>
                                     <a
-                                        href="https://co-writter.vercel.app/pricing"
+                                        href="https://co-writter-studio.web.app/pricing"
                                         className="px-5 py-2 text-xs font-bold uppercase tracking-widest text-black bg-white hover:bg-neutral-200 transition-all duration-300 ease-obsidian rounded-full hover:shadow-[0_0_15px_rgba(255,255,255,0.3)] hover:scale-105"
                                     >
                                         Start Free
@@ -214,13 +214,13 @@ const Navbar: React.FC = () => {
                         ) : (
                             <div className="mt-8 flex flex-col gap-4 animate-slide-up-stagger delay-400">
                                 <a
-                                    href="https://code-co-writter.web.app/login"
+                                    href="https://co-writter-studio.web.app/login"
                                     className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold text-center rounded-full"
                                 >
                                     Login
                                 </a>
                                 <a
-                                    href="https://code-co-writter.web.app/pricing"
+                                    href="https://co-writter-studio.web.app/pricing"
                                     className="w-full py-4 bg-white text-black font-bold text-center rounded-full shadow-glow-white"
                                 >
                                     Start Free

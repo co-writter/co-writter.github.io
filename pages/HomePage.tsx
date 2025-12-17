@@ -151,7 +151,7 @@ const HomePage: React.FC = () => {
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
                         {currentUser ? (
                             <a
-                                href="https://co-writter.vercel.app/ebook-studio"
+                                href="https://co-writter-studio.web.app/ebook-studio"
                                 className="w-full sm:w-auto px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 group"
                             >
                                 <IconRocket className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
@@ -160,13 +160,13 @@ const HomePage: React.FC = () => {
                         ) : (
                             <>
                                 <a
-                                    href="https://code-co-writter.web.app/login"
+                                    href="https://co-writter-studio.web.app/login"
                                     className="px-8 py-4 rounded-full font-bold text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 relative overflow-hidden group"
                                 >
                                     <span className="relative z-10 flex items-center gap-2">Start Creating <IconArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
                                 </a>
                                 <a
-                                    href="https://code-co-writter.web.app/login"
+                                    href="https://co-writter-studio.web.app/login"
                                     className="px-8 py-4 rounded-full font-bold text-white border border-white/20 hover:bg-white/10 transition-all backdrop-blur-md"
                                 >
                                     Sign In
