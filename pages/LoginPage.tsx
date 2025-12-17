@@ -172,18 +172,30 @@ const LoginPage: React.FC = () => {
                                 {/* Hover Glow Background */}
                                 <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
 
-                                <button
-                                    onClick={handleFirebaseGoogleLogin}
-                                    disabled={isLoading}
-                                    className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isLoading ? (
-                                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                    ) : (
+                                {window.location.hostname.includes('github.io') ? (
+                                    // Direct Link for GitHub Pages - Robust & "Works"
+                                    <a
+                                        href={`${getAppBaseUrl()}/login`}
+                                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98]"
+                                    >
                                         <GoogleIcon />
-                                    )}
-                                    <span>Continue with Google</span>
-                                </button>
+                                        <span>Login to Studio</span>
+                                    </a>
+                                ) : (
+                                    // Firebase Popup for Actual App
+                                    <button
+                                        onClick={handleFirebaseGoogleLogin}
+                                        disabled={isLoading}
+                                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        {isLoading ? (
+                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                        ) : (
+                                            <GoogleIcon />
+                                        )}
+                                        <span>Continue with Google</span>
+                                    </button>
+                                )}
                             </div>
                             <p className="text-center text-[10px] text-neutral-500 px-4 leading-relaxed">
                                 By continuing, you agree to our Terms of Service and confirm you have read our Privacy Policy.
