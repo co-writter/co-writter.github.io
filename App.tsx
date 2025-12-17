@@ -27,7 +27,7 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 // Reverting to HashRouter for stability in cloud/preview environments
 // Reverting to HashRouter for stability in cloud/preview environments
-const { BrowserRouter, Routes, Route, useLocation } = ReactRouterDOM as any;
+const { BrowserRouter, Routes, Route, useLocation, Navigate } = ReactRouterDOM as any;
 
 export const getAppBaseUrl = () => {
   const hostname = window.location.hostname;
@@ -120,7 +120,7 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
 
   if (!currentUser) {
     // Redirect to login, remembering where they tried to go
-    return ReactRouterDOM.Navigate({ to: "/login", state: { from: location } });
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   return children;
