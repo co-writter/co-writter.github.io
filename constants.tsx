@@ -9,12 +9,12 @@ export const CARD_DARK_CLASS = "brand-card-dark";
 export const BORDER_CLASS = "border-brand-border"; // For sharp square elements
 
 // Updated to stable model names to prevent 404 "Entity not found" errors
-export const GEMINI_TEXT_MODEL = "gemini-2.5-flash"; 
+export const GEMINI_TEXT_MODEL = "gemini-2.5-flash";
 export const GEMINI_IMAGE_MODEL = "gemini-2.5-flash-image";
 
 // UPDATED KEYS FROM USER PROMPT
-export const RAZORPAY_KEY_ID = "rzp_live_RR5721D6h6BMt4"; 
-export const GOOGLE_CLIENT_ID = "399711702378-437l1ouof6p9hvnoo3uud7acfr1h5k12.apps.googleusercontent.com";
+export const RAZORPAY_KEY_ID = "rzp_live_RR5721D6h6BMt4";
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "55195088674-sk8akeomnpl9e1lf3t7iuhjq8tm278m7.apps.googleusercontent.com";
 
 // Tabler Icons (as JSX) - Ensure all use stroke="currentColor"
 export const IconBook = (props: React.SVGProps<SVGSVGElement>) => (
@@ -30,18 +30,18 @@ export const IconBook = (props: React.SVGProps<SVGSVGElement>) => (
 // New Cogito Core Logo Icon (Cute Robot "Co-Author")
 export const IconCogito = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-     {/* Antenna */}
-     <path d="M12 2v4" />
-     <circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none" />
-     {/* Head */}
-     <rect x="5" y="6" width="14" height="13" rx="4.5" />
-     {/* Face */}
-     <circle cx="9" cy="11" r="1.5" fill="currentColor" stroke="none" />
-     <circle cx="15" cy="11" r="1.5" fill="currentColor" stroke="none" />
-     <path d="M10 15a2 2 0 0 0 4 0" /> {/* Smile */}
-     {/* Ears */}
-     <line x1="3" y1="12" x2="5" y2="12" />
-     <line x1="19" y1="12" x2="21" y2="12" />
+    {/* Antenna */}
+    <path d="M12 2v4" />
+    <circle cx="12" cy="2" r="1.5" fill="currentColor" stroke="none" />
+    {/* Head */}
+    <rect x="5" y="6" width="14" height="13" rx="4.5" />
+    {/* Face */}
+    <circle cx="9" cy="11" r="1.5" fill="currentColor" stroke="none" />
+    <circle cx="15" cy="11" r="1.5" fill="currentColor" stroke="none" />
+    <path d="M10 15a2 2 0 0 0 4 0" /> {/* Smile */}
+    {/* Ears */}
+    <line x1="3" y1="12" x2="5" y2="12" />
+    <line x1="19" y1="12" x2="21" y2="12" />
   </svg>
 );
 
@@ -146,6 +146,14 @@ export const IconArrowLeft = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
+export const IconArrowRight = (props: React.SVGProps<SVGSVGElement>) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M5 12l14 0"></path>
+    <path d="M13 18l6 -6"></path>
+    <path d="M13 6l6 6"></path>
+  </svg>
+);
+
 export const IconArrowUp = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <path d="M12 5l0 14"></path>
@@ -175,7 +183,7 @@ export const IconTrash = (props: React.SVGProps<SVGSVGElement>) => (
   </svg>
 );
 
-export const IconPayment = (props: React.SVGProps<SVGSVGElement>) => ( 
+export const IconPayment = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
     <rect x="2" y="7" width="20" height="10" rx="2" ry="2"></rect>
     <line x1="6" y1="12" x2="8" y2="12"></line>
@@ -204,7 +212,7 @@ export const IconGrip = (props: React.SVGProps<SVGSVGElement>) => (
 // Razorpay Icon
 export const IconRazorpay = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" {...props}>
-    <path d="M11.275 4.01L7.26 15.225H2.015L6.03 4.01h5.245zm1.53 0L8.79 12.65h10.41L15.175 4.01h-2.37zm-.263 10.372l3.412-9.15h4.15l-3.412 9.15h-4.15zM24 19.99h-4.015l2.008-5.265H24v5.265zm-6.265 0H2.015L0 22h17.735l2.007-5.265H17.735v3.255z"/>
+    <path d="M11.275 4.01L7.26 15.225H2.015L6.03 4.01h5.245zm1.53 0L8.79 12.65h10.41L15.175 4.01h-2.37zm-.263 10.372l3.412-9.15h4.15l-3.412 9.15h-4.15zM24 19.99h-4.015l2.008-5.265H24v5.265zm-6.265 0H2.015L0 22h17.735l2.007-5.265H17.735v3.255z" />
   </svg>
 );
 
@@ -217,15 +225,15 @@ export const IconSend = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export const IconEdit = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
 );
 
 export const IconWallet = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 7V6a2 2 0 00-2-2H7a2 2 0 00-2 2v1"></path><path d="M3 10h18v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9z"></path><line x1="12" y1="14" x2="12.01" y2="14"></line></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 7V6a2 2 0 00-2-2H7a2 2 0 00-2 2v1"></path><path d="M3 10h18v9a2 2 0 01-2 2H5a2 2 0 01-2-2v-9z"></path><line x1="12" y1="14" x2="12.01" y2="14"></line></svg>
 );
 
 export const IconDownload = (props: React.SVGProps<SVGSVGElement>) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
 );
 
 export const IconLink = (props: React.SVGProps<SVGSVGElement>) => (
@@ -276,7 +284,7 @@ export const IconVolume = (props: React.SVGProps<SVGSVGElement>) => (
 
 export const IconStop = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-     <rect x="4" y="4" width="16" height="16" rx="2" />
+    <rect x="4" y="4" width="16" height="16" rx="2" />
   </svg>
 );
 
@@ -305,10 +313,10 @@ export const IconBrain = (props: React.SVGProps<SVGSVGElement>) => (
 );
 
 export const IconChartLine = (props: React.SVGProps<SVGSVGElement>) => (
-   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-  <path d="M3 3v18h18" />
-  <path d="m19 9-5 5-4-4-3 3" />
-</svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M3 3v18h18" />
+    <path d="m19 9-5 5-4-4-3 3" />
+  </svg>
 );
 
 export const IconImage = (props: React.SVGProps<SVGSVGElement>) => (
@@ -355,7 +363,7 @@ export const IconCheck = (props: React.SVGProps<SVGSVGElement>) => (
 
 export const IconStar = (props: React.SVGProps<SVGSVGElement>) => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="none" {...props}>
-     <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z"/>
+    <path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
   </svg>
 );
 

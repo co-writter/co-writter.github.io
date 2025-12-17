@@ -5,12 +5,18 @@ import { UserType } from '../types';
 import UserDashboardContent from '../components/Dashboard/UserDashboardContent';
 import { SellerDashboardContent } from '../components/Dashboard/SellerDashboardContent';
 import * as ReactRouterDOM from 'react-router-dom';
+import { sendPageview } from '../services/analyticsService';
 
-const { useNavigate } = ReactRouterDOM as any;
+const { useNavigate, useLocation } = ReactRouterDOM as any;
 
 const DashboardPage: React.FC = () => {
   const { currentUser, userType } = useAppContext();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    sendPageview(location.pathname);
+  }, [location]);
 
   useEffect(() => {
       if (userType === UserType.GUEST || !currentUser) {

@@ -15,6 +15,8 @@ import EditEBookPage from './pages/EditEBookPage';
 import EbookStudioPage from './pages/EbookStudioPage';
 import EbookReaderPage from './pages/EbookReaderPage';
 import HostingPreviewPage from './pages/HostingPreviewPage';
+import { initGA } from './services/analyticsService';
+import StudioLandingPage from './pages/StudioLandingPage';
 
 // Policy Pages
 import ContactPage from './pages/ContactPage';
@@ -60,8 +62,11 @@ const AnimatedRoutes = () => {
         <Route path="/site/:username" element={<HostingPreviewPage />} />
 
         <Route path="/edit-ebook/:bookId" element={<EditEBookPage />} />
-        <Route path="/ebook-studio" element={<ExternalRedirect to="https://co-writter.vercel.app" />} />
-        <Route path="/studio" element={<ExternalRedirect to="https://co-writter.vercel.app" />} />
+
+        {/* If on main domain, redirect studio to vercel. If on Vercel, this route is valid too but usually handled by root. */}
+        <Route path="/ebook-studio" element={window.location.hostname.includes('vercel.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://co-writter.vercel.app" />} />
+        <Route path="/studio" element={window.location.hostname.includes('vercel.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://co-writter.vercel.app" />} />
+
         <Route path="/read/:bookId" element={<EbookReaderPage />} />
 
         {/* Policy Routes */}
@@ -76,6 +81,16 @@ const AnimatedRoutes = () => {
 };
 
 const App: React.FC = () => {
+  const isStudioDomain =
+    window.location.hostname.includes('vercel.app') ||
+    window.location.hostname.includes('web.app') ||
+    window.location.hostname.includes('firebaseapp.com') ||
+    window.location.hostname.includes('localhost');
+
+  React.useEffect(() => {
+    initGA();
+  }, []);
+
   return (
     <AppProvider>
       <BrowserRouter>
@@ -91,17 +106,33 @@ const App: React.FC = () => {
             <div className="absolute bottom-[25%] right-[20%] w-64 h-64 border border-white/5 rotate-45 animate-float-delayed opacity-20"></div>
 
             {/* Scanlines */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[grid-flow_8s_linear_infinite]"></div>
           </div>
 
           {/* === Foreground Content === */}
           <div className="flex-grow relative z-10 flex flex-col w-full">
-            <Navbar />
+
+            {/* Navbar is strictly for the Main Site. Studio Mode has its own UI or Landing. */}
+            {!isStudioDomain && <Navbar />}
+
             <main className="flex-grow flex flex-col">
-              <AnimatedRoutes />
+              {isStudioDomain ? (
+                <Routes>
+                  <Route path="/" element={<StudioLandingPage />} />
+                  <Route path="/ebook-studio" element={<EbookStudioPage />} />
+                  {/* Allow login on Studio Domain too if needed, or redirect back to main? Let's allow login. */}
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/dashboard" element={<DashboardPage />} />
+                  {/* Redirect anything else to root of studio */}
+                  <Route path="*" element={<StudioLandingPage />} />
+                </Routes>
+              ) : (
+                <AnimatedRoutes />
+              )}
             </main>
-            <Footer />
+
+            {!isStudioDomain && <Footer />}
           </div>
 
         </div>

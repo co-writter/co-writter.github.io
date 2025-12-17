@@ -25,10 +25,10 @@
     // When the single page app is loaded further down in this file,
     // the correct url will be waiting in the browser's history for
     // the single page app to route accordingly.
-    (function (l) {
+    (function  (l) {
       if (l.search) {
         var q = {};
-        l.search.slice(1).split('&').forEach(function (v) {
+        l.search.slice(1).split('&').forEach(functio n (v) {
           var a = v.split('=');
           q[a[0]] = a.slice(1).join('=').replace(/~and~/g, '&');
         });
@@ -40,8 +40,7 @@
           );
         }
       }
-    }(window.location))
-  </script>
+    }(window.location)  </script>
 
   <script>
     tailwind.config = {
@@ -101,9 +100,7 @@
               "0%, 100%": { opacity: "1", transform: "scale(1)" },
               "50%": { opacity: "0.5", transform: "scale(0.9)" },
             },
-            "slide-up": {
-              "0%": { opacity: "0", transform: "translateY(20px)" },
-              "100%": { opacity: "1", transform: "translateY(0)" },
+            "slide-up":                "0%": { opacity: "0", transform: "translateY(20px)" },              "100%": { opacity: "1", transform: "translateY(0)" },
             },
             "fade-in": {
               "0%": { opacity: "0" },
@@ -117,6 +114,15 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+  <script>
+    // Initialize global dataLayer and gtagon for Google Analytics
+    // The actual config and script loading will be handled by analyticsService.ts
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+  </script>
+
   <style>
     /* Safe Area for iPhone X+ */
     body {

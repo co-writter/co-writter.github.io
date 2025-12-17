@@ -12,7 +12,7 @@ interface AIEbookCreatorWizardProps {
 
 const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete, onCancel }) => {
     const [step, setStep] = useState<'mode' | 'details' | 'outline' | 'generation'>('mode');
-    
+
     // Import Mode
     const [canvaLink, setCanvaLink] = useState('');
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -72,7 +72,7 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
     const handleGenerateFullEbook = async () => {
         setIsGeneratingContent(true);
         setStep('generation');
-        
+
         const generatedPages = [];
         let completed = 0;
 
@@ -97,12 +97,12 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
     return (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-[#0a0a0a] w-full max-w-4xl h-[600px] rounded-3xl border border-white/10 shadow-2xl flex overflow-hidden relative">
-                
+
                 {/* Left Sidebar Steps */}
                 <div className="w-64 bg-[#111] border-r border-white/5 p-6 flex flex-col justify-between hidden md:flex">
                     <div>
                         <h2 className="text-xl font-bold text-white mb-8 flex items-center gap-2">
-                            <IconSparkles className="w-5 h-5 text-google-blue"/> AI Creator
+                            <IconSparkles className="w-5 h-5 text-google-blue" /> AI Creator
                         </h2>
                         <div className="space-y-6">
                             {[
@@ -116,7 +116,7 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                 return (
                                     <div key={s.id} className={`flex items-center gap-3 ${isActive ? 'text-white' : 'text-neutral-500'}`}>
                                         <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border ${isActive ? 'border-white bg-white/10' : isPast ? 'bg-green-500 border-green-500 text-black' : 'border-neutral-700'}`}>
-                                            {isPast ? <IconCheck className="w-3 h-3"/> : idx + 1}
+                                            {isPast ? <IconCheck className="w-3 h-3" /> : idx + 1}
                                         </div>
                                         <span className="text-sm font-medium">{s.label}</span>
                                     </div>
@@ -128,9 +128,9 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                         <div className="p-3 bg-white/5 rounded-xl border border-white/5">
                             <p className="text-[10px] text-neutral-500 uppercase tracking-widest mb-2">Style Active</p>
                             <div className="flex gap-2">
-                                <div className="w-4 h-4 rounded-full" style={{background: analyzedStyle.colorPrimary}}></div>
-                                <div className="w-4 h-4 rounded-full" style={{background: analyzedStyle.colorSecondary}}></div>
-                                <div className="w-4 h-4 rounded-full" style={{background: analyzedStyle.colorBackground}}></div>
+                                <div className="w-4 h-4 rounded-full" style={{ background: analyzedStyle.colorPrimary }}></div>
+                                <div className="w-4 h-4 rounded-full" style={{ background: analyzedStyle.colorSecondary }}></div>
+                                <div className="w-4 h-4 rounded-full" style={{ background: analyzedStyle.colorBackground }}></div>
                             </div>
                             <p className="text-xs text-white mt-1 font-serif">Canva Theme</p>
                         </div>
@@ -147,9 +147,9 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                         <div className="h-full flex flex-col items-center justify-center text-center max-w-lg mx-auto">
                             <h3 className="text-3xl font-bold text-white mb-2">Start a New Project</h3>
                             <p className="text-neutral-400 mb-8">Choose how you want to begin your creative journey.</p>
-                            
+
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
-                                <button 
+                                <button
                                     onClick={() => setStep('details')}
                                     className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all group text-left"
                                 >
@@ -160,27 +160,27 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                     <p className="text-xs text-neutral-400">Let AI guide you through topic, genre, and outline creation.</p>
                                 </button>
 
-                                <button 
-                                    onClick={() => {}}
+                                <button
+                                    onClick={() => { }}
                                     className="p-6 rounded-3xl bg-white/5 border border-white/10 hover:border-white/30 hover:bg-white/10 transition-all group text-left relative overflow-hidden"
                                 >
-                                     {/* Input Overlay for Canva */}
-                                     <div className="space-y-3">
+                                    {/* Input Overlay for Canva */}
+                                    <div className="space-y-3">
                                         <div className="w-10 h-10 bg-purple-500/20 rounded-full flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
                                             <IconLink className="w-5 h-5 text-purple-400" />
                                         </div>
                                         <h4 className="font-bold text-white mb-1">Import from Canva</h4>
                                         <p className="text-xs text-neutral-400 mb-3">Analyze a public link and replicate the design style.</p>
-                                        
+
                                         <div className="relative">
-                                            <input 
+                                            <input
                                                 value={canvaLink}
                                                 onChange={(e) => setCanvaLink(e.target.value)}
                                                 placeholder="Paste Canva View Link..."
                                                 className="w-full bg-black border border-white/20 rounded px-2 py-1.5 text-xs text-white focus:outline-none focus:border-purple-500"
                                                 onClick={(e) => e.stopPropagation()}
                                             />
-                                            <button 
+                                            <button
                                                 onClick={(e) => { e.stopPropagation(); handleAnalyzeCanva(); }}
                                                 disabled={isAnalyzing || !canvaLink}
                                                 className="mt-2 w-full py-1.5 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-full transition-colors disabled:opacity-50"
@@ -188,7 +188,7 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                                 {isAnalyzing ? 'Analyzing...' : 'Analyze & Import'}
                                             </button>
                                         </div>
-                                     </div>
+                                    </div>
                                 </button>
                             </div>
                         </div>
@@ -197,11 +197,11 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                     {step === 'details' && (
                         <div className="max-w-xl mx-auto py-10">
                             <h3 className="text-2xl font-bold text-white mb-6">Book Concept</h3>
-                            
+
                             <div className="space-y-5">
                                 <div>
                                     <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Topic / Subject</label>
-                                    <input 
+                                    <input
                                         value={topic}
                                         onChange={(e) => setTopic(e.target.value)}
                                         className="w-full bg-[#151515] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30"
@@ -211,8 +211,8 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
                                         <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Genre</label>
-                                        <select 
-                                            value={genre} 
+                                        <select
+                                            value={genre}
                                             onChange={e => setGenre(e.target.value)}
                                             className="w-full bg-[#151515] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 appearance-none"
                                         >
@@ -226,8 +226,8 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                     </div>
                                     <div>
                                         <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Tone</label>
-                                        <select 
-                                            value={tone} 
+                                        <select
+                                            value={tone}
                                             onChange={e => setTone(e.target.value)}
                                             className="w-full bg-[#151515] border border-white/10 rounded-lg p-3 text-white focus:outline-none focus:border-white/30 appearance-none"
                                         >
@@ -239,19 +239,19 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                     </div>
                                 </div>
 
-                                <button 
+                                <button
                                     onClick={handleGenerateTitles}
                                     disabled={!topic || !genre || isGeneratingTitles}
                                     className="text-sm font-bold text-google-blue hover:text-white transition-colors flex items-center gap-2"
                                 >
-                                    {isGeneratingTitles ? <Spinner size="sm" /> : <><IconSparkles className="w-4 h-4"/> Suggest Titles</>}
+                                    {isGeneratingTitles ? <Spinner size="sm" /> : <><IconSparkles className="w-4 h-4" /> Suggest Titles</>}
                                 </button>
 
                                 {titleSuggestions.length > 0 && (
                                     <div className="space-y-2 mt-2">
                                         <label className="block text-xs font-bold text-neutral-500 uppercase mb-1">Select a Title</label>
                                         {titleSuggestions.map(t => (
-                                            <button 
+                                            <button
                                                 key={t}
                                                 onClick={() => setSelectedTitle(t)}
                                                 className={`w-full text-left p-3 rounded-lg border transition-all ${selectedTitle === t ? 'bg-white text-black border-white' : 'bg-white/5 border-white/5 text-neutral-300 hover:bg-white/10'}`}
@@ -262,7 +262,7 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                                     </div>
                                 )}
 
-                                <button 
+                                <button
                                     onClick={handleGenerateOutline}
                                     disabled={!selectedTitle}
                                     className="w-full py-3 bg-white text-black font-bold rounded-full hover:bg-neutral-200 transition-colors mt-4 disabled:opacity-50 text-xs uppercase tracking-widest"
@@ -297,7 +297,7 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                             )}
 
                             {!isGeneratingOutline && (
-                                <button 
+                                <button
                                     onClick={handleGenerateFullEbook}
                                     className="w-full py-4 bg-gradient-to-r from-google-blue to-purple-600 text-white font-bold rounded-full hover:shadow-glow-blue transition-all uppercase tracking-widest text-xs"
                                 >
@@ -321,13 +321,13 @@ const AIEbookCreatorWizard: React.FC<AIEbookCreatorWizardProps> = ({ onComplete,
                             </div>
                             <h3 className="text-2xl font-bold text-white mb-2">Writing your Masterpiece</h3>
                             <p className="text-neutral-400">Gemini is drafting chapters, formatting content, and applying styles.</p>
-                            
+
                             <div className="mt-8 p-4 bg-white/5 rounded-xl border border-white/5 w-full text-left">
                                 <p className="text-xs font-mono text-google-green mb-1">> Initializing Neural Engine...</p>
-                                {generationProgress > 10 && <p className="text-xs font-mono text-neutral-400 mb-1">> Analyzing outline structure...</p>}
-                                {generationProgress > 30 && <p className="text-xs font-mono text-neutral-400 mb-1">> Drafting content batches...</p>}
-                                {generationProgress > 70 && <p className="text-xs font-mono text-neutral-400 mb-1">> Applying typographic rules...</p>}
-                                {generationProgress === 100 && <p className="text-xs font-mono text-google-blue mb-1">> Finalizing asset compilation...</p>}
+                                {generationProgress > 20 && <p className="text-xs font-mono text-neutral-400 mb-1">{'>'} Analyzing narrative structure...</p>}
+                                {generationProgress > 45 && <p className="text-xs font-mono text-neutral-400 mb-1">{'>'} Generating 1800+ words/chapter...</p>}
+                                {generationProgress > 70 && <p className="text-xs font-mono text-neutral-400 mb-1">{'>'} Applying typographic rules...</p>}
+                                {generationProgress === 100 && <p className="text-xs font-mono text-google-blue mb-1">{'>'} Finalizing asset compilation...</p>}
                             </div>
                         </div>
                     )}
