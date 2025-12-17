@@ -63,9 +63,9 @@ const AnimatedRoutes = () => {
 
         <Route path="/edit-ebook/:bookId" element={<EditEBookPage />} />
 
-        {/* If on main domain, redirect studio to vercel. If on Vercel, this route is valid too but usually handled by root. */}
-        <Route path="/ebook-studio" element={window.location.hostname.includes('vercel.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://co-writter.vercel.app" />} />
-        <Route path="/studio" element={window.location.hostname.includes('vercel.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://co-writter.vercel.app" />} />
+        {/* If on main domain, redirect studio to web.app. If on web.app, this route is valid too but usually handled by root. */}
+        <Route path="/ebook-studio" element={window.location.hostname.includes('web.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://code-co-writter.web.app" />} />
+        <Route path="/studio" element={window.location.hostname.includes('web.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://code-co-writter.web.app" />} />
 
         <Route path="/read/:bookId" element={<EbookReaderPage />} />
 

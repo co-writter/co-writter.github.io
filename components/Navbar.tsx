@@ -214,13 +214,13 @@ const Navbar: React.FC = () => {
                         ) : (
                             <div className="mt-8 flex flex-col gap-4 animate-slide-up-stagger delay-400">
                                 <a
-                                    href="https://co-writter.vercel.app/login"
+                                    href="https://code-co-writter.web.app/login"
                                     className="w-full py-4 bg-white/5 border border-white/10 text-white font-bold text-center rounded-full"
                                 >
                                     Login
                                 </a>
                                 <a
-                                    href="https://co-writter.vercel.app/pricing"
+                                    href="https://code-co-writter.web.app/pricing"
                                     className="w-full py-4 bg-white text-black font-bold text-center rounded-full shadow-glow-white"
                                 >
                                     Start Free
