@@ -20,26 +20,26 @@ const StudioLandingPage: React.FC = () => {
 
     const handleEnterStudio = () => {
         setPhase('launch');
+        // Explicitly redirect to the production Firebase app
         setTimeout(() => {
-            // Redirect to the Studio Domain
-            window.location.href = "https://co-writter-studio.web.app/ebook-studio";
-        }, 1200);
+            window.location.href = "https://co-writter-studio.web.app";
+        }, 1500);
     };
 
     if (phase === 'init') {
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+            <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50">
                 <div className="relative">
-                    <div className="absolute inset-0 bg-white/20 blur-xl rounded-full animate-pulse"></div>
+                    <div className="absolute inset-0 bg-white/20 blur-2xl rounded-full animate-pulse-slow"></div>
                     <MorphicEye className="w-24 h-24 border border-white/50 bg-black relative z-10" />
                 </div>
-                <div className="mt-8 flex flex-col items-center gap-2">
-                    <h1 className="text-white text-2xl font-black tracking-tighter uppercase animate-slide-up">
-                        Co-Writer Studio
+                <div className="mt-8 flex flex-col items-center gap-3">
+                    <h1 className="text-white text-3xl font-black tracking-tighter uppercase animate-slide-up font-sans">
+                        CO-WRITTER
                     </h1>
-                    <div className="flex items-center gap-2 text-neutral-500 font-mono text-xs uppercase tracking-widest animate-fade-in delay-200">
-                        <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                        Initializing Environment...
+                    <div className="flex items-center gap-3 text-neutral-500 font-mono text-[10px] uppercase tracking-[0.2em] animate-fade-in delay-200">
+                        <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-ping"></span>
+                        SYSTEM ONLINE
                     </div>
                 </div>
             </div>
@@ -48,66 +48,72 @@ const StudioLandingPage: React.FC = () => {
 
     if (phase === 'launch') {
         return (
-            <div className="min-h-screen bg-black flex flex-col items-center justify-center relative overflow-hidden">
+            <div className="fixed inset-0 bg-black flex flex-col items-center justify-center z-50 overflow-hidden">
                 <div className="absolute inset-0 bg-white/5 animate-pulse-square"></div>
-                <MorphicEye className="w-32 h-32 border border-white bg-black animate-spin-slow" />
-                <h2 className="mt-8 text-white text-xl font-bold uppercase tracking-[0.3em] animate-pulse">Launching Neural Link...</h2>
+                <MorphicEye className="w-32 h-32 border border-white bg-black animate-spin-slow scale-125 transition-transform duration-1000" />
+                <h2 className="mt-12 text-white text-xl font-bold uppercase tracking-[0.5em] animate-pulse">Establishing Uplink...</h2>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center relative overflow-hidden">
-            {/* Background Grid */}
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.03)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+        <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-white/20">
+            {/* Background Grid - Subtle and Precise */}
+            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:6rem_6rem] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_70%,transparent_100%)]"></div>
 
-            <div className="z-10 w-full max-w-4xl px-6 grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            {/* Top Badge */}
+            <div className="absolute top-12 left-1/2 -translate-x-1/2">
+                <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md shadow-2xl">
+                    <IconBrain className="w-4 h-4 text-indigo-400" />
+                    <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-neutral-400">Agentic Workflow Engine v3.0</span>
+                </div>
+            </div>
 
-                {/* Left: Branding */}
-                <div className="text-center md:text-left space-y-6">
-                    <div className="inline-flex items-center gap-3 px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold uppercase tracking-widest text-neutral-400">
-                        <IconBrain className="w-3 h-3 text-indigo-400" />
-                        <span>Agentic Workflow Engine v3.0</span>
-                    </div>
-                    <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-white via-neutral-200 to-neutral-600 leading-[0.9]">
-                        Studio <br /> Environment
+            <div className="z-10 w-full max-w-[1200px] px-8 grid grid-cols-1 lg:grid-cols-2 gap-20 items-center mt-10">
+
+                {/* Left: Typography */}
+                <div className="text-left space-y-8">
+                    <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-white leading-[0.9]">
+                        Studio <br />
+                        <span className="text-transparent bg-clip-text bg-gradient-to-b from-neutral-200 to-neutral-600">Environment</span>
                     </h1>
-                    <p className="text-neutral-500 max-w-md text-sm leading-relaxed">
-                        Welcome to the dedicated creation workspace. Access your projects, configure your AI agents, and write without distractions.
+                    <p className="text-neutral-500 max-w-lg text-base md:text-lg leading-relaxed font-light">
+                        Welcome to your dedicated creation workspace. Access your projects, configure your AI agents, and write without distractions.
                     </p>
                 </div>
 
-                {/* Right: Actions */}
-                <div className="space-y-4 w-full max-w-md">
+                {/* Right: Interactive Cards */}
+                <div className="space-y-6 w-full max-w-md mx-auto lg:ml-auto">
 
+                    {/* Main Action Card */}
                     <button
                         onClick={handleEnterStudio}
-                        className="group w-full relative overflow-hidden bg-white text-black p-1 rounded-2xl transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                        className="group w-full relative overflow-hidden bg-white text-black p-1.5 rounded-[2rem] transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_40px_rgba(255,255,255,0.1)] hover:shadow-[0_0_60px_rgba(255,255,255,0.2)]"
                     >
-                        <div className="relative z-10 bg-white border border-neutral-200 rounded-xl px-6 py-6 flex items-center justify-between">
+                        <div className="relative z-10 bg-white border border-neutral-200 rounded-[1.5rem] px-8 py-8 flex items-center justify-between">
                             <div className="text-left">
-                                <h3 className="text-lg font-bold uppercase tracking-tight flex items-center gap-2">
-                                    <IconRocket className="w-5 h-5" /> Enter Studio
+                                <h3 className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                                    <IconRocket className="w-6 h-6" /> Enter Studio
                                 </h3>
-                                <p className="text-[10px] text-neutral-500 font-mono mt-1">NEW PROJECT / OPEN RECENT</p>
+                                <p className="text-[11px] text-neutral-500 font-mono mt-2 font-bold tracking-widest">NEW PROJECT / OPEN RECENT</p>
                             </div>
-                            <div className="w-10 h-10 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:rotate-45">
-                                <IconArrowRight className="w-5 h-5" />
+                            <div className="w-12 h-12 rounded-full bg-black text-white flex items-center justify-center transition-transform group-hover:rotate-45 group-hover:scale-110">
+                                <IconArrowRight className="w-6 h-6" />
                             </div>
                         </div>
                     </button>
 
+                    {/* Secondary Grid */}
                     <div className="grid grid-cols-2 gap-4">
-                        <button className="group relative overflow-hidden bg-neutral-900 border border-white/10 p-5 rounded-2xl hover:bg-neutral-800 transition-colors text-left hover:border-white/30">
-                            <IconSettings className="w-6 h-6 text-neutral-500 mb-3 group-hover:text-white transition-colors" />
-                            <h3 className="text-sm font-bold text-white uppercase tracking-tight">Agent Settings</h3>
-                            <p className="text-[9px] text-neutral-500 mt-1 pb-4">Configure Models & Personas</p>
+                        <button className="group relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-[1.5rem] hover:bg-[#111] transition-colors text-left hover:border-white/20">
+                            <IconSettings className="w-8 h-8 text-neutral-600 mb-4 group-hover:text-white transition-colors" />
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Agent Settings</h3>
+                            <p className="text-[10px] text-neutral-500 mt-1">Configure Models & Personas</p>
                         </button>
-                        <button className="group relative overflow-hidden bg-neutral-900 border border-white/10 p-5 rounded-2xl hover:bg-neutral-800 transition-colors text-left hover:border-white/30">
-                            <IconBook className="w-6 h-6 text-neutral-500 mb-3 group-hover:text-white transition-colors" />
-                            <h3 className="text-sm font-bold text-white uppercase tracking-tight">Archives</h3>
-                            <p className="text-[9px] text-neutral-500 mt-1 pb-4">View past drafts</p>
+                        <button className="group relative overflow-hidden bg-[#0A0A0A] border border-white/10 p-6 rounded-[1.5rem] hover:bg-[#111] transition-colors text-left hover:border-white/20">
+                            <IconBook className="w-8 h-8 text-neutral-600 mb-4 group-hover:text-white transition-colors" />
+                            <h3 className="text-sm font-bold text-white uppercase tracking-wider">Archives</h3>
+                            <p className="text-[10px] text-neutral-500 mt-1">View past drafts</p>
                         </button>
                     </div>
 
