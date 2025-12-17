@@ -3,6 +3,7 @@ import React, { useState, useEffect } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { IconRocket, IconBrain, IconSettings, IconArrowRight, IconBook } from '../constants';
 import MorphicEye from '../components/MorphicEye';
+import { getAppBaseUrl } from '../App';
 
 const { useNavigate } = ReactRouterDOM as any;
 
@@ -20,9 +21,10 @@ const StudioLandingPage: React.FC = () => {
 
     const handleEnterStudio = () => {
         setPhase('launch');
-        // Explicitly redirect to the production Firebase app
+        // Explicitly redirect to the production Firebase app (or mirror)
         setTimeout(() => {
-            window.location.href = "https://co-writter-studio.web.app";
+            const baseUrl = getAppBaseUrl();
+            window.location.href = `${baseUrl}/ebook-studio`;
         }, 1500);
     };
 

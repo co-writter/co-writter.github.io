@@ -26,7 +26,35 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 
 // Reverting to HashRouter for stability in cloud/preview environments
+// Reverting to HashRouter for stability in cloud/preview environments
 const { BrowserRouter, Routes, Route, useLocation } = ReactRouterDOM as any;
+
+export const getAppBaseUrl = () => {
+  const hostname = window.location.hostname;
+
+  // 1. Vercel Mirror (Dev/Test) - Point to self
+  if (hostname.includes('vercel.app')) {
+    return `https://${hostname}`;
+  }
+
+  // 2. Localhost - Point to self
+  if (hostname.includes('localhost')) {
+    return ''; // Relative path works
+  }
+
+  // 3. Studio/App Domain (Firebase) - Point to self
+  if (hostname.includes('web.app') || hostname.includes('firebaseapp.com')) {
+    return ''; // Relative path works
+  }
+
+  // 4. Landing Page (GitHub Pages) - Point to Production App (Firebase)
+  if (hostname.includes('github.io')) {
+    return 'https://co-writter-studio.web.app';
+  }
+
+  // Fallback
+  return 'https://co-writter-studio.web.app';
+};
 
 const STUDIO_URL = "https://co-writter-studio.web.app";
 const MAIN_SITE_URL = "https://co-writter.github.io";

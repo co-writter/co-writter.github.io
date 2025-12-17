@@ -5,6 +5,7 @@ import { useAppContext } from '../contexts/AppContext';
 import { APP_NAME, GOOGLE_CLIENT_ID, IconRocket, IconUser } from '../constants';
 import { UserType, User } from '../types';
 import MorphicEye from '../components/MorphicEye';
+import { getAppBaseUrl } from '../App';
 
 const { useNavigate, Link } = ReactRouterDOM as any;
 
@@ -57,9 +58,10 @@ const LoginPage: React.FC = () => {
     }, [currentUser, userType, navigate]);
 
     const handleFirebaseGoogleLogin = async () => {
-        // Domain Redirection Logic: Writers/Dashboard should use the Vercel App
+        // Domain Redirection Logic: If on Landing Page, go to App Login
         if (window.location.hostname.includes('github.io')) {
-            window.location.href = 'https://co-writter.vercel.app/login';
+            const baseUrl = getAppBaseUrl();
+            window.location.href = `${baseUrl}/login`;
             return;
         }
 
