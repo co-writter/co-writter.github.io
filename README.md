@@ -1,70 +1,50 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6"# Co-Writter: AI-Powered Publishing Platform
+  <img src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" width="100%" alt="Co-Writter Banner"/>
+  
+  # Co-Writter: AI-Powered Publishing Ecosystem
+  
+  [![Production Status](https://img.shields.io/badge/Status-Production-green?style=for-the-badge)](https://co-writter-studio.web.app)
+  [![GitHub Pages](https://img.shields.io/badge/Landing-GitHub_Pages-blue?style=for-the-badge)](https://co-writter.github.io)
+  [![Firebase](https://img.shields.io/badge/App-Firebase-orange?style=for-the-badge)](https://co-writter-studio.web.app)
+  
+  <p align="center">
+    <b>A professional studio environment for writing, publishing, and monetizing your work.</b>
+  </p>
+</div>
 
-![Co-Writter Studio](https://co-writter.github.io/studio-preview.png)
+## 🌐 Ecosystem & URLs
 
-## Overview
-Co-Writter is a next-generation ebook creation and publishing platform that leverages Google Gemini AI to assist authors in writing, editing, and selling their books. The platform integrates a powerful studio environment with a public marketplace.
+This project operates on a split-domain architecture to separate the public-facing marketing funnels from the secure application environment.
 
-- **Landing Page**: [https://co-writter.github.io](https://co-writter.github.io)
-- **Studio App (Production)**: [https://co-writter-studio.web.app](https://co-writter-studio.web.app)
-- **Development Mirror**: [https://co-writter.vercel.app](https://co-writter.vercel.app)
+| Environment | URL | Purpose |
+|-------------|-----|---------|
+| **Landing & Marketing** | [**co-writter.github.io**](https://co-writter.github.io) | Public entry point. Hosted on GitHub Pages. Redirects authenticated users. |
+| **Studio Application** | [**co-writter-studio.web.app**](https://co-writter-studio.web.app) | **The Real App**. Secure, authenticated Firebase environment for writing and publishing. |
+| *Development Mirror* | *co-writter.vercel.app* | *Internal testing & development mirror. Not for public use.* |
 
-## Architecture
+## 🚀 Key Features
 
-The project uses a split-domain architecture to ensure optimal performance and security:
+*   **Antigravity Design**: A premium, physics-inspired UI with glassmorphism and smooth animations.
+*   **AI-Powered Studio**: Integrated with Google Gemini for advanced writing assistance.
+*   **Secure Authentication**: Protected routes ensuring only verified users can access the studio.
+*   **Monetization**: Built-in marketplace infrastructure using Razorpay.
 
-1.  **Marketing & Funnel (`github.io`)**:
-    *   Hosted on GitHub Pages.
-    *   Serves the Landing Page, Policy Pages, and Studio Funnel.
-    *   Redirects authenticated users to the secure Studio application.
+## 🛠 Architecture
 
-2.  **Application Core (`web.app`)**:
-    *   Hosted on Firebase Hosting (`co-writter-studio`).
-    *   Contains the `EbookStudio`, `Dashboard`, and `WriterTools`.
-    *   Protected by Firebase Authentication.
+1.  **Frontend**: React 18, TypeScript, Vite.
+2.  **Routing**: Smart routing based on domain context (`github.io` vs `web.app`).
+3.  **Authentication**: Firebase Auth (Google OAuth).
+4.  **Deployment**: Automated multi-target deployment (GitHub Actions -> Pages, Firebase CLI -> Hosting).
 
-3.  **Development Mirror (`vercel.app`)**:
-    *   Continuous Deployment from the `main` branch.
-    *   Used for testing new features in a production-like environment before final release.
+## 🔒 Authentication Configuration
 
-## Tech Stack
-*   **Frontend**: React 18, TypeScript, Vite
-*   **Styling**: TailwindCSS, Framer Motion
-*   **Backend / Auth**: Firebase (Auth, Firestore, Storage)
-*   **AI Engine**: Google Gemini API
-*   **Payments**: Razorpay
+To ensure secure sign-ins, the following **Authorized Redirect URIs** must be whitelisted in the Google Cloud Console / Firebase Console:
 
-## Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Run local development server
-npm run dev
-# App runs at http://localhost:5173
-```
-
-## Deployment
-
-The project is configured for automated multi-target deployment.
-
-### Deploy to Production (Firebase)
-```bash
-# Switch to Production Project
-firebase use co-writter-studio
-
-# Build & Deploy
-npm run build
-firebase deploy --only hosting
-```
-
-### Deploy to Landing (GitHub Pages)
-Updates to the `main` branch are automatically deployed to GitHub Pages via GitHub Actions (if configured) or can be manually deployed:
-```bash
-npm run deploy
-```
+*   `https://co-writter-studio.web.app/__/auth/handler`
+*   `https://co-writter-studio.firebaseapp.com/__/auth/handler`
+*   `https://co-writter.github.io` (for initial redirection flow)
+*   `http://localhost:5173` (Local Dev)
+*   `https://co-writter.vercel.app` (Dev Mirror)
 
 ---
-*Built with ❤️ by OpenDev Labs*
+*© 2025 OpenDev Labs. All Rights Reserved.*

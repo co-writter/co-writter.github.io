@@ -9,7 +9,7 @@ import DashboardPage from './pages/DashboardPage';
 import CheckoutPage from './pages/CheckoutPage';
 import LoginPage from './pages/LoginPage';
 import PricingPage from './pages/PricingPage';
-import { AppProvider } from './contexts/AppContext';
+import { AppProvider, useAppContext } from './contexts/AppContext';
 import CreatorSitePage from './pages/CreatorSitePage';
 import EditEBookPage from './pages/EditEBookPage';
 import EbookStudioPage from './pages/EbookStudioPage';
@@ -106,20 +106,34 @@ const AnimatedRoutes = () => {
   );
 };
 
-const StudioProtectedRoutes = () => {
-  // In a real implementation with shared auth state (e.g. via cookie or token passed), we would check here.
-  // Since Firebase Auth persists in IndexedDB, it *might* share across subdomains if configured, but 
-  // across different domains (github.io vs web.app) it does not by default without custom logic.
-  // For now, we rely on the user having logged in via the Github.io flow which usually redirects here,
-  // OR they just login directly here if the session isn't found.
+const RequireAuth = ({ children }: { children: React.ReactElement }) => {
+  const { currentUser, loading } = useAppContext();
+  const location = useLocation();
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    // Redirect to login, remembering where they tried to go
+    return ReactRouterDOM.Navigate({ to: "/login", state: { from: location } });
+  }
+
+  return children;
+};
+
+const StudioProtectedRoutes = () => {
   return (
     <Routes>
-      <Route path="/" element={<EbookStudioPage />} />
-      <Route path="/ebook-studio" element={<EbookStudioPage />} />
+      <Route path="/" element={<RequireAuth><EbookStudioPage /></RequireAuth>} />
+      <Route path="/ebook-studio" element={<RequireAuth><EbookStudioPage /></RequireAuth>} />
+      <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/dashboard" element={<DashboardPage />} />
-      <Route path="*" element={<EbookStudioPage />} />
+      <Route path="*" element={<RequireAuth><EbookStudioPage /></RequireAuth>} />
     </Routes>
   )
 }
@@ -129,8 +143,11 @@ const App: React.FC = () => {
   // Logic to identify if we are on the "Studio" (Application) Domain
   const isStudioDomain =
     window.location.hostname.includes('firebaseapp.com') ||
-    window.location.hostname.includes('web.app') ||
-    window.location.hostname.includes('localhost');
+    window.location.hostname.includes('web.app');
+  // Note: Localhost is treated as Landing/Dev by default unless manually toggled, 
+  // but for safety we can treat localhost as 'hybrid' or dev mirror. 
+  // To test Studio locally, one might need to toggle this variable manually or use specific port.
+
 
   React.useEffect(() => {
     initGA();
