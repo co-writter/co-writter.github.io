@@ -21,8 +21,9 @@ const StudioLandingPage: React.FC = () => {
     const handleEnterStudio = () => {
         setPhase('launch');
         setTimeout(() => {
-            navigate('/ebook-studio');
-        }, 1000);
+            // Redirect to the Studio Domain
+            window.location.href = "https://co-writter-studio.web.app/ebook-studio";
+        }, 1200);
     };
 
     if (phase === 'init') {

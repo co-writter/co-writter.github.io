@@ -28,6 +28,9 @@ import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 // Reverting to HashRouter for stability in cloud/preview environments
 const { BrowserRouter, Routes, Route, useLocation } = ReactRouterDOM as any;
 
+const STUDIO_URL = "https://co-writter-studio.web.app";
+const MAIN_SITE_URL = "https://co-writter.github.io";
+
 const ExternalRedirect = ({ to }: { to: string }) => {
   React.useEffect(() => {
     window.location.href = to;
@@ -42,7 +45,6 @@ const ExternalRedirect = ({ to }: { to: string }) => {
 const AnimatedRoutes = () => {
   const location = useLocation();
 
-  // Scroll to top whenever the route changes
   React.useLayoutEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -56,20 +58,16 @@ const AnimatedRoutes = () => {
         <Route path="/pricing" element={<PricingPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
-        {/* Internal Creator Page */}
         <Route path="/s/:slug" element={<CreatorSitePage />} />
-        {/* Standalone Hosting Preview */}
         <Route path="/site/:username" element={<HostingPreviewPage />} />
-
         <Route path="/edit-ebook/:bookId" element={<EditEBookPage />} />
 
-        {/* If on main domain, redirect studio to web.app. If on web.app, this route is valid too but usually handled by root. */}
-        <Route path="/ebook-studio" element={window.location.hostname.includes('web.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://code-co-writter.web.app" />} />
-        <Route path="/studio" element={window.location.hostname.includes('web.app') ? <EbookStudioPage /> : <ExternalRedirect to="https://code-co-writter.web.app" />} />
+        {/* Studio Landing Page on Main Site - Redirects to App if clicked, or acts as funnel */}
+        <Route path="/ebook-studio" element={<StudioLandingPage />} />
+        <Route path="/studio" element={<StudioLandingPage />} />
 
         <Route path="/read/:bookId" element={<EbookReaderPage />} />
 
-        {/* Policy Routes */}
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/shipping-policy" element={<ShippingPolicyPage />} />
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
@@ -80,11 +78,30 @@ const AnimatedRoutes = () => {
   );
 };
 
+const StudioProtectedRoutes = () => {
+  // In a real implementation with shared auth state (e.g. via cookie or token passed), we would check here.
+  // Since Firebase Auth persists in IndexedDB, it *might* share across subdomains if configured, but 
+  // across different domains (github.io vs web.app) it does not by default without custom logic.
+  // For now, we rely on the user having logged in via the Github.io flow which usually redirects here,
+  // OR they just login directly here if the session isn't found.
+
+  return (
+    <Routes>
+      <Route path="/" element={<EbookStudioPage />} />
+      <Route path="/ebook-studio" element={<EbookStudioPage />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/dashboard" element={<DashboardPage />} />
+      <Route path="*" element={<EbookStudioPage />} />
+    </Routes>
+  )
+}
+
 const App: React.FC = () => {
+
+  // Logic to identify if we are on the "Studio" (Application) Domain
   const isStudioDomain =
-    window.location.hostname.includes('vercel.app') ||
-    window.location.hostname.includes('web.app') ||
     window.location.hostname.includes('firebaseapp.com') ||
+    window.location.hostname.includes('web.app') ||
     window.location.hostname.includes('localhost');
 
   React.useEffect(() => {
@@ -98,35 +115,20 @@ const App: React.FC = () => {
 
           {/* === GLOBAL ANTIGRAVITY THEME BACKGROUND === */}
           <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-            {/* Deep Space Gradients */}
             <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,30,1)_0%,rgba(0,0,0,1)_100%)]"></div>
-
-            {/* Floating Debris / Geometry */}
             <div className="absolute top-[20%] left-[15%] w-32 h-32 border border-white/5 rounded-full animate-float opacity-30 blur-[1px]"></div>
             <div className="absolute bottom-[25%] right-[20%] w-64 h-64 border border-white/5 rotate-45 animate-float-delayed opacity-20"></div>
-
-            {/* Scanlines */}
             <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
             <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[grid-flow_8s_linear_infinite]"></div>
           </div>
 
           {/* === Foreground Content === */}
           <div className="flex-grow relative z-10 flex flex-col w-full">
-
-            {/* Navbar is strictly for the Main Site. Studio Mode has its own UI or Landing. */}
             {!isStudioDomain && <Navbar />}
 
             <main className="flex-grow flex flex-col">
               {isStudioDomain ? (
-                <Routes>
-                  <Route path="/" element={<StudioLandingPage />} />
-                  <Route path="/ebook-studio" element={<EbookStudioPage />} />
-                  {/* Allow login on Studio Domain too if needed, or redirect back to main? Let's allow login. */}
-                  <Route path="/login" element={<LoginPage />} />
-                  <Route path="/dashboard" element={<DashboardPage />} />
-                  {/* Redirect anything else to root of studio */}
-                  <Route path="*" element={<StudioLandingPage />} />
-                </Routes>
+                <StudioProtectedRoutes />
               ) : (
                 <AnimatedRoutes />
               )}
