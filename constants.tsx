@@ -14,7 +14,7 @@ export const GEMINI_IMAGE_MODEL = "gemini-1.5-flash";
 
 // UPDATED KEYS FROM USER PROMPT
 export const RAZORPAY_KEY_ID = "rzp_live_RR5721D6h6BMt4";
-export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "55195088674-sk8akeomnpl9e1lf3t7iuhjq8tm278m7.apps.googleusercontent.com";
+export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "221587475436-aicsikclgbqu4g3poihgtnapbpk0tgmv.apps.googleusercontent.com";
 
 // Tabler Icons (as JSX) - Ensure all use stroke="currentColor"
 export const IconBook = (props: React.SVGProps<SVGSVGElement>) => (

@@ -108,39 +108,50 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (!auth) return;
 
         unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-          if (fbUser) {
-            console.log("Firebase Auth detected:", fbUser.email);
-            // If we already have a user in state, don't necessarily overwrite unless it's different
-            // But checking Firestore is better for "Full Power"
-            try {
-              const userDoc = await getDoc(doc(db, "users", `google_${fbUser.uid}`));
-              if (userDoc.exists()) {
-                const userData = userDoc.data() as any;
-                setCurrentUser(userData, userData.userType === 'seller' ? UserType.SELLER : UserType.USER);
-              } else {
-                // New user or direct login without doc (unlikely if signin flow is correct)
-                const newUser: User = {
-                  id: `google_${fbUser.uid}`,
-                  name: fbUser.displayName || 'Unknown',
-                  email: fbUser.email || '',
-                  purchaseHistory: [],
-                  wishlist: [],
-                  isVerified: fbUser.emailVerified,
-                  profileImageUrl: fbUser.photoURL || ''
-                };
-                setCurrentUser(newUser, UserType.USER);
+          try {
+            if (fbUser) {
+              console.log("Firebase Auth detected:", fbUser.email);
+              // Set a timeout for the Firestore fetch to prevent permanent loading hang
+              const fetchPromise = getDoc(doc(db, "users", `google_${fbUser.uid}`));
+              const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout")), 8000));
+
+              try {
+                const userDoc = (await Promise.race([fetchPromise, timeoutPromise])) as any;
+                if (userDoc.exists()) {
+                  const userData = userDoc.data() as any;
+                  setCurrentUser(userData, userData.userType === 'seller' ? UserType.SELLER : UserType.USER);
+                } else {
+                  // Fallback for new user
+                  const newUser: User = {
+                    id: `google_${fbUser.uid}`,
+                    name: fbUser.displayName || 'Unknown',
+                    email: fbUser.email || '',
+                    purchaseHistory: [],
+                    wishlist: [],
+                    isVerified: fbUser.emailVerified,
+                    profileImageUrl: fbUser.photoURL || ''
+                  };
+                  setCurrentUser(newUser, UserType.USER);
+                }
+              } catch (err: any) {
+                console.error("Firestore sync error or timeout:", err);
+                // IF FIREBASE IS BLOCKED (403), do not hang, show as guest
+                if (err.message === "Timeout" || err.code === 'permission-denied' || (err.message && err.message.includes('blocked'))) {
+                  console.warn("Recovering from blocked/timed out Firebase state...");
+                  setCurrentUser(null, UserType.GUEST);
+                }
               }
-            } catch (err) {
-              console.error("Error syncing Firestore user:", err);
+            } else {
+              if (currentUser?.id.startsWith('google_')) {
+                setCurrentUser(null, UserType.GUEST);
+              }
             }
-          } else {
-            // Only clear if we were previously logged in via Firebase
-            // (Avoiding clearing admin/email login state for now)
-            if (currentUser?.id.startsWith('google_')) {
-              setCurrentUser(null, UserType.GUEST);
-            }
+          } catch (outerErr) {
+            console.error("Critical Auth Listener Error:", outerErr);
+            setCurrentUser(null, UserType.GUEST);
+          } finally {
+            setLoading(false);
           }
-          setLoading(false);
         });
       } catch (err) {
         console.error("Auth Sync Init Failed:", err);
