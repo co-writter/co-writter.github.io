@@ -1,64 +1,37 @@
-# co-writter
+# Co-Writter: Market-Ready Architecture 🚀
 
-## The Professional AI Publishing Platform
+This document defines the professional architecture and deployment strategy for the **Co-Writter** SaaS platform.
 
-Welcome to **co-writter**, the definitive platform for creating, refining, and selling digital literature. Powered by the proprietary **Co-Author** neural engine, this software bridges the gap between human creativity and machine intelligence.
+## 1. Market Entry & Domains 📂
 
----
-
-## 🚀 Quick Start (Linux/Unix)
-
-### Step 1: Installation
-Run the installer script to set up the environment and dependencies.
-
-```bash
-chmod +x install-ebook-engine.sh
-./install-ebook-engine.sh
-```
-
-### Step 2: Launch Studio
-Start the development server with hot-reloading enabled.
-
-```bash
-chmod +x run-ebook-engine.sh
-./run-ebook-engine.sh --dev
-```
+| Component | Responsibility | URL | Owner Account |
+| :--- | :--- | :--- | :--- |
+| **Primary Site** | Main Entry & SaaS Dashboard | [co-writter.github.io](https://co-writter.github.io) | `subatomiceror@gmail.com` |
+| **App Engine** | Firebase Studio Backend | [co-writter-51007753.web.app](https://co-writter-51007753.web.app) | `opendev.help@gmail.com` |
+| **Code Repo** | Source Code & Automation | [github.com/co-writter/co-writter.github.io](https://github.com/co-writter/co-writter.github.io) | `subatomiceror@gmail.com` |
 
 ---
 
-## 🏗 Architecture & Core Systems
+## 2. Professional SEO & Branding (v1.0) 🔍
 
-**co-writter** is architected as a high-performance, serverless Single Page Application (SPA).
-
-*   **Frontend**: React 18 + Vite (TypeScript)
-*   **Neural Engine**: Co-Author (powered by Google Gemini 2.5 Flash)
-*   **Styling**: Tailwind CSS with custom `obsidian` easing
-*   **State Management**: React Context + LocalStorage Persistence
-
-### The Co-Author Engine
-The heart of **co-writter** is **Co-Author**, an advanced AI agent designed for narrative consistency.
-*   **Context Awareness**: Remembers previous chapters and character arcs.
-*   **Visual Synthesis**: Generates cover art and inline illustrations via Gemini 2.5 Image.
-*   **Spectral Analysis**: Analyzes PDF manuscripts for genre, tone, and pacing.
+To ensure market readiness, the following SEO parameters are implemented:
+- **Title**: Co-Writter | AI-Powered Ebook Studio
+- **Meta Description**: Professional AI authoring engine for creators. Write, format, and publish ebooks instantly.
+- **OpenGraph**: Professional preview cards for social media (Twitter/X, LinkedIn, WhatsApp).
 
 ---
 
-## 🌐 Deployment (GitHub Pages)
+## 3. Automation & Deployment 🤖
 
-To host your own instance of **co-writter**:
+We use **GitHub Actions** for dual-deployment:
+- **Trigger**: Every push to `main`.
+- **Destination 1**: GitHub Pages (Client-side app).
+- **Destination 2**: Firebase Hosting (Dynamic studio features).
 
-1.  **Build**: `npm run build`
-2.  **Deploy**: Push the `dist` folder to your `gh-pages` branch.
-3.  **Access**: Visit `https://your-username.github.io/co-writter/`
-
----
-
-## 🎨 Professional Suite
-
-*   **Studio Editor**: A distraction-free markdown environment with slash commands (`/img`, `/h1`).
-*   **Marketplace**: A fully functional digital store for selling your creations.
-*   **Writer Dashboard**: Real-time analytics, revenue tracking, and audience insights.
+### Required Setup:
+Ensure the following secret is in the repository at [github.com/co-writter/co-writter.github.io](https://github.com/co-writter/co-writter.github.io/settings/secrets/actions):
+- `FIREBASE_SERVICE_ACCOUNT_CO_WRITTER_51007753`
 
 ---
 
-**© OpenDev Labs.** *Where Thought Becomes Literature.*
+*This document is the Source of Truth for Co-Writter's production architecture.*

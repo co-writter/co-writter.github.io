@@ -1,9 +1,9 @@
-
 import React from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
-import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain } from '../constants';
+import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain, IconArrowRight } from '../constants';
 import MorphicEye from '../components/MorphicEye';
 import { useAppContext } from '../contexts/AppContext';
+import { getAppBaseUrl } from '../App';
 
 const { Link, useNavigate } = ReactRouterDOM as any;
 
@@ -72,7 +72,6 @@ const LeadCaptureForm = () => {
         setStatus('loading');
 
         try {
-            // Dynamic import to avoid loading Firebase SDk on initial load unless needed
             const { db } = await import('../services/firebase');
             const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
 
@@ -120,21 +119,53 @@ const LeadCaptureForm = () => {
 
 const HomePage: React.FC = () => {
     const navigate = useNavigate();
-    const { currentUser } = useAppContext();
+    const { currentUser, handleFirebaseGoogleLogin } = useAppContext();
+    const [isLoginLoading, setIsLoginLoading] = React.useState(false);
+
+    const onLoginClick = async () => {
+        setIsLoginLoading(true);
+        try {
+            await handleFirebaseGoogleLogin();
+            // If it returns, we are on the app domain and logged in
+            navigate('/dashboard');
+        } catch (err) {
+            console.error("Login failed", err);
+            setIsLoginLoading(false);
+        }
+    };
 
     return (
         <div className="min-h-screen bg-transparent text-white selection:bg-google-blue/30 overflow-x-hidden">
 
             {/* --- HERO SECTION --- */}
-            <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center pt-32 pb-20 z-10">
+            <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center pt-32 pb-20 z-10 overflow-hidden">
+
+                {/* Background Polish */}
+                <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none"></div>
+                <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none"></div>
 
                 {/* Local Hero Effects */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-google-blue/10 rounded-full blur-[100px] pointer-events-none"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none"></div>
 
                 <div className="relative z-10 animate-slide-up flex flex-col items-center max-w-5xl mx-auto">
 
                     <div className="mb-8 md:mb-10 scale-100 hover:scale-105 transition-transform duration-500">
-                        <MorphicEye className="w-24 h-24 md:w-40 md:h-40 bg-[#050505] shadow-[0_0_80px_rgba(255,255,255,0.15)] border border-white/30 rounded-full" />
+                        <MorphicEye className="w-24 h-24 md:w-32 md:h-32 bg-[#050505] shadow-[0_0_80px_rgba(255,255,255,0.15)] border border-white/30 rounded-full" />
+                    </div>
+
+                    {/* Funnel Live Ticker */}
+                    <div className="mb-12 bg-white/5 border border-white/10 rounded-2xl px-6 py-2 flex items-center gap-6 overflow-hidden relative max-w-xl mx-auto backdrop-blur-md">
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                            <span className="w-2 h-2 rounded-full bg-[#81c995] animate-pulse"></span>
+                            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#81c995]">Ecosystem Pulse</span>
+                        </div>
+                        <div className="h-3 w-px bg-white/10 flex-shrink-0"></div>
+                        <div className="flex gap-12 animate-marquee whitespace-nowrap text-[9px] font-bold text-neutral-500 uppercase tracking-widest">
+                            <span>New Creator Joined: @alex_writes</span>
+                            <span>Sale: "Quantum Poetry" - ₹299</span>
+                            <span>Payout: ₹1.4k sent to @dev_writer</span>
+                            <span>Nodes Online: 1,284 Operational</span>
+                        </div>
                     </div>
 
                     <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-[0.95] md:leading-[0.9] drop-shadow-2xl">
@@ -142,43 +173,49 @@ const HomePage: React.FC = () => {
                         <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-neutral-500">Into Books.</span>
                     </h1>
 
-                    <p className="text-base md:text-xl text-neutral-300 max-w-2xl mb-10 leading-relaxed px-4 drop-shadow-md">
-                        The easiest way to write, read, and sell books with AI.
-                        <br className="my-2 block" />
-                        <span className="inline-block mt-1">Powered by <span className="text-white font-mono font-bold border-b border-white/20 pb-0.5">GOOGLE</span>.</span>
+                    <p className="text-base md:text-xl text-neutral-400 max-w-2xl mb-10 leading-relaxed px-4 drop-shadow-md">
+                        The professional AI authoring engine for creators.
+                        <br />
+                        Write, format, and publish ebooks instantly.
                     </p>
 
                     <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
                         {currentUser ? (
                             <a
-                                href="https://co-writter-studio.web.app/ebook-studio"
+                                href={`${getAppBaseUrl()}/ebook-studio`}
                                 className="w-full sm:w-auto px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 group"
                             >
                                 <IconRocket className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
-                                Start Writing
+                                Launch Studio
                             </a>
                         ) : (
                             <>
-                                <a
-                                    href="https://co-writter-studio.web.app/login"
-                                    className="px-8 py-4 rounded-full font-bold text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 relative overflow-hidden group"
+                                <button
+                                    onClick={onLoginClick}
+                                    disabled={isLoginLoading}
+                                    className="px-10 py-5 rounded-full font-black text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 flex items-center gap-3 disabled:opacity-50"
                                 >
-                                    <span className="relative z-10 flex items-center gap-2">Start Creating <IconArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" /></span>
-                                </a>
-                                <a
-                                    href="https://co-writter-studio.web.app/login"
-                                    className="px-8 py-4 rounded-full font-bold text-white border border-white/20 hover:bg-white/10 transition-all backdrop-blur-md"
+                                    {isLoginLoading ? (
+                                        <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
+                                    ) : (
+                                        <>Get Started <IconArrowRight className="w-5 h-5" /></>
+                                    )}
+                                </button>
+                                <button
+                                    onClick={onLoginClick}
+                                    disabled={isLoginLoading}
+                                    className="px-10 py-5 rounded-full font-black text-white border border-white/20 hover:bg-white/10 transition-all backdrop-blur-md disabled:opacity-50"
                                 >
-                                    Sign In
-                                </a>
+                                    Login
+                                </button>
                             </>
                         )}
                     </div>
 
-                    <div className="mt-12 flex flex-col md:flex-row items-center gap-4 md:gap-8 text-neutral-400 text-xs font-mono uppercase tracking-widest">
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green" /> Easy to Use</span>
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green" /> Free to Start</span>
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green" /> Instant Publishing</span>
+                    <div className="mt-12 flex flex-wrap justify-center items-center gap-4 md:gap-8 text-neutral-500 text-[10px] font-mono uppercase tracking-[0.3em]">
+                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Easy to Use</span>
+                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Free to Start</span>
+                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Instant Publishing</span>
                     </div>
                 </div>
             </section>

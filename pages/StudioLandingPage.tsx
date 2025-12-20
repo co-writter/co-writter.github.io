@@ -60,8 +60,10 @@ const StudioLandingPage: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-[#050505] text-white flex flex-col items-center justify-center relative overflow-hidden font-sans selection:bg-white/20">
-            {/* Background Grid - Subtle and Precise */}
-            <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.02)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:6rem_6rem] [mask-image:radial-gradient(ellipse_80%_80%_at_50%_0%,#000_70%,transparent_100%)]"></div>
+            {/* Background Polish */}
+            <div className="absolute inset-0 bg-grid opacity-10 pointer-events-none"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-white/5 rounded-full blur-[160px] pointer-events-none animate-pulse-slow"></div>
 
             {/* Top Badge */}
             <div className="absolute top-12 left-1/2 -translate-x-1/2">

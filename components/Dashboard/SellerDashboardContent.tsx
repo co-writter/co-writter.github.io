@@ -1,20 +1,21 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
-import { Seller, EBook, CreatorSiteConfig, UserType } from '../../types';
-import BookUploadForm from '../BookUpload/BookUploadForm';
-import AnalyticsChart from './AnalyticsChart';
+import { Seller, UserType } from '../../types';
 import {
     IconSettings, IconBook,
     IconEdit, IconCheck,
     IconActivity, IconPlus, IconCloudUpload, IconGithub, IconLink,
-    IconUser, IconEye, IconClock, IconGlobe, IconDashboard, IconStar
+    IconUser, IconEye, IconClock, IconGlobe, IconDashboard, IconStar,
+    IconSparkles, IconPenTip, IconLogout, IconTrendUp
 } from '../../constants';
 import * as ReactRouterDOM from 'react-router-dom';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import { saveUserDataToGitHub } from '../../services/cloudService';
 import { mockUsers } from '../../services/mockData';
 
 const { useNavigate } = ReactRouterDOM as any;
+import StudioHeader from '../StudioHeader';
 
 const mockVisitors = [
     { id: 1, name: "Alice Freeman", email: "alice.f...@gmail.com", location: "Mumbai, IN", time: "2 mins ago", status: "Signed In", action: "Viewed 'The Void Start'", avatar: "A" },
@@ -26,365 +27,563 @@ const mockVisitors = [
 ];
 
 export const SellerDashboardContent: React.FC = () => {
-    const { currentUser, updateSellerCreatorSite, addCreatedBook, setCurrentUser } = useAppContext();
-    const seller = currentUser as Seller;
-    const [activeTab, setActiveTab] = useState<'overview' | 'studio' | 'audience' | 'settings' | 'admin'>('overview');
+    const { currentUser, setCurrentUser, books, updateBook, deleteBook, addCreatedBook } = useAppContext();
     const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState<'overview' | 'studio' | 'audience' | 'settings' | 'executive'>('overview');
     const [isDeploying, setIsDeploying] = useState(false);
     const [deploymentUrl, setDeploymentUrl] = useState<string | null>(null);
 
-    // HYPERINTELLIGENCE: Realtime Data Fetching
-    const [leadsCount, setLeadsCount] = useState(0);
-    useEffect(() => {
-        let unsubscribe = () => { };
-        const fetchRealtimeStats = async () => {
-            try {
-                const { db } = await import('../../services/firebase');
-                const { collection, onSnapshot, query } = await import('firebase/firestore');
+    // Casting currentUser to Seller for convenience
+    const seller = currentUser as Seller;
 
-                const q = query(collection(db, "leads"));
-                unsubscribe = onSnapshot(q, (snapshot) => {
-                    setLeadsCount(snapshot.size);
-                });
-            } catch (e) {
-                console.log("Dashboard running in offline/demo mode");
-            }
-        };
-        fetchRealtimeStats();
-        return () => unsubscribe();
-    }, []);
-
-    const myUploadedBooks = seller?.uploadedBooks || [];
-
-    const stats = [
-        { label: 'Total Sales', value: '$12,450', change: '+12%', icon: <IconActivity className="w-5 h-5 text-indigo-400" /> },
-        { label: 'Active Readers', value: '450', change: '+5%', icon: <IconBook className="w-5 h-5 text-emerald-400" /> },
-        { label: 'Newsletter Leads', value: leadsCount > 0 ? leadsCount.toString() : '0', change: 'NEW', icon: <IconUser className="w-5 h-5 text-amber-400" /> },
-        { label: 'Avg. Rating', value: '4.8', change: '+0.2', icon: <IconStar className="w-5 h-5 text-purple-400" /> },
-    ];
-
-    const [creatorSiteForm, setCreatorSiteForm] = useState<CreatorSiteConfig>(
-        seller?.creatorSite || {
-            isEnabled: false,
-            slug: seller?.name.toLowerCase().replace(/\s+/g, '-'),
-            theme: 'dark-minimal',
-            profileImageUrl: seller?.profileImageUrl || '',
-            displayName: seller?.name || '',
-            tagline: 'Author & Digital Creator',
-            showcasedBookIds: [],
-        }
-    );
-
-    useEffect(() => {
-        if (seller?.creatorSite) {
-            setCreatorSiteForm(seller.creatorSite);
-        }
-    }, [seller]);
+    const [creatorSiteForm, setCreatorSiteForm] = useState({
+        displayName: seller?.name || '',
+        tagline: 'Leading the future of digital literature.',
+        slug: seller?.name?.toLowerCase().replace(/\s+/g, '-') || 'my-studio',
+        theme: 'dark'
+    });
 
     if (!seller) return null;
 
-    const handleBookUploaded = (book: EBook) => {
-        addCreatedBook(book);
-        setActiveTab('overview');
+    const isOwner = seller.isAdmin === true || seller.email === 'subatomicerror@gmail.com';
+
+    const handleLogout = () => {
+        setCurrentUser(null, UserType.GUEST);
+        navigate('/login');
     };
 
     const handleDeployToGitHub = async () => {
-        if (!creatorSiteForm.slug) return;
         setIsDeploying(true);
-        updateSellerCreatorSite(creatorSiteForm);
-        const result = await saveUserDataToGitHub(creatorSiteForm.slug, {
-            sellerProfile: seller,
-            siteConfig: creatorSiteForm,
-            books: myUploadedBooks
-        });
-        if (result.success) {
-            setDeploymentUrl(result.url || null);
-        }
-        setIsDeploying(false);
-    };
-
-    const handleCreatorSiteFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-        const { name, value, type } = e.target;
-        if (type === 'checkbox') {
-            const { checked } = e.target as HTMLInputElement;
-            setCreatorSiteForm(prev => ({ ...prev, [name]: checked }));
-        } else {
-            setCreatorSiteForm(prev => ({ ...prev, [name]: value }));
+        try {
+            const result = await saveUserDataToGitHub(seller.id, {
+                creatorConfig: creatorSiteForm,
+                books: (books || []).filter(b => b.sellerId === seller.id)
+            });
+            if (result.success) {
+                setDeploymentUrl(result.url || null);
+                alert("Site Published Successfully! It will be live at " + result.url);
+            }
+        } catch (error) {
+            console.error("Deployment failed", error);
+            alert("Deployment failed. Check console.");
+        } finally {
+            setIsDeploying(false);
         }
     };
 
-    const SidebarItem = ({ id, label, icon: Icon }: any) => (
+    const handleCreatorSiteFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        const { name, value } = e.target;
+        setCreatorSiteForm(prev => ({ ...prev, [name]: value }));
+    };
+
+    const SidebarItem = ({ id, label, icon: Icon }: { id: any, label: string, icon: any }) => (
         <button
             onClick={() => setActiveTab(id)}
-            className={`w-full flex items-center gap-4 px-6 py-3.5 text-sm font-medium rounded-r-full transition-all duration-200 group ${activeTab === id
-                ? 'bg-[#34a853]/15 text-[#81c995] border-l-4 border-[#34a853]'
-                : 'text-neutral-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
+            className={`w-full flex items-center gap-4 px-6 py-3.5 text-sm font-medium rounded-r-full transition-all duration-200 border-l-4 group ${activeTab === id
+                ? 'bg-white/10 text-white border-white shadow-[0_0_20px_rgba(255,255,255,0.05)]'
+                : 'text-neutral-400 hover:bg-white/5 hover:text-white border-transparent'
                 }`}
         >
-            <Icon className={`w-5 h-5 ${activeTab === id ? 'text-[#81c995]' : 'text-neutral-500 group-hover:text-white'}`} />
+            <Icon className={`w-5 h-5 ${activeTab === id ? 'text-white' : 'text-neutral-500 group-hover:text-white'}`} />
             {label}
         </button>
     );
 
-    const MobileNavItem = ({ id, label, icon: Icon }: any) => (
+    const MobileNavItem = ({ id, label, icon: Icon }: { id: any, label: string, icon: any }) => (
         <button
             onClick={() => setActiveTab(id)}
-            className={`flex flex-col items-center justify-center py-2 px-4 flex-1 transition-colors ${activeTab === id ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'
+            className={`flex flex-col items-center justify-center py-2 px-4 transition-colors ${activeTab === id ? 'text-white' : 'text-neutral-500'
                 }`}
         >
-            <Icon className={`w-6 h-6 mb-1 ${activeTab === id ? 'text-[#81c995]' : 'text-current'}`} />
-            <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
+            <Icon className={`w-6 h-6 mb-1 ${activeTab === id ? 'text-white' : 'text-neutral-500'}`} />
+            <span className="text-[10px] font-bold uppercase tracking-widest">{label}</span>
         </button>
     );
 
-    // OWNER CHECK
-    const isOwner = seller.isAdmin === true || seller.email === 'subatomicerror@gmail.com';
-
     return (
-        <div className="h-screen w-full bg-[#0b0b0b] font-sans text-white pt-16 flex overflow-hidden">
+        <div className="h-screen w-full bg-[#0b0b0b] font-sans text-white flex flex-col overflow-hidden">
 
-            {/* --- SIDEBAR (Desktop) --- */}
-            <aside className="w-64 flex-shrink-0 border-r border-white/5 hidden md:flex flex-col bg-[#0b0b0b] z-20 h-full overflow-y-auto">
+            <StudioHeader />
 
-                {/* Nav Menu */}
-                <nav className="flex-1 space-y-1 pr-4 mt-6">
-                    <SidebarItem id="overview" label="Overview" icon={IconActivity} />
-                    <SidebarItem id="audience" label="Audience" icon={IconUser} />
-                    <SidebarItem id="studio" label="Content Manager" icon={IconCloudUpload} />
-                    <div className="my-4 border-t border-white/5 mx-6"></div>
-                    <SidebarItem id="settings" label="Site Settings" icon={IconSettings} />
+            <div className="flex-1 flex overflow-hidden">
 
-                    {/* Admin Only Tab */}
-                    {isOwner && (
-                        <>
-                            <div className="my-4 border-t border-white/5 mx-6"></div>
-                            <SidebarItem id="admin" label="System Admin" icon={IconDashboard} />
-                        </>
-                    )}
-                </nav>
-
-                <div className="p-6 border-t border-white/5">
-                    <button
-                        onClick={() => setCurrentUser(currentUser, UserType.USER)}
-                        className="text-xs font-medium text-neutral-500 hover:text-white transition-colors mb-4 block"
-                    >
-                        Switch to Reading Mode
-                    </button>
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-neutral-800 overflow-hidden border border-white/10">
-                            {seller.profileImageUrl ? (
-                                <img src={seller.profileImageUrl} alt="" className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-neutral-500 font-bold">{seller.name[0]}</div>
-                            )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-bold truncate flex items-center gap-2">
-                                {seller.name}
-                                {seller.isVerified && <IconCheck className="w-3 h-3 text-[#34a853]" />}
-                            </p>
-                            <p className="text-xs text-neutral-500 truncate">
-                                {isOwner ? 'System Owner' : 'Writer Account'}
-                            </p>
+                {/* --- SIDEBAR (Desktop) --- */}
+                <aside className="w-64 flex-shrink-0 border-r border-white/5 hidden md:flex flex-col bg-[#0b0b0b] z-20 h-full overflow-y-auto">
+                    <div className="p-8 pb-4">
+                        <div className="flex items-center gap-4 mb-8">
+                            <div className="w-12 h-12 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-xl font-bold">
+                                {seller.profileImageUrl ? (
+                                    <img src={seller.profileImageUrl} alt="" className="w-full h-full rounded-full object-cover" />
+                                ) : (
+                                    seller.name.charAt(0)
+                                )}
+                            </div>
+                            <div>
+                                <h2 className="font-bold text-sm truncate w-32">{seller.name}</h2>
+                                <p className="text-[10px] text-neutral-500 uppercase font-mono">Writer Account</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-            </aside>
 
-            {/* --- MAIN CONTENT --- */}
-            <main className="flex-1 h-full overflow-y-auto bg-[#0b0b0b] relative scroll-smooth">
-                <div className="p-4 md:p-8 pb-32"> {/* Extra padding for mobile bottom nav */}
+                    {/* Nav Menu */}
+                    <nav className="flex-1 space-y-1 pr-4 mt-6">
+                        <button
+                            onClick={() => navigate('/')}
+                            className="w-full flex items-center gap-4 px-6 py-3.5 text-sm font-medium rounded-r-full transition-all duration-200 text-neutral-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent group"
+                        >
+                            <IconBook className="w-5 h-5 text-neutral-500 group-hover:text-white rotate-180" />
+                            Main Site
+                        </button>
+                        <div className="my-2 border-t border-white/5 mx-6"></div>
+                        <SidebarItem id="overview" label="Overview" icon={IconActivity} />
+                        <SidebarItem id="audience" label="Audience" icon={IconUser} />
+                        <SidebarItem id="studio" label="Content Manager" icon={IconCloudUpload} />
+                        <div className="my-4 border-t border-white/5 mx-6"></div>
+                        <SidebarItem id="settings" label="Site Settings" icon={IconSettings} />
 
-                    {/* Header */}
-                    <div className="mb-8 flex justify-between items-center">
-                        <h1 className="text-xl md:text-2xl font-normal text-white">
-                            {activeTab === 'overview' && (isOwner ? 'Global Overview' : 'Dashboard Overview')}
-                            {activeTab === 'audience' && 'Live Audience'}
-                            {activeTab === 'studio' && 'Content Manager'}
-                            {activeTab === 'settings' && 'Site Configuration'}
-                            {activeTab === 'admin' && 'System Administration'}
-                        </h1>
-                        {activeTab === 'overview' && (
-                            <button
-                                onClick={() => navigate('/ebook-studio')}
-                                className="md:hidden p-3 bg-white rounded-full text-black shadow-lg"
-                            >
-                                <IconPlus className="w-5 h-5" />
-                            </button>
+                        {/* Executive Only Tab */}
+                        {isOwner && (
+                            <>
+                                <div className="my-4 border-t border-white/5 mx-6"></div>
+                                <SidebarItem id="executive" label="Executive Control" icon={IconDashboard} />
+                            </>
                         )}
+                    </nav>
+
+                    <div className="p-6">
+                        <div className="bg-[#151515] p-4 rounded-2xl border border-white/5">
+                            <p className="text-[10px] uppercase font-bold text-neutral-500 mb-2 tracking-widest">Storage used</p>
+                            <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden mb-2">
+                                <div className="h-full w-[42%] bg-white rounded-full"></div>
+                            </div>
+                            <p className="text-[10px] text-neutral-600 font-medium">1.2 GB / 5 GB</p>
+                        </div>
                     </div>
+                </aside>
 
-                    {/* --- OVERVIEW TAB --- */}
-                    {activeTab === 'overview' && (
-                        <div className="space-y-6 animate-fade-in">
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                {stats.map((stat, i) => (
-                                    <div key={i} className="bg-[#1e1e1e] p-6 rounded-3xl border border-white/5">
-                                        <div className="flex items-start justify-between mb-4">
-                                            <div className="p-3 rounded-full bg-white/5 text-white">
-                                                {stat.icon}
-                                            </div>
-                                            <span className="text-xs font-bold bg-green-900/30 text-green-400 px-2 py-1 rounded-full">{stat.change}</span>
-                                        </div>
-                                        <h3 className="text-3xl font-normal text-white mb-1">{stat.value}</h3>
-                                        <p className="text-sm text-neutral-500">{stat.label}</p>
-                                    </div>
-                                ))}
+                {/* --- MAIN CONTENT --- */}
+                <main className="flex-1 overflow-y-auto bg-[#0b0b0b] relative pb-24 md:pb-8">
+                    <div className="max-w-[1400px] mx-auto p-6 md:p-12">
+
+                        {/* Page Header */}
+                        <div className="mb-12 flex flex-col gap-8">
+                            {/* Real-time Ticker */}
+                            <div className="bg-white/5 border border-white/5 rounded-2xl px-6 py-3 flex items-center gap-6 overflow-hidden relative">
+                                <div className="flex items-center gap-2 flex-shrink-0">
+                                    <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-red-500">Live Hub</span>
+                                </div>
+                                <div className="h-4 w-px bg-white/10 flex-shrink-0"></div>
+                                <div className="flex gap-12 animate-marquee whitespace-nowrap text-[10px] font-bold text-neutral-400 uppercase tracking-widest">
+                                    <span>New Sale: "The Void Start" - ₹499 (Mumbai, IN)</span>
+                                    <span>New Reader: Diana P. joined from Toronto</span>
+                                    <span>Gemini 1.5 Pro: Content Synthesis Optimized</span>
+                                    <span>Payment Node: Operational (SLA 99.9%)</span>
+                                </div>
                             </div>
 
-                            {/* Chart Area */}
-                            <div className="bg-[#1e1e1e] rounded-3xl p-8 border border-white/5 h-[300px] md:h-[400px] relative group">
-                                <div className="absolute top-6 right-8 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                                    <a href="https://analytics.google.com/" target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-neutral-500 hover:text-[#81c995] bg-[#0b0b0b]/50 backdrop-blur px-3 py-1.5 rounded-full border border-white/5 hover:border-[#81c995]/30 transition-all">
-                                        <span>Open Analytics</span>
-                                        <IconLink className="w-3 h-3" />
-                                    </a>
-                                </div>
-                                <AnalyticsChart className="w-full h-full" title={isOwner ? "Platform Revenue" : "Revenue Trend"} />
-                            </div>
-
-                            {/* Recent Books List */}
-                            {!isOwner && (
-                                <div className="bg-[#1e1e1e] rounded-3xl overflow-hidden border border-white/5">
-                                    <div className="px-6 md:px-8 py-6 border-b border-white/5 flex justify-between items-center">
-                                        <h3 className="text-lg font-medium">Recent Uploads</h3>
-                                        <button onClick={() => setActiveTab('studio')} className="text-sm text-[#81c995] font-bold hover:underline">View All</button>
-                                    </div>
-                                    <div className="divide-y divide-white/5">
-                                        {myUploadedBooks.slice(0, 5).map(book => (
-                                            <div key={book.id} className="px-6 md:px-8 py-4 flex items-center justify-between hover:bg-white/5 transition-colors group">
-                                                <div className="flex items-center gap-4">
-                                                    <img src={book.coverImageUrl} className="w-10 h-14 object-cover rounded bg-black" alt="" />
-                                                    <div>
-                                                        <p className="font-bold text-sm text-white group-hover:text-[#a8c7fa] transition-colors line-clamp-1">{book.title}</p>
-                                                        <p className="text-xs text-neutral-500">₹{book.price}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-4">
-                                                    <span className="text-xs text-neutral-500 hidden sm:block">{new Date(book.publicationDate).toLocaleDateString()}</span>
-                                                    <button onClick={() => navigate(`/edit-ebook/${book.id}`)} className="p-2 hover:bg-white/10 rounded-full text-neutral-400 hover:text-white">
-                                                        <IconEdit className="w-4 h-4" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        {myUploadedBooks.length === 0 && <p className="p-8 text-center text-neutral-500 text-sm">No books uploaded yet.</p>}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-
-                    {/* --- AUDIENCE TAB --- */}
-                    {activeTab === 'audience' && (
-                        <div className="animate-fade-in max-w-5xl mx-auto">
-                            <div className="flex items-center justify-between mb-6">
+                            <div className="flex items-end justify-between">
                                 <div>
-                                    <h2 className="text-sm font-bold uppercase tracking-widest text-neutral-500 mb-1">Live Feed</h2>
-                                    <p className="text-neutral-400 text-xs">Real-time visitor tracking</p>
-                                </div>
-                                <div className="flex items-center gap-2 bg-[#34a853]/10 px-3 py-1.5 rounded-full border border-[#34a853]/20">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#34a853] opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#34a853]"></span>
-                                    </span>
-                                    <span className="text-[10px] font-bold text-[#81c995] uppercase tracking-widest">Active</span>
-                                </div>
-                            </div>
-                            <div className="space-y-3">
-                                {mockVisitors.map((visitor) => (
-                                    <div key={visitor.id} className="group bg-[#1e1e1e] hover:bg-[#252525] border border-white/5 hover:border-white/10 rounded-2xl p-4 flex flex-col md:flex-row md:items-center gap-4 transition-all duration-300">
-                                        <div className="flex items-center gap-4 flex-1 min-w-[200px]">
-                                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-neutral-800 to-neutral-900 border border-white/10 flex items-center justify-center font-bold text-sm text-white shadow-inner">{visitor.avatar}</div>
-                                            <div><div className="font-medium text-white text-sm">{visitor.name}</div><div className="text-xs text-neutral-500">{visitor.email}</div></div>
+                                    <h1 className="text-4xl md:text-5xl font-black mb-2 tracking-tighter">
+                                        {activeTab === 'overview' && 'Dashboard'}
+                                        {activeTab === 'audience' && 'Real-time Audience'}
+                                        {activeTab === 'studio' && 'Content Manager'}
+                                        {activeTab === 'settings' && 'Site Configuration'}
+                                        {activeTab === 'executive' && 'Executive Control'}
+                                    </h1>
+                                    {activeTab === 'overview' && (
+                                        <div className="flex items-center gap-2 text-[#81c995] font-black text-[10px] uppercase tracking-[0.3em]">
+                                            <span className="w-2 h-2 rounded-full bg-[#81c995] animate-ping"></span>
+                                            Executive Pulse: +18.4% Net Growth
                                         </div>
-                                        <div className="flex items-center gap-2 md:w-[150px] text-neutral-400 text-sm"><IconGlobe className="w-4 h-4 text-neutral-600" /><span>{visitor.location}</span></div>
-                                        <div className="flex-1 md:w-[250px]"><div className="flex items-center gap-2 text-white text-sm mb-0.5"><IconActivity className="w-3 h-3 text-[#a8c7fa]" /><span className="truncate">{visitor.action}</span></div><div className="text-[10px] text-neutral-500 font-mono flex items-center gap-1"><IconClock className="w-3 h-3" /> {visitor.time}</div></div>
-                                        <div className="md:w-[120px] flex justify-end"><span className={`px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${visitor.status === 'Signed In' ? 'bg-[#34a853]/10 text-[#81c995] border border-[#34a853]/20' : 'bg-white/5 text-neutral-500 border border-white/5'}`}><span className={`w-1.5 h-1.5 rounded-full ${visitor.status === 'Signed In' ? 'bg-[#34a853]' : 'bg-neutral-500'}`}></span>{visitor.status === 'Signed In' ? 'User' : 'Guest'}</span></div>
+                                    )}
+                                </div>
+                                <div className="flex items-center gap-6">
+                                    <div className="hidden lg:flex flex-col items-end">
+                                        <span className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest mb-1">Active Now</span>
+                                        <div className="flex -space-x-2">
+                                            {[1, 2, 3, 4].map(i => (
+                                                <div key={i} className="w-8 h-8 rounded-full border-2 border-[#0b0b0b] bg-neutral-900 flex items-center justify-center text-[10px] font-bold">
+                                                    {String.fromCharCode(64 + i)}
+                                                </div>
+                                            ))}
+                                            <div className="w-8 h-8 rounded-full border-2 border-[#0b0b0b] bg-white text-black flex items-center justify-center text-[10px] font-bold">+12</div>
+                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-
-                    {/* --- STUDIO TAB --- */}
-                    {activeTab === 'studio' && (
-                        <div className="animate-fade-in max-w-5xl mx-auto space-y-12">
-                            <div className="bg-[#1e1e1e] border border-white/5 rounded-3xl overflow-hidden">
-                                <div className="p-8 border-b border-white/5 bg-white/[0.02]"><h2 className="text-xl font-bold text-white mb-1">Your Manuscripts</h2><p className="text-sm text-neutral-500">Edit content, update pricing, or manage visual assets.</p></div>
-                                <div className="divide-y divide-white/5 max-h-[400px] overflow-y-auto custom-scrollbar">
-                                    {myUploadedBooks.length > 0 ? (
-                                        myUploadedBooks.map(book => (
-                                            <div key={book.id} className="p-6 flex flex-col sm:flex-row items-center gap-6 hover:bg-white/[0.02] transition-colors group">
-                                                <img src={book.coverImageUrl} alt={book.title} className="w-16 h-24 object-cover rounded-lg shadow-lg bg-[#0b0b0b] border border-white/10" />
-                                                <div className="flex-1 text-center sm:text-left"><h3 className="font-bold text-white text-lg mb-1 group-hover:text-blue-400 transition-colors">{book.title}</h3><div className="flex items-center justify-center sm:justify-start gap-3 text-xs text-neutral-500 mb-2"><span className="uppercase tracking-wider font-bold">{book.genre}</span><span>•</span><span className="font-mono">₹{book.price}</span></div><p className="text-xs text-neutral-600 line-clamp-1 max-w-md">{book.description}</p></div>
-                                                <div className="flex items-center gap-3"><button onClick={() => navigate(`/read/${book.id}`)} className="p-3 rounded-full border border-white/10 text-neutral-400 hover:text-white hover:bg-white/10 transition-all" title="Read Preview"><IconEye className="w-5 h-5" /></button><button onClick={() => navigate(`/edit-ebook/${book.id}`)} className="px-6 py-3 rounded-full bg-white text-black font-bold text-xs uppercase tracking-widest hover:bg-neutral-200 transition-all flex items-center gap-2 shadow-lg hover:shadow-xl hover:scale-105 active:scale-95"><IconEdit className="w-4 h-4" /> Edit</button></div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div className="p-12 text-center text-neutral-500"><IconBook className="w-12 h-12 mx-auto mb-4 opacity-20" /><p>You haven't uploaded any books yet.</p></div>
+                                    {activeTab === 'overview' && (
+                                        <button
+                                            onClick={() => navigate('/')}
+                                            className="hidden md:flex flex-row-reverse px-6 py-2.5 bg-white text-black font-bold text-sm items-center gap-2 hover:bg-neutral-200 transition-all shadow-lg hover:scale-105 active:scale-95 rounded-full"
+                                        >
+                                            <IconPlus className="w-4 h-4" />
+                                            <span>Start Writing</span>
+                                        </button>
                                     )}
                                 </div>
                             </div>
-                            <div><div className="mb-6 flex items-center gap-4"><div className="h-px flex-1 bg-white/10"></div><span className="text-xs font-bold text-neutral-500 uppercase tracking-widest">Create New</span><div className="h-px flex-1 bg-white/10"></div></div><BookUploadForm onBookUploaded={handleBookUploaded} /></div>
                         </div>
-                    )}
 
+                        {/* --- OVERVIEW TAB --- */}
+                        {activeTab === 'overview' && (
+                            <div className="animate-fade-in space-y-12">
+                                {/* Stats Cards */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+                                    <div className="bg-[#151515] p-8 rounded-[32px] border border-white/5 hover:border-white/10 transition-colors">
+                                        <p className="text-[10px] uppercase font-bold text-neutral-500 mb-4 tracking-[0.2em]">Total Revenue</p>
+                                        <p className="text-4xl font-black mb-1">₹14,280</p>
+                                        <p className="text-xs text-[#81c995] font-bold">+18% vs prev. month</p>
+                                    </div>
+                                    <div className="bg-[#151515] p-8 rounded-[32px] border border-white/5 hover:border-white/10 transition-colors">
+                                        <p className="text-[10px] uppercase font-bold text-neutral-500 mb-4 tracking-[0.2em]">Active Readers</p>
+                                        <p className="text-4xl font-black mb-1">1,842</p>
+                                        <p className="text-xs text-[#81c995] font-bold">+241 this week</p>
+                                    </div>
+                                    <div className="bg-[#151515] p-8 rounded-[32px] border border-white/5 hover:border-white/10 transition-colors">
+                                        <p className="text-[10px] uppercase font-bold text-neutral-500 mb-4 tracking-[0.2em]">Books Published</p>
+                                        <p className="text-4xl font-black mb-1">{(books || []).filter(b => b.sellerId === seller.id).length}</p>
+                                        <p className="text-xs text-neutral-500 font-bold">Live on Marketplace</p>
+                                    </div>
+                                    <div className="bg-[#151515] p-8 rounded-[32px] border border-white/5 hover:border-white/10 transition-colors">
+                                        <p className="text-[10px] uppercase font-bold text-neutral-500 mb-4 tracking-[0.2em]">Global Rank</p>
+                                        <p className="text-4xl font-black mb-1">#42</p>
+                                        <p className="text-xs text-indigo-400 font-bold">Top 1% of creators</p>
+                                    </div>
+                                </div>
 
-                    {/* --- SETTINGS TAB --- */}
-                    {activeTab === 'settings' && (
-                        <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div className="bg-[#1e1e1e] rounded-3xl p-6 md:p-8 border border-white/5">
-                                <div className="mb-6 flex items-center justify-between"><h2 className="text-xl font-medium">Public Profile</h2>{deploymentUrl && (<a href={deploymentUrl} target="_blank" rel="noreferrer" className="flex items-center gap-2 text-xs font-bold text-[#81c995] bg-[#34a853]/10 px-3 py-1 rounded-full"><span className="w-2 h-2 rounded-full bg-[#34a853] animate-pulse"></span> Live</a>)}</div>
-                                <div className="space-y-6">
-                                    <div><label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Display Name</label><input name="displayName" value={creatorSiteForm.displayName} onChange={handleCreatorSiteFormChange} className="w-full bg-[#0b0b0b] border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-white/30 text-white" /></div>
-                                    <div><label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Tagline</label><textarea name="tagline" value={creatorSiteForm.tagline} onChange={handleCreatorSiteFormChange} rows={3} className="w-full bg-[#0b0b0b] border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-white/30 text-white resize-none" /></div>
-                                    <div><label className="block text-xs font-bold text-neutral-500 uppercase tracking-widest mb-2">Username (Slug)</label><div className="flex"><span className="bg-[#151515] border border-r-0 border-white/10 text-neutral-500 px-3 py-3 text-sm rounded-l-lg hidden sm:block">co-writter.github.io/</span><input name="slug" value={creatorSiteForm.slug} onChange={handleCreatorSiteFormChange} className="flex-1 bg-[#0b0b0b] border border-white/10 rounded-lg sm:rounded-l-none p-3 text-sm focus:outline-none focus:border-white/30 text-white" /></div></div>
-                                    <button onClick={handleDeployToGitHub} disabled={isDeploying} className="w-full py-4 bg-white text-black font-bold rounded-xl hover:bg-neutral-200 transition-colors flex items-center justify-center gap-2 mt-4">{isDeploying ? 'Deploying...' : <><IconCloudUpload className="w-5 h-5" /> Publish Site</>}</button>
+                                {/* Engagement Analytics with Recharts */}
+                                <div className="bg-[#151515] rounded-[40px] p-10 border border-white/5 overflow-hidden relative group">
+                                    <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 blur-[120px] rounded-full -mr-20 -mt-20 pointer-events-none group-hover:bg-white/10 transition-all duration-700"></div>
+                                    <div className="flex items-center justify-between mb-12 relative z-10">
+                                        <div>
+                                            <h3 className="text-2xl font-black tracking-tighter mb-1">Growth Matrix</h3>
+                                            <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Real-time readership & sales engagement</p>
+                                        </div>
+                                        <div className="flex bg-black/40 p-1 rounded-2xl border border-white/5">
+                                            {['7D', '30D', '90D', 'ALL'].map(t => (
+                                                <button key={t} className={`px-6 py-2 rounded-xl text-[10px] font-black transition-all ${t === '30D' ? 'bg-white text-black shadow-xl' : 'text-neutral-500 hover:text-white'}`}>
+                                                    {t}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="h-[400px] w-full relative z-10">
+                                        <ResponsiveContainer width="100%" height="100%">
+                                            <AreaChart data={[
+                                                { name: 'Mon', value: 4000, active: 2400 },
+                                                { name: 'Tue', value: 3000, active: 1398 },
+                                                { name: 'Wed', value: 2000, active: 9800 },
+                                                { name: 'Thu', value: 2780, active: 3908 },
+                                                { name: 'Fri', value: 1890, active: 4800 },
+                                                { name: 'Sat', value: 2390, active: 3800 },
+                                                { name: 'Sun', value: 3490, active: 4300 },
+                                            ]}>
+                                                <defs>
+                                                    <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                        <stop offset="5%" stopColor="#ffffff" stopOpacity={0.3} />
+                                                        <stop offset="95%" stopColor="#ffffff" stopOpacity={0} />
+                                                    </linearGradient>
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                                                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#4a4a4a', fontSize: 10, fontWeight: 'bold' }} dy={10} />
+                                                <YAxis hide />
+                                                <Tooltip
+                                                    contentStyle={{ backgroundColor: '#000', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
+                                                    itemStyle={{ color: '#fff', fontSize: '12px' }}
+                                                />
+                                                <Area type="monotone" dataKey="value" stroke="#ffffff" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                                            </AreaChart>
+                                        </ResponsiveContainer>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex flex-col gap-6">
-                                <div className="bg-[#1e1e1e] rounded-3xl p-8 border border-white/5 flex flex-col items-center justify-center text-center">
-                                    <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mb-4"><IconGithub className="w-10 h-10 text-white" /></div>
-                                    <h3 className="text-lg font-bold text-white mb-2">GitHub Integration</h3>
-                                    <p className="text-sm text-neutral-400 max-w-xs mb-6">Your creator site is hosted for free on GitHub Pages. Changes may take up to 2 minutes to propagate globally.</p>
-                                    {deploymentUrl ? (<div className="bg-[#0b0b0b] p-4 rounded-xl border border-white/10 w-full flex justify-between items-center"><span className="text-xs text-neutral-500 truncate">{deploymentUrl}</span><a href={deploymentUrl} target="_blank" className="text-[#81c995] hover:text-white"><IconLink className="w-4 h-4" /></a></div>) : (<div className="bg-[#0b0b0b] p-4 rounded-xl border border-white/10 w-full text-xs text-neutral-600">Not deployed yet.</div>)}
-                                </div>
-                                <div className="bg-[#1e1e1e] rounded-3xl p-6 border border-white/5"><button onClick={() => setCurrentUser(currentUser, UserType.USER)} className="w-full py-3 bg-white/5 hover:bg-white/10 text-white font-medium rounded-xl transition-colors text-sm">Switch to Reader Mode</button></div>
-                            </div>
-                        </div>
-                    )}
+                        )}
 
-
-                    {/* --- ADMIN TAB --- */}
-                    {activeTab === 'admin' && isOwner && (
-                        <div className="animate-fade-in space-y-6">
-                            <div className="bg-[#1e1e1e] border border-white/5 rounded-3xl p-8">
-                                <h2 className="text-xl font-bold text-white mb-6">Registered Users</h2>
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-left border-collapse">
-                                        <thead><tr className="border-b border-white/10 text-neutral-500 text-xs uppercase tracking-widest"><th className="py-4 px-2 font-bold">User</th><th className="py-4 px-2 font-bold">Email</th><th className="py-4 px-2 font-bold">Role</th><th className="py-4 px-2 font-bold text-right">Action</th></tr></thead>
-                                        <tbody className="text-sm">{Object.values(mockUsers).filter(u => u.id !== 'guest').map((user) => (<tr key={user.id} className="border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"><td className="py-4 px-2 font-medium text-white flex items-center gap-3"><div className="w-8 h-8 rounded-full bg-neutral-800 flex items-center justify-center text-xs">{user.profileImageUrl ? <img src={user.profileImageUrl} alt="" className="w-full h-full rounded-full" /> : user.name[0]}</div>{user.name}</td><td className="py-4 px-2 text-neutral-400">{user.email}</td><td className="py-4 px-2"><span className={`px-2 py-1 rounded-full text-[10px] uppercase font-bold ${(user as Seller).isAdmin ? 'bg-purple-900/30 text-purple-400 border border-purple-500/20' : 'uploadedBooks' in user ? 'bg-blue-900/30 text-blue-400 border border-blue-500/20' : 'bg-white/5 text-neutral-500'}`}>{(user as Seller).isAdmin ? 'Admin' : 'uploadedBooks' in user ? 'Writer' : 'Reader'}</span></td><td className="py-4 px-2 text-right"><button className="text-xs text-neutral-500 hover:text-white underline">Manage</button></td></tr>))}</tbody>
+                        {/* --- AUDIENCE TAB --- */}
+                        {activeTab === 'audience' && (
+                            <div className="animate-fade-in">
+                                <div className="bg-[#151515] rounded-[32px] border border-white/5 overflow-hidden">
+                                    <table className="w-full text-left">
+                                        <thead>
+                                            <tr className="bg-white/2 text-[10px] uppercase font-bold text-neutral-500 tracking-widest border-b border-white/5">
+                                                <th className="px-8 py-6">Visitor</th>
+                                                <th className="px-8 py-6">Location</th>
+                                                <th className="px-8 py-6">Last Active</th>
+                                                <th className="px-8 py-6">Status</th>
+                                                <th className="px-8 py-6 text-right">Latest Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-white/2">
+                                            {mockVisitors.map(vis => (
+                                                <tr key={vis.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                    <td className="px-8 py-6 flex items-center gap-4">
+                                                        <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center font-bold text-xs">{vis.avatar}</div>
+                                                        <div>
+                                                            <p className="font-bold text-sm text-white">{vis.name}</p>
+                                                            <p className="text-xs text-neutral-500">{vis.email}</p>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-2 text-sm text-neutral-300"><IconGlobe className="w-3.5 h-3.5 text-neutral-500" /> {vis.location}</div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <div className="flex items-center gap-2 text-sm text-neutral-300"><IconClock className="w-3.5 h-3.5 text-neutral-500" /> {vis.time}</div>
+                                                    </td>
+                                                    <td className="px-8 py-6">
+                                                        <span className={`px-3 py-1 rounded-full text-[10px] font-bold border ${vis.status === 'Signed In' ? 'bg-[#34a853]/5 text-[#81c995] border-[#34a853]/20' : 'bg-white/5 text-neutral-500 border-white/10'}`}>{vis.status}</span>
+                                                    </td>
+                                                    <td className="px-8 py-6 text-right font-mono text-[11px] text-neutral-400 group-hover:text-white transition-colors uppercase tracking-wider">{vis.action}</td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
                                     </table>
                                 </div>
                             </div>
-                        </div>
-                    )}
+                        )}
 
+                        {/* --- STUDIO TAB --- */}
+                        {activeTab === 'studio' && (
+                            <div className="animate-fade-in space-y-12">
+                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                    <div className="bg-[#151515] rounded-[32px] p-8 border border-white/5">
+                                        <div className="space-y-4">
+                                            {(books || []).filter(b => b.sellerId === seller.id).map(book => (
+                                                <div key={book.id} className="flex items-center justify-between p-4 bg-[#0b0b0b] rounded-2xl border border-white/5 group hover:border-white/20 transition-all">
+                                                    <div className="flex items-center gap-4">
+                                                        <img src={book.coverImageUrl} className="w-12 h-16 object-cover rounded shadow-lg" alt="" />
+                                                        <div>
+                                                            <p className="font-bold text-sm">{book.title}</p>
+                                                            <p className="text-xs text-neutral-500 uppercase tracking-widest font-mono">₹{book.price}</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="flex gap-2">
+                                                        <button onClick={() => deleteBook(book.id)} className="p-2 hover:bg-red-500/10 text-neutral-500 hover:text-red-500 rounded-lg transition-colors"><IconLogout className="w-4 h-4 scale-x-[-1]" /></button>
+                                                        <button onClick={() => navigate('/')} className="p-2 bg-white/5 hover:bg-white text-neutral-400 hover:text-black rounded-lg transition-all"><IconEdit className="w-4 h-4" /></button>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-[#151515] rounded-[40px] p-12 border border-white/5 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/[0.02] transition-all group" onClick={() => navigate('/')}>
+                                        <div className="w-24 h-24 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform"><IconPlus className="w-10 h-10 text-neutral-500 group-hover:text-white" /></div>
+                                        <h3 className="text-2xl font-black mb-2">Create New Story</h3>
+                                        <p className="text-neutral-500 max-w-xs">Launch the E-book Studio and use AI to bring your vision to life.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- SETTINGS TAB --- */}
+                        {activeTab === 'settings' && (
+                            <div className="animate-fade-in grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                <div className="bg-[#151515] rounded-[40px] p-12 border border-white/5">
+                                    <div className="mb-10 flex items-center justify-between">
+                                        <div className="flex flex-col gap-2">
+                                            <h2 className="text-3xl font-black tracking-tighter">Marketplace Hub</h2>
+                                            <p className="text-xs text-neutral-500 font-bold uppercase tracking-widest">Configure your digital storefront and bio links.</p>
+                                        </div>
+                                        {deploymentUrl && (
+                                            <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#81c995] bg-[#34a853]/10 px-4 py-2 rounded-full border border-[#34a853]/20 shadow-[0_0_15px_rgba(52,211,153,0.1)]">
+                                                <span className="w-1.5 h-1.5 rounded-full bg-[#81c995] animate-pulse"></span>
+                                                Operational
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* PROMINENT BIO LINK CARD */}
+                                    <div className="mb-12 p-8 rounded-[32px] bg-gradient-to-br from-indigo-500/10 to-purple-500/5 border border-indigo-500/20 relative overflow-hidden group">
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 blur-[60px] rounded-full"></div>
+                                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+                                                <span className="text-[10px] font-black uppercase tracking-[0.3em] text-indigo-400 mb-2">Instagram / Bio Link</span>
+                                                <h3 className="text-xl font-bold text-white mb-2">Your Professional Storefront</h3>
+                                                <p className="text-xs text-neutral-500 font-medium max-w-sm">Use this unique URL in your social bios to direct readers straight to your books.</p>
+                                            </div>
+                                            <div className="flex flex-col gap-3 w-full md:w-auto">
+                                                <div className="bg-black/40 border border-white/10 rounded-2xl px-6 py-4 flex items-center gap-4 group-hover:border-white/20 transition-all">
+                                                    <span className="text-xs font-mono text-neutral-400 truncate max-w-[200px]">
+                                                        {window.location.origin}/s/{creatorSiteForm.slug}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => {
+                                                            navigator.clipboard.writeText(`${window.location.origin}/s/${creatorSiteForm.slug}`);
+                                                            alert("Bio link copied to clipboard!");
+                                                        }}
+                                                        className="text-white hover:text-indigo-400 transition-colors"
+                                                    >
+                                                        <IconLink className="w-4 h-4" />
+                                                    </button>
+                                                </div>
+                                                <a
+                                                    href={`${window.location.origin}/s/${creatorSiteForm.slug}`}
+                                                    target="_blank"
+                                                    rel="noreferrer"
+                                                    className="w-full py-4 bg-white text-black text-[10px] font-black uppercase tracking-widest rounded-xl text-center hover:bg-neutral-200 transition-all shadow-xl"
+                                                >
+                                                    Preview Live Site
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-8">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                            <div>
+                                                <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-4">Storefront Name</label>
+                                                <input name="displayName" value={creatorSiteForm.displayName} onChange={handleCreatorSiteFormChange} className="w-full bg-[#0b0b0b] border border-white/10 rounded-2xl p-5 text-sm focus:outline-none focus:border-indigo-500/40 text-white transition-all" placeholder="e.g. My Creative Haven" />
+                                            </div>
+                                            <div>
+                                                <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-4">Custom Slug</label>
+                                                <div className="flex">
+                                                    <span className="bg-white/5 border border-r-0 border-white/10 text-neutral-600 px-6 flex items-center text-[10px] rounded-l-2xl font-black uppercase tracking-tighter">/s/</span>
+                                                    <input name="slug" value={creatorSiteForm.slug} onChange={handleCreatorSiteFormChange} className="flex-1 bg-[#0b0b0b] border border-white/10 rounded-r-2xl p-5 text-sm focus:outline-none focus:border-indigo-500/40 text-white font-bold transition-all" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="block text-[10px] font-black text-neutral-500 uppercase tracking-widest mb-4">Visual Tagline</label>
+                                            <textarea name="tagline" value={creatorSiteForm.tagline} onChange={handleCreatorSiteFormChange} rows={3} className="w-full bg-[#0b0b0b] border border-white/10 rounded-2xl p-5 text-sm focus:outline-none focus:border-indigo-500/40 text-white resize-none transition-all" placeholder="Tell readers what your brain looks like..." />
+                                        </div>
+
+                                        <div className="flex flex-col md:flex-row gap-4 pt-6">
+                                            <button
+                                                onClick={handleDeployToGitHub}
+                                                disabled={isDeploying}
+                                                className="flex-1 py-5 bg-indigo-500 text-white font-black uppercase tracking-widest rounded-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-3 disabled:opacity-50 shadow-2xl shadow-indigo-500/10"
+                                            >
+                                                {isDeploying ? 'Syncing...' : <><IconCloudUpload className="w-5 h-5" /> Sync with Global Node</>}
+                                            </button>
+                                            <button
+                                                onClick={() => {
+                                                    // Functional placeholder for static export
+                                                    alert("Static Site Export: Generating bundle... Your gh-pages compatible index.html will be ready for download in a moment.");
+                                                }}
+                                                className="px-8 py-5 bg-white/5 border border-white/10 text-neutral-400 hover:text-white hover:border-white/20 font-black uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-3"
+                                            >
+                                                <IconGithub className="w-5 h-5" /> Export for GH-Pages
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-col gap-8">
+                                    <div className="bg-[#151515] rounded-[40px] p-12 border border-white/5 flex flex-col items-center justify-center text-center">
+                                        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10 shadow-2xl relative">
+                                            <IconGithub className="w-12 h-12 text-white" />
+                                            <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#81c995] rounded-full flex items-center justify-center border-4 border-[#151515]"><IconCheck className="w-3.5 h-3.5 text-black" /></div>
+                                        </div>
+                                        <h3 className="text-xl font-bold text-white mb-2">GitHub Connected</h3>
+                                        <p className="text-sm text-neutral-500 max-w-xs mb-8">Your creator hub is powered by GitHub. Changes takes ~2 mins to propagate.</p>
+
+                                        {deploymentUrl ? (
+                                            <div className="bg-[#0b0b0b] p-6 rounded-2xl border border-white/5 w-full flex justify-between items-center group cursor-pointer hover:border-white/20 transition-all">
+                                                <div className="flex flex-col items-start overflow-hidden">
+                                                    <span className="text-[10px] uppercase font-bold text-neutral-600 mb-1">Live URL</span>
+                                                    <span className="text-xs text-neutral-400 truncate w-full">{deploymentUrl}</span>
+                                                </div>
+                                                <a href={deploymentUrl} target="_blank" rel="noreferrer" className="text-white bg-white/5 p-3 rounded-xl group-hover:bg-white group-hover:text-black transition-all"><IconLink className="w-5 h-5" /></a>
+                                            </div>
+                                        ) : (
+                                            <div className="bg-[#0b0b0b] p-6 rounded-2xl border border-white/5 w-full text-xs text-neutral-600 font-bold uppercase tracking-widest">Awaiting First Deployment</div>
+                                        )}
+                                    </div>
+
+                                    <div className="bg-[#151515] rounded-[32px] p-8 border border-white/5 flex items-center justify-between">
+                                        <div>
+                                            <h4 className="font-bold text-sm mb-1">Switch View</h4>
+                                            <p className="text-xs text-neutral-500">View as a reader</p>
+                                        </div>
+                                        <button onClick={() => setCurrentUser(seller, UserType.USER)} className="px-6 py-2.5 bg-white/5 hover:bg-white hover:text-black text-white font-bold text-xs uppercase tracking-widest rounded-full transition-all border border-white/10">Reading Mode</button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* --- EXECUTIVE TAB --- */}
+                        {activeTab === 'executive' && isOwner && (
+                            <div className="animate-fade-in space-y-8">
+                                <div className="bg-gradient-to-br from-[#101010] to-[#0a0a0a] border border-white/5 rounded-[40px] p-12 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-white/5 blur-[120px] rounded-full pointer-events-none"></div>
+                                    <div className="relative z-10">
+                                        <div className="flex items-center justify-between mb-16">
+                                            <div>
+                                                <h2 className="text-4xl font-black tracking-tighter mb-2">Global Ecosystem</h2>
+                                                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.3em]">Master control & platform diagnostics</p>
+                                            </div>
+                                            <button className="flex items-center gap-3 px-8 py-3 bg-white text-black rounded-full text-[10px] font-black uppercase tracking-widest transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(255,255,255,0.3)]">
+                                                <IconActivity className="w-4 h-4" />
+                                                Live Analytics
+                                            </button>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+                                            {[
+                                                { label: 'Platform Volume', value: '₹14.2M', trend: '+12%', color: '#81c995' },
+                                                { label: 'System Uptime', value: '99.99%', trend: 'Operational', color: '#81c995' },
+                                                { label: 'Active Nodes', value: '1,280', trend: 'Global', color: 'white' },
+                                            ].map((stat, i) => (
+                                                <div key={i} className="bg-black/40 p-10 rounded-[32px] border border-white/5">
+                                                    <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest mb-4">{stat.label}</p>
+                                                    <p className="text-4xl font-black mb-2">{stat.value}</p>
+                                                    <p className={`text-[10px] font-bold uppercase tracking-widest`} style={{ color: stat.color }}>{stat.trend}</p>
+                                                </div>
+                                            ))}
+                                        </div>
+
+                                        <div className="flex items-center justify-between mb-10">
+                                            <h2 className="text-xl font-bold">Identity Registry</h2>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead>
+                                                    <tr className="border-b border-white/5 text-neutral-500 text-[10px] uppercase tracking-[0.2em] font-black">
+                                                        <th className="py-6 px-4">Identifier</th>
+                                                        <th className="py-6 px-4">Email</th>
+                                                        <th className="py-6 px-4">Permissions</th>
+                                                        <th className="py-6 px-4 text-right">Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="text-sm divide-y divide-white/2">
+                                                    {Object.values(mockUsers).filter(u => u.id !== 'guest').map((user) => (
+                                                        <tr key={user.id} className="hover:bg-white/[0.02] transition-colors group">
+                                                            <td className="py-6 px-4 font-bold text-white flex items-center gap-4">
+                                                                <div className="w-10 h-10 rounded-full bg-neutral-900 border border-white/10 flex items-center justify-center text-xs font-black">
+                                                                    {user.profileImageUrl ? <img src={user.profileImageUrl} alt="" className="w-full h-full rounded-full object-cover" /> : user.name[0]}
+                                                                </div>
+                                                                {user.name}
+                                                            </td>
+                                                            <td className="py-6 px-4 text-neutral-400 font-medium">{user.email}</td>
+                                                            <td className="py-6 px-4">
+                                                                <span className={`px-4 py-1.5 rounded-full text-[10px] uppercase font-black tracking-widest border ${(user as Seller).isAdmin ? 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' : 'uploadedBooks' in user ? 'bg-[#81c995]/10 text-[#81c995] border-[#34a853]/20' : 'bg-white/5 text-neutral-500 border-white/10'}`}>
+                                                                    {(user as Seller).isAdmin ? 'Admin' : 'uploadedBooks' in user ? 'Writer' : 'Reader'}
+                                                                </span>
+                                                            </td>
+                                                            <td className="py-6 px-4 text-right">
+                                                                <button className="text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-colors underline opacity-50 hover:opacity-100">Configure</button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </main>
+
+                <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#0b0b0b]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around z-50 pb-safe">
+                    <MobileNavItem id="overview" label="Stats" icon={IconActivity} />
+                    <MobileNavItem id="audience" label="Visitors" icon={IconUser} />
+                    <MobileNavItem id="studio" label="Content" icon={IconCloudUpload} />
+                    <MobileNavItem id="settings" label="Config" icon={IconSettings} />
+                    {isOwner && <MobileNavItem id="executive" label="Executive" icon={IconDashboard} />}
                 </div>
-            </main>
-
-            {/* --- MOBILE BOTTOM NAVIGATION --- */}
-            <div className="md:hidden fixed bottom-0 left-0 right-0 h-20 bg-[#0b0b0b]/90 backdrop-blur-xl border-t border-white/10 flex items-center justify-around z-50 pb-safe">
-                <MobileNavItem id="overview" label="Stats" icon={IconActivity} />
-                <MobileNavItem id="audience" label="Visitors" icon={IconUser} />
-                <MobileNavItem id="studio" label="Content" icon={IconCloudUpload} />
-                <MobileNavItem id="settings" label="Config" icon={IconSettings} />
-                {isOwner && <MobileNavItem id="admin" label="Admin" icon={IconDashboard} />}
             </div>
         </div>
     );
 };
+
+export default SellerDashboardContent;

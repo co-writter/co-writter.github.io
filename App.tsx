@@ -24,6 +24,7 @@ import ShippingPolicyPage from './pages/ShippingPolicyPage';
 import RefundPolicyPage from './pages/RefundPolicyPage';
 import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import NotFoundPage from './pages/NotFoundPage';
 
 // Reverting to HashRouter for stability in cloud/preview environments
 // Reverting to HashRouter for stability in cloud/preview environments
@@ -37,9 +38,9 @@ export const getAppBaseUrl = () => {
     return `https://${hostname}`;
   }
 
-  // 2. Localhost - Point to self
-  if (hostname.includes('localhost')) {
-    return ''; // Relative path works
+  // 2. Localhost/Dev - Point to self
+  if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost')) {
+    return ''; // Relative path works for local dev
   }
 
   // 3. Studio/App Domain (Firebase) - Point to self
@@ -49,14 +50,14 @@ export const getAppBaseUrl = () => {
 
   // 4. Landing Page (GitHub Pages) - Point to Production App (Firebase)
   if (hostname.includes('github.io')) {
-    return 'https://co-writter-studio.web.app';
+    return 'https://co-writter-51007753.web.app';
   }
 
   // Fallback
-  return 'https://co-writter-studio.web.app';
+  return 'https://co-writter-51007753.web.app';
 };
 
-const STUDIO_URL = "https://co-writter-studio.web.app";
+const STUDIO_URL = "https://co-writter-51007753.web.app";
 const MAIN_SITE_URL = "https://co-writter.github.io";
 
 const ExternalRedirect = ({ to }: { to: string }) => {
@@ -101,6 +102,7 @@ const AnimatedRoutes = () => {
         <Route path="/refund-policy" element={<RefundPolicyPage />} />
         <Route path="/terms-and-conditions" element={<TermsPage />} />
         <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </div>
   );
@@ -112,14 +114,21 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="w-8 h-8 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+      <div className="flex flex-col items-center justify-center min-h-screen bg-black overflow-hidden relative">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,30,1)_0%,rgba(0,0,0,1)_100%)]"></div>
+        <div className="relative z-10 scale-150 animate-pulse-slow">
+          <MorphicEye className="w-16 h-16 border border-white/20 bg-black/40 backdrop-blur-xl rounded-full" />
+        </div>
+        <div className="mt-12 text-neutral-500 font-mono text-[10px] uppercase tracking-[0.4em] z-10 animate-pulse">
+          Authenticating Session...
+        </div>
       </div>
     );
   }
 
   if (!currentUser) {
     // Redirect to login, remembering where they tried to go
+    // If on Studio domain, show local login. If on Landing, it will redirect anyway.
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -143,7 +152,9 @@ const App: React.FC = () => {
   // Logic to identify if we are on the "Studio" (Application) Domain
   const isStudioDomain =
     window.location.hostname.includes('firebaseapp.com') ||
-    window.location.hostname.includes('web.app');
+    window.location.hostname.includes('web.app') ||
+    window.location.hostname.includes('localhost') ||
+    window.location.hostname === '127.0.0.1';
   // Note: Localhost is treated as Landing/Dev by default unless manually toggled, 
   // but for safety we can treat localhost as 'hybrid' or dev mirror. 
   // To test Studio locally, one might need to toggle this variable manually or use specific port.

@@ -3,9 +3,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 import { EBook, User, Seller, UserType } from '../types';
-import { 
-    IconBook, IconX, IconChevronLeft, IconChevronRight, 
-    IconPlus, IconMinus, IconMenu, IconSettings, IconCheck, 
+import {
+    IconBook, IconX, IconChevronLeft, IconChevronRight,
+    IconPlus, IconMinus, IconMenu, IconSettings, IconCheck,
     IconSun, IconMoon
 } from '../constants';
 import { Document, Page, pdfjs } from 'react-pdf';
@@ -30,12 +30,12 @@ interface ReaderSettings {
 const EbookReaderPage: React.FC = () => {
     const { bookId } = useParams();
     const navigate = useNavigate();
-    const { currentUser, userType, allBooks } = useAppContext();
-    
+    const { currentUser, userType, books } = useAppContext();
+
     // Data State
     const [book, setBook] = useState<EBook | null>(null);
     const [loading, setLoading] = useState(true);
-    
+
     // UI State
     const [showSidebar, setShowSidebar] = useState(false);
     const [showSettings, setShowSettings] = useState(false);
@@ -63,55 +63,55 @@ const EbookReaderPage: React.FC = () => {
             setLoading(true);
 
             // Find Book Logic
-            let foundBook = allBooks.find(b => b.id === bookId);
+            let foundBook = (books || []).find(b => b.id === bookId);
             if (!foundBook && currentUser) {
-                 if (userType === UserType.SELLER) {
-                     foundBook = (currentUser as Seller).uploadedBooks?.find(b => b.id === bookId);
-                 } else if (userType === UserType.USER) {
-                     foundBook = (currentUser as User).purchaseHistory?.find(b => b.id === bookId);
-                 }
+                if (userType === UserType.SELLER) {
+                    foundBook = (currentUser as Seller).uploadedBooks?.find(b => b.id === bookId);
+                } else if (userType === UserType.USER) {
+                    foundBook = (currentUser as User).purchaseHistory?.find(b => b.id === bookId);
+                }
             }
 
             if (foundBook) {
-                 // Access Logic
-                 const isFree = foundBook.price === 0;
-                 let hasAccess = isFree;
+                // Access Logic
+                const isFree = foundBook.price === 0;
+                let hasAccess = isFree;
 
-                 if (!hasAccess && currentUser) {
-                     if (userType === UserType.SELLER) {
-                         hasAccess = foundBook.sellerId === currentUser.id; 
-                     } else if (userType === UserType.USER) {
-                         hasAccess = (currentUser as User).purchaseHistory?.some(b => b.id === bookId);
-                     }
-                 }
-                 
-                 if (hasAccess) {
-                     setBook(foundBook);
-                     if (foundBook.pdfUrl) {
-                         try {
-                             const res = await fetch(foundBook.pdfUrl);
-                             const blob = await res.blob();
-                             const blobUrl = URL.createObjectURL(blob);
-                             setPdfBlobUrl(blobUrl);
-                         } catch (e) {
-                             setPdfBlobUrl(foundBook.pdfUrl);
-                         }
-                     }
-                 } else {
-                     if (!currentUser && !isFree) {
-                         navigate('/login');
-                         return;
-                     } else if (currentUser) {
-                         alert("Access denied. Please purchase this book.");
-                         navigate('/store');
-                         return;
-                     }
-                 }
+                if (!hasAccess && currentUser) {
+                    if (userType === UserType.SELLER) {
+                        hasAccess = foundBook.sellerId === currentUser.id;
+                    } else if (userType === UserType.USER) {
+                        hasAccess = (currentUser as User).purchaseHistory?.some(b => b.id === bookId);
+                    }
+                }
+
+                if (hasAccess) {
+                    setBook(foundBook);
+                    if (foundBook.pdfUrl) {
+                        try {
+                            const res = await fetch(foundBook.pdfUrl);
+                            const blob = await res.blob();
+                            const blobUrl = URL.createObjectURL(blob);
+                            setPdfBlobUrl(blobUrl);
+                        } catch (e) {
+                            setPdfBlobUrl(foundBook.pdfUrl);
+                        }
+                    }
+                } else {
+                    if (!currentUser && !isFree) {
+                        navigate('/login');
+                        return;
+                    } else if (currentUser) {
+                        alert("Access denied. Please purchase this book.");
+                        navigate('/store');
+                        return;
+                    }
+                }
             }
             setLoading(false);
         };
         loadBook();
-    }, [bookId, currentUser, userType, navigate, allBooks]);
+    }, [bookId, currentUser, userType, navigate, books]);
 
     useEffect(() => {
         return () => {
@@ -126,16 +126,16 @@ const EbookReaderPage: React.FC = () => {
         switch (settings.theme) {
             case 'light': return 'bg-[#f8f9fa] text-neutral-900 selection:bg-yellow-200';
             case 'sepia': return 'bg-[#f4ecd8] text-[#5b4636] selection:bg-[#d6cbb1]';
-            case 'dark': 
+            case 'dark':
             default: return 'bg-[#0a0a0a] text-[#d4d4d4] selection:bg-white/20';
         }
     };
-    
+
     const getPageThemeClasses = () => {
-         switch (settings.theme) {
+        switch (settings.theme) {
             case 'light': return 'bg-white shadow-[0_0_50px_rgba(0,0,0,0.1)] border-neutral-200';
             case 'sepia': return 'bg-[#faf4e8] shadow-[0_0_50px_rgba(91,70,54,0.1)] border-[#e3d8c4]';
-            case 'dark': 
+            case 'dark':
             default: return 'bg-[#111] shadow-[0_0_50px_rgba(0,0,0,0.8)] border-white/5';
         }
     };
@@ -144,7 +144,7 @@ const EbookReaderPage: React.FC = () => {
         switch (settings.fontFamily) {
             case 'sans': return 'font-sans';
             case 'mono': return 'font-mono';
-            case 'serif': 
+            case 'serif':
             default: return 'font-serif';
         }
     };
@@ -154,7 +154,7 @@ const EbookReaderPage: React.FC = () => {
         // Split text by markdown image syntax ![alt](url)
         // Regex captures the whole image tag
         const parts = content.split(/(!\[.*?\]\(.*?\))/g);
-        
+
         return parts.map((part, index) => {
             // Check if this part is an image
             const imageMatch = part.match(/!\[(.*?)\]\((.*?)\)/);
@@ -162,17 +162,17 @@ const EbookReaderPage: React.FC = () => {
                 return (
                     <div key={index} className="my-8 flex flex-col items-center group">
                         <div className="relative rounded-lg overflow-hidden shadow-2xl border border-white/10 bg-black">
-                            <img 
-                                src={imageMatch[2]} 
-                                alt={imageMatch[1]} 
-                                className="max-h-[500px] w-auto object-contain transition-transform duration-500 hover:scale-[1.02]" 
+                            <img
+                                src={imageMatch[2]}
+                                alt={imageMatch[1]}
+                                className="max-h-[500px] w-auto object-contain transition-transform duration-500 hover:scale-[1.02]"
                             />
                         </div>
                         {imageMatch[1] && <span className="text-[10px] text-neutral-500 mt-3 font-mono uppercase tracking-widest">{imageMatch[1]}</span>}
                     </div>
                 );
             }
-            
+
             // Render text with basic formatting (Headers, Bold, Newlines)
             return (
                 <div key={index} className="whitespace-pre-wrap">
@@ -184,7 +184,7 @@ const EbookReaderPage: React.FC = () => {
                         if (line.startsWith('## ')) return <h2 key={i} className="text-2xl font-bold mb-4 mt-6 leading-snug opacity-90">{line.replace('## ', '')}</h2>
                         if (line.startsWith('### ')) return <h3 key={i} className="text-xl font-bold mb-3 mt-5 leading-snug opacity-80">{line.replace('### ', '')}</h3>
                         if (line.startsWith('- ')) return <li key={i} className="ml-6 list-disc mb-2 pl-2">{line.replace('- ', '')}</li>
-                        
+
                         // Parse Bold **text** within paragraph
                         const lineParts = line.split(/(\*\*.*?\*\*)/g);
                         return (
@@ -218,13 +218,13 @@ const EbookReaderPage: React.FC = () => {
     // --- RENDER CONTENT ---
     const pages = book.pages && book.pages.length > 0 ? book.pages : [{ id: '1', title: 'Cover', pageNumber: 1, content: "No content available." }];
     const currentTextPage = pages[textPageIndex];
-    const progress = book.pdfUrl 
+    const progress = book.pdfUrl
         ? Math.round((pageNumber / numPages) * 100)
         : Math.round(((textPageIndex + 1) / pages.length) * 100);
 
     return (
         <div className={`min-h-screen w-full flex flex-col fixed inset-0 z-50 transition-colors duration-500 font-sans ${getThemeClasses()}`}>
-            
+
             {/* === HEADER (Glassmorphism) === */}
             <header className={`
                 h-16 flex items-center justify-between px-4 md:px-8 border-b z-40 relative backdrop-blur-xl transition-colors duration-300
@@ -235,7 +235,7 @@ const EbookReaderPage: React.FC = () => {
                         <IconX className={`w-5 h-5 ${settings.theme === 'dark' ? 'text-neutral-400 group-hover:text-white' : 'text-neutral-500 group-hover:text-black'}`} />
                     </button>
                     <button onClick={() => setShowSidebar(true)} className="group p-2 rounded-full hover:bg-black/5 transition-all" title="Table of Contents">
-                         <IconMenu className={`w-5 h-5 ${settings.theme === 'dark' ? 'text-neutral-400 group-hover:text-white' : 'text-neutral-500 group-hover:text-black'}`} />
+                        <IconMenu className={`w-5 h-5 ${settings.theme === 'dark' ? 'text-neutral-400 group-hover:text-white' : 'text-neutral-500 group-hover:text-black'}`} />
                     </button>
                     {/* Allow title to show on mobile but truncate heavily */}
                     <h1 className="text-sm font-bold truncate opacity-80 flex-1 min-w-0">{book.title}</h1>
@@ -245,13 +245,13 @@ const EbookReaderPage: React.FC = () => {
                     {/* Settings Toggle (Text Mode Only) */}
                     {!book.pdfUrl && (
                         <div className="relative">
-                            <button 
+                            <button
                                 onClick={() => setShowSettings(!showSettings)}
                                 className={`p-2 rounded-full transition-all border ${showSettings ? 'bg-black/5' : 'bg-transparent border-transparent'} ${settings.theme === 'dark' ? 'hover:bg-white/10 text-neutral-300' : 'hover:bg-black/5 text-neutral-600'}`}
                             >
                                 <span className="font-serif font-bold text-lg">Aa</span>
                             </button>
-                            
+
                             {/* Settings Dropdown */}
                             {showSettings && (
                                 <div className={`absolute top-12 right-0 w-72 p-5 rounded-2xl shadow-2xl border animate-slide-up origin-top-right z-50
@@ -268,8 +268,8 @@ const EbookReaderPage: React.FC = () => {
                                                 key={t.id}
                                                 onClick={() => setSettings(prev => ({ ...prev, theme: t.id as ReaderTheme }))}
                                                 className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md text-xs font-bold uppercase tracking-wider transition-all
-                                                    ${settings.theme === t.id 
-                                                        ? (settings.theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white') 
+                                                    ${settings.theme === t.id
+                                                        ? (settings.theme === 'dark' ? 'bg-white text-black' : 'bg-black text-white')
                                                         : 'hover:bg-black/5 text-neutral-500'
                                                     }
                                                 `}
@@ -288,7 +288,7 @@ const EbookReaderPage: React.FC = () => {
                                                 { id: 'serif', label: 'Serif', font: 'font-serif' },
                                                 { id: 'mono', label: 'Mono', font: 'font-mono' },
                                             ].map(f => (
-                                                <button 
+                                                <button
                                                     key={f.id}
                                                     onClick={() => setSettings(prev => ({ ...prev, fontFamily: f.id as FontFamily }))}
                                                     className={`flex-1 py-3 border rounded-lg text-sm transition-all ${f.font}
@@ -309,9 +309,9 @@ const EbookReaderPage: React.FC = () => {
                                         </div>
                                         <div className="flex items-center gap-3">
                                             <button onClick={() => setSettings(prev => ({ ...prev, fontSize: Math.max(12, prev.fontSize - 1) }))} className="p-2 hover:bg-black/5 rounded"><span className="text-xs font-bold">A-</span></button>
-                                            <input 
-                                                type="range" min="12" max="32" 
-                                                value={settings.fontSize} 
+                                            <input
+                                                type="range" min="12" max="32"
+                                                value={settings.fontSize}
                                                 onChange={(e) => setSettings(prev => ({ ...prev, fontSize: parseInt(e.target.value) }))}
                                                 className="flex-1 h-1 bg-neutral-500/20 rounded-lg appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-current [&::-webkit-slider-thumb]:rounded-full"
                                             />
@@ -322,7 +322,7 @@ const EbookReaderPage: React.FC = () => {
                             )}
                         </div>
                     )}
-                    
+
                     {/* Progress Indicator - Hidden on very small screens, visible on md+ */}
                     <div className="hidden md:flex items-center gap-3 px-3 py-1.5 rounded-full border border-current/10 bg-current/5">
                         <span className="text-xs font-bold tabular-nums">{progress}%</span>
@@ -340,7 +340,7 @@ const EbookReaderPage: React.FC = () => {
                     <div className={`relative w-80 h-full shadow-2xl flex flex-col animate-slide-right border-r ${settings.theme === 'dark' ? 'bg-[#0f0f0f] border-white/10' : 'bg-white border-neutral-200'}`}>
                         <div className="p-6 border-b border-current/10 flex items-center justify-between">
                             <h3 className="font-bold text-sm uppercase tracking-widest">Chapters</h3>
-                            <button onClick={() => setShowSidebar(false)}><IconX className="w-5 h-5"/></button>
+                            <button onClick={() => setShowSidebar(false)}><IconX className="w-5 h-5" /></button>
                         </div>
                         <div className="flex-1 overflow-y-auto p-4 space-y-2">
                             {pages.map((p, idx) => (
@@ -349,13 +349,12 @@ const EbookReaderPage: React.FC = () => {
                                     onClick={() => {
                                         setTextPageIndex(idx);
                                         setShowSidebar(false);
-                                        contentRef.current?.scrollTo(0,0);
+                                        contentRef.current?.scrollTo(0, 0);
                                     }}
-                                    className={`w-full text-left p-4 rounded-xl transition-all border ${
-                                        textPageIndex === idx 
-                                        ? 'bg-current/10 border-current/20 font-bold' 
-                                        : 'bg-transparent border-transparent hover:bg-current/5 text-current/60'
-                                    }`}
+                                    className={`w-full text-left p-4 rounded-xl transition-all border ${textPageIndex === idx
+                                            ? 'bg-current/10 border-current/20 font-bold'
+                                            : 'bg-transparent border-transparent hover:bg-current/5 text-current/60'
+                                        }`}
                                 >
                                     <span className="text-xs opacity-50 block mb-1">Chapter {idx + 1}</span>
                                     <span className="text-sm">{p.title}</span>
@@ -367,8 +366,8 @@ const EbookReaderPage: React.FC = () => {
             )}
 
             {/* === MAIN CONTENT === */}
-            <main className="flex-1 relative overflow-hidden flex flex-col pb-24"> 
-                
+            <main className="flex-1 relative overflow-hidden flex flex-col pb-24">
+
                 {/* --- PDF MODE --- */}
                 {book.pdfUrl && pdfBlobUrl ? (
                     <div className="flex-1 relative bg-black/50 overflow-auto flex justify-center p-4 md:p-10 custom-scrollbar pb-32">
@@ -379,31 +378,31 @@ const EbookReaderPage: React.FC = () => {
                                 loading={<div className="text-white p-10 font-mono text-xs">Loading Document...</div>}
                                 error={<div className="text-red-400 p-10 font-mono text-xs">PDF Error</div>}
                             >
-                                <Page 
-                                    pageNumber={pageNumber} 
-                                    scale={1} 
+                                <Page
+                                    pageNumber={pageNumber}
+                                    scale={1}
                                     className="shadow-2xl"
                                     renderTextLayer={false}
                                     renderAnnotationLayer={false}
                                 />
                             </Document>
                         </div>
-                        
+
                         {/* Floating PDF Controls */}
                         <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-xl border border-white/10 p-2 rounded-full flex items-center gap-4 shadow-2xl z-40 text-white">
-                             <button onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber <= 1} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 disabled:opacity-30"><IconChevronLeft className="w-5 h-5"/></button>
-                             <span className="font-mono text-xs font-bold">{pageNumber} / {numPages}</span>
-                             <button onClick={() => setPageNumber(p => Math.min(numPages, p + 1))} disabled={pageNumber >= numPages} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 disabled:opacity-30"><IconChevronRight className="w-5 h-5"/></button>
-                             <div className="w-px h-6 bg-white/20 mx-2"></div>
-                             <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="p-2 hover:text-white text-neutral-400"><IconMinus className="w-4 h-4"/></button>
-                             <button onClick={() => setScale(s => Math.min(2, s + 0.1))} className="p-2 hover:text-white text-neutral-400"><IconPlus className="w-4 h-4"/></button>
+                            <button onClick={() => setPageNumber(p => Math.max(1, p - 1))} disabled={pageNumber <= 1} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 disabled:opacity-30"><IconChevronLeft className="w-5 h-5" /></button>
+                            <span className="font-mono text-xs font-bold">{pageNumber} / {numPages}</span>
+                            <button onClick={() => setPageNumber(p => Math.min(numPages, p + 1))} disabled={pageNumber >= numPages} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 disabled:opacity-30"><IconChevronRight className="w-5 h-5" /></button>
+                            <div className="w-px h-6 bg-white/20 mx-2"></div>
+                            <button onClick={() => setScale(s => Math.max(0.5, s - 0.1))} className="p-2 hover:text-white text-neutral-400"><IconMinus className="w-4 h-4" /></button>
+                            <button onClick={() => setScale(s => Math.min(2, s + 0.1))} className="p-2 hover:text-white text-neutral-400"><IconPlus className="w-4 h-4" /></button>
                         </div>
                     </div>
                 ) : (
                     /* --- TEXT MODE --- */
                     <div ref={contentRef} className="flex-1 overflow-y-auto custom-scrollbar scroll-smooth">
                         <div className="max-w-3xl mx-auto py-8 md:py-12 px-4 md:px-0">
-                            
+
                             {/* The "Page" */}
                             <div className={`
                                 min-h-[calc(100vh-200px)] p-6 md:p-16 rounded-[12px] transition-all duration-300 border
@@ -416,12 +415,12 @@ const EbookReaderPage: React.FC = () => {
                                     </h2>
                                 </div>
 
-                                <article 
+                                <article
                                     className={`prose prose-base md:prose-lg max-w-none transition-all duration-300 ${getFontFamily()}`}
-                                    style={{ 
-                                        fontSize: `${settings.fontSize}px`, 
+                                    style={{
+                                        fontSize: `${settings.fontSize}px`,
                                         lineHeight: settings.lineHeight,
-                                        color: 'currentColor' 
+                                        color: 'currentColor'
                                     }}
                                 >
                                     <div className="opacity-90">
@@ -431,8 +430,8 @@ const EbookReaderPage: React.FC = () => {
 
                                 {/* Page Footer */}
                                 <div className="mt-12 md:mt-20 pt-10 border-t border-current/10 flex flex-col md:flex-row gap-4 justify-between items-center opacity-50 text-[10px] md:text-xs font-mono uppercase tracking-widest text-center md:text-left">
-                                     <span>{book.title}</span>
-                                     <span>{textPageIndex + 1} / {pages.length}</span>
+                                    <span>{book.title}</span>
+                                    <span>{textPageIndex + 1} / {pages.length}</span>
                                 </div>
                             </div>
                         </div>
@@ -444,11 +443,11 @@ const EbookReaderPage: React.FC = () => {
             {!book.pdfUrl && (
                 <div className={`fixed bottom-0 left-0 right-0 p-4 border-t z-50 backdrop-blur-xl ${settings.theme === 'dark' ? 'bg-black/90 border-white/10' : settings.theme === 'light' ? 'bg-white/90 border-black/10' : 'bg-[#f4ecd8]/90 border-[#5b4636]/10'}`}>
                     <div className="max-w-2xl mx-auto flex items-center justify-between gap-4">
-                        <button 
+                        <button
                             onClick={() => {
                                 if (textPageIndex > 0) {
                                     setTextPageIndex(p => p - 1);
-                                    contentRef.current?.scrollTo(0,0);
+                                    contentRef.current?.scrollTo(0, 0);
                                 }
                             }}
                             disabled={textPageIndex === 0}
@@ -462,11 +461,11 @@ const EbookReaderPage: React.FC = () => {
                             {textPageIndex + 1} / {pages.length}
                         </div>
 
-                        <button 
+                        <button
                             onClick={() => {
                                 if (textPageIndex < pages.length - 1) {
                                     setTextPageIndex(p => p + 1);
-                                    contentRef.current?.scrollTo(0,0);
+                                    contentRef.current?.scrollTo(0, 0);
                                 }
                             }}
                             disabled={textPageIndex === pages.length - 1}

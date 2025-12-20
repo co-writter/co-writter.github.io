@@ -97,13 +97,16 @@ export interface AppContextType {
   isChatbotOpen: boolean;
   toggleChatbot: () => void;
   updateSellerCreatorSite: (config: CreatorSiteConfig) => void;
-  allBooks: EBook[]; // Added to manage AI-created books dynamically
-  addCreatedBook: (book: EBook) => void; // For AI eBook creation
-  updateEBook: (book: EBook) => void; // Added for editing eBooks
-  handleGoogleLogin: (credentialResponse: any) => void; // Added for Google Login
-  handleEmailLogin: (email: string, password: string) => Promise<{success: boolean, message?: string}>; // ADDED: Email Login
-  upgradeToSeller: () => void; // Upgrade User to Seller
-  verifyUser: () => void; // Added for Blue Tick Verification
+  books: EBook[];
+  addCreatedBook: (book: EBook) => void;
+  updateBook: (book: EBook) => void;
+  deleteBook: (bookId: string) => void;
+  handleGoogleLogin: (credentialResponse: any) => void;
+  handleFirebaseGoogleLogin: () => Promise<void>;
+  handleEmailLogin: (email: string, password: string) => Promise<{ success: boolean, message?: string }>;
+  upgradeToSeller: () => void;
+  verifyUser: () => void;
+  loading: boolean;
 }
 
 export interface GroundingChunkWeb {

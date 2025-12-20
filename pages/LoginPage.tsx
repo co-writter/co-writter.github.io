@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import * as ReactRouterDOM from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
-import { APP_NAME, GOOGLE_CLIENT_ID, IconRocket, IconUser } from '../constants';
+import { APP_NAME, IconRocket, IconUser, IconArrowRight } from '../constants';
 import { UserType, User } from '../types';
 import MorphicEye from '../components/MorphicEye';
 import { getAppBaseUrl } from '../App';
@@ -38,9 +38,10 @@ const GoogleIcon = () => (
 );
 
 const LoginPage: React.FC = () => {
-    const { currentUser, userType, setCurrentUser, handleEmailLogin } = useAppContext();
+    const { currentUser, userType, setCurrentUser, handleEmailLogin, handleFirebaseGoogleLogin } = useAppContext();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     // Login Mode: 'social' or 'email'
     const [loginMode, setLoginMode] = useState<'social' | 'email'>('social');
@@ -57,51 +58,18 @@ const LoginPage: React.FC = () => {
         }
     }, [currentUser, userType, navigate]);
 
-    const handleFirebaseGoogleLogin = async () => {
-        // Domain Redirection Logic: If on Landing Page, go to App Login
-        if (window.location.hostname.includes('github.io')) {
-            const baseUrl = getAppBaseUrl();
-            window.location.href = `${baseUrl}/login`;
-            return;
-        }
-
+    const onFirebaseGoogleLogin = async () => {
         setIsLoading(true);
+        setErrorMsg('');
+
         try {
-            // Import dynamically to avoid top-level issues if modules not loaded
-            const { auth, googleProvider, signInWithPopup } = await import('../services/firebase');
-
-            const result = await signInWithPopup(auth, googleProvider);
-            const user = result.user;
-
-            // Construct User Object
-            const googleUser: User = {
-                id: `google_${user.uid}`,
-                name: user.displayName || 'Unknown User',
-                email: user.email || '',
-                purchaseHistory: [],
-                wishlist: [],
-                isVerified: user.emailVerified,
-                profileImageUrl: user.photoURL || ''
-            };
-
-            // Sync to Firestore (Realtime DB)
-            const { db } = await import('../services/firebase');
-            const { doc, setDoc, serverTimestamp } = await import('firebase/firestore');
-
-            await setDoc(doc(db, "users", googleUser.id), {
-                ...googleUser,
-                lastLogin: serverTimestamp(),
-                userType: 'user' // Default role
-            }, { merge: true });
-
-            // Determine User Type based on context or email (simulate logic)
-            // For now, default to USER. AppContext can upgrade or check existing mocks.
-            setCurrentUser(googleUser, UserType.USER); // AppContext will check if they are a seller in mockDB
+            await handleFirebaseGoogleLogin();
+            // HandleFirebaseGoogleLogin handles redirect internally if on github.io
+            // If it returns, we are on web.app and login was successful
             navigate('/dashboard');
-
         } catch (error: any) {
             console.error("Firebase Login Error", error);
-            alert(error.message || "Authentication failed.");
+            setErrorMsg(error.message || "Authentication failed. Please try again.");
         } finally {
             setIsLoading(false);
         }
@@ -120,146 +88,120 @@ const LoginPage: React.FC = () => {
                 setErrorMsg(result.message || "Login failed.");
             }
         } catch (err) {
-            console.error("Login Error:", err);
-            setErrorMsg("System error. Check console for details.");
+            setErrorMsg("System error.");
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 relative font-sans selection:bg-white/20">
+        <div className="min-h-screen w-full flex items-center justify-center p-4 relative font-sans selection:bg-white/20 overflow-hidden bg-black">
 
-            {/* Background is handled globally by App.tsx to ensure Antigravity consistency */}
+            {/* HACKATHON GRADE BACKGROUND ELEMENTS */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(30,30,40,1)_0%,rgba(0,0,0,1)_100%)]"></div>
+
+            <div className="absolute inset-0 opacity-10 pointer-events-none"
+                style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)', backgroundSize: '60px 60px' }}>
+            </div>
+
+            {/* SCANNING LASER EFFECT */}
+            <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent animate-[grid-flow_10s_linear_infinite] opacity-20"></div>
 
             <div className="relative z-10 w-full max-w-sm flex flex-col items-center">
 
-                {/* Morphic Eye Identity */}
-                <div className="mb-10 scale-125 animate-float-delayed">
-                    <MorphicEye className="w-24 h-24 border border-white/30 bg-black shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-full" />
+                {/* Identity Entrance */}
+                <div className="mb-12 relative group">
+                    <div className="absolute -inset-8 bg-white/5 blur-[50px] rounded-full animate-pulse-slow"></div>
+                    <MorphicEye className="w-24 h-24 border border-white/20 bg-black/40 backdrop-blur-3xl shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-full relative z-10" />
                 </div>
 
-                <div className="w-full bg-black/40 backdrop-blur-2xl border border-white/10 p-8 shadow-[0_0_40px_rgba(0,0,0,0.8)] rounded-[32px] relative overflow-hidden transition-all duration-500 hover:border-white/20 hover:shadow-[0_0_60px_rgba(255,255,255,0.05)]">
+                <div className="w-full bg-black/40 backdrop-blur-3xl border border-white/10 p-10 shadow-[0_40px_100px_rgba(0,0,0,0.8)] rounded-[40px] relative overflow-hidden transition-all duration-700 hover:border-white/20 group">
 
-                    {/* Top Shine */}
-                    <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/30 to-transparent"></div>
-
-                    <div className="text-center mb-8">
-                        <h1 className="text-2xl font-black tracking-tighter text-white mb-2">{APP_NAME}</h1>
-                        <p className="text-[10px] text-neutral-500 font-mono uppercase tracking-[0.2em]">Writing Platform</p>
+                    <div className="text-center mb-10">
+                        <div className="inline-block px-3 py-1 bg-white/5 border border-white/10 rounded-full mb-4">
+                            <span className="text-[8px] text-white font-black uppercase tracking-[0.4em]">Integrated Secure Node</span>
+                        </div>
+                        <h1 className="text-3xl font-black tracking-tighter text-white mb-1 uppercase">{APP_NAME}</h1>
+                        <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.3em]">Studio Access</p>
                     </div>
 
-                    {/* --- TOGGLE TABS --- */}
-                    <div className="flex bg-white/5 p-1 rounded-full mb-8 border border-white/5">
+                    {/* Pro Toggle */}
+                    <div className="flex bg-white/5 p-1 rounded-2xl mb-10 border border-white/5">
                         <button
                             onClick={() => setLoginMode('social')}
-                            className={`flex-1 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${loginMode === 'social' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'social' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
                         >
-                            Reader
+                            Guest
                         </button>
                         <button
                             onClick={() => setLoginMode('email')}
-                            className={`flex-1 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-all ${loginMode === 'email' ? 'bg-white text-black shadow-lg' : 'text-neutral-500 hover:text-white'}`}
+                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'email' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
                         >
-                            Admin / Writer
+                            Operator
                         </button>
                     </div>
 
-                    {/* --- GOOGLE LOGIN (Social Mode) --- */}
-                    {loginMode === 'social' && (
+                    {loginMode === 'social' ? (
                         <div className="animate-fade-in">
-                            <div className="mb-6 relative group">
-                                {/* Hover Glow Background */}
-                                <div className="absolute -inset-0.5 bg-gradient-to-r from-white/10 to-neutral-700/30 rounded-full blur opacity-0 group-hover:opacity-100 transition duration-700"></div>
-
-                                {window.location.hostname.includes('github.io') ? (
-                                    // Direct Link for GitHub Pages - Robust & "Works"
-                                    <a
-                                        href={`${getAppBaseUrl()}/login`}
-                                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98]"
-                                    >
-                                        <GoogleIcon />
-                                        <span>Login to Studio</span>
-                                    </a>
+                            <button
+                                onClick={onFirebaseGoogleLogin}
+                                disabled={isLoading}
+                                className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all duration-500 shadow-xl"
+                            >
+                                {isLoading ? (
+                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                                 ) : (
-                                    // Firebase Popup for Actual App
-                                    <button
-                                        onClick={handleFirebaseGoogleLogin}
-                                        disabled={isLoading}
-                                        className="relative w-full py-4 rounded-full bg-white/5 border border-white/10 text-white font-bold uppercase tracking-widest text-xs flex items-center justify-center gap-4 hover:bg-white/10 hover:border-white/30 transition-all duration-300 shadow-[0_0_20px_rgba(255,255,255,0.02)] hover:shadow-[0_0_30px_rgba(255,255,255,0.05)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                                    >
-                                        {isLoading ? (
-                                            <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                        ) : (
-                                            <GoogleIcon />
-                                        )}
-                                        <span>Continue with Google</span>
-                                    </button>
+                                    <GoogleIcon />
                                 )}
-                            </div>
-                            <p className="text-center text-[10px] text-neutral-500 px-4 leading-relaxed">
-                                By continuing, you agree to our Terms of Service and confirm you have read our Privacy Policy.
-                            </p>
+                                <span>Link with Google</span>
+                            </button>
                         </div>
-                    )}
-
-                    {/* --- EMAIL LOGIN (Admin/Writer Mode) --- */}
-                    {loginMode === 'email' && (
-                        <form onSubmit={onEmailSubmit} className="animate-fade-in space-y-4">
-                            <div>
-                                {/* Changed type="text" to support username-only logins (e.g. 'opendev-labs') */}
+                    ) : (
+                        <form onSubmit={onEmailSubmit} className="space-y-6 animate-fade-in">
+                            <div className="space-y-4">
                                 <input
-                                    type="text"
-                                    placeholder="Email or Username"
+                                    type="email"
+                                    placeholder="Operator ID"
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
                                     value={email}
-                                    onChange={e => setEmail(e.target.value)}
-                                    className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40 placeholder-neutral-600 transition-colors"
+                                    onChange={(e) => setEmail(e.target.value)}
                                     required
                                 />
-                            </div>
-                            <div>
                                 <input
                                     type="password"
-                                    placeholder="Password"
+                                    placeholder="Access Key"
+                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
                                     value={password}
-                                    onChange={e => setPassword(e.target.value)}
-                                    className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-white/40 placeholder-neutral-600 transition-colors"
+                                    onChange={(e) => setPassword(e.target.value)}
                                     required
                                 />
                             </div>
-
-                            {errorMsg && (
-                                <div className="text-red-400 text-xs bg-red-500/10 p-2 rounded-lg border border-red-500/20 text-center">
-                                    {errorMsg}
-                                </div>
-                            )}
-
                             <button
                                 type="submit"
                                 disabled={isLoading}
-                                className="w-full py-4 rounded-full bg-white text-black font-bold uppercase tracking-widest text-xs hover:bg-neutral-200 transition-all shadow-[0_0_20px_rgba(255,255,255,0.1)] hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-2"
+                                className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-[10px] hover:bg-neutral-200 transition-all duration-500 shadow-2xl"
                             >
-                                {isLoading ? 'Authenticating...' : 'Access Dashboard'}
+                                {isLoading ? 'Verifying...' : 'Authorize Access'}
                             </button>
-
-                            <div className="text-center pt-2">
-                                <p className="text-[10px] text-neutral-600">Restricted access for Owners & Paid Writers.</p>
-                            </div>
                         </form>
                     )}
 
-                    <div className="mt-6 pt-6 border-t border-white/5 text-center">
-                        <Link to="/" className="text-neutral-600 hover:text-white text-[10px] font-bold uppercase tracking-widest transition-colors">
-                            Cancel
+                    {errorMsg && (
+                        <div className="mt-8 text-red-500 text-[10px] bg-red-500/5 p-4 rounded-2xl border border-red-500/20 text-center font-bold tracking-tight animate-slide-up">
+                            {errorMsg}
+                        </div>
+                    )}
+
+                    <div className="mt-8 pt-8 border-t border-white/5 flex items-center justify-center">
+                        <Link to="/" className="text-[10px] font-black uppercase tracking-widest text-neutral-600 hover:text-white transition-colors">
+                            Return to Landing
                         </Link>
                     </div>
                 </div>
 
-                <div className="mt-8 text-center opacity-40 hover:opacity-100 transition-opacity duration-500">
-                    <p className="text-[9px] text-neutral-500 font-mono tracking-widest">
-                        POWERED BY AI
-                    </p>
-                </div>
+                <p className="mt-12 text-[10px] text-neutral-600 font-bold uppercase tracking-[0.4em] opacity-40">
+                    Neural Design System 4.2
+                </p>
             </div>
         </div>
     );
