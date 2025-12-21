@@ -7,9 +7,30 @@
   <meta name="viewport"
     content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
   <meta name="theme-color" content="#000000" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>co-writter</title>
+
+  <!-- Primary Meta Tags -->
+  <title>Co-Writter | Professional AI Ebook Studio</title>
+  <meta name="title" content="Co-Writter | Professional AI Ebook Studio" />
+  <meta name="description"
+    content="Transform your ideas into professional ebooks with Co-Writter. AI-powered authoring, smart formatting, and instant publishing for modern creators." />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://co-writter.github.io/" />
+  <meta property="og:title" content="Co-Writter | AI-Powered Ebook Studio" />
+  <meta property="og:description"
+    content="Transform your ideas into professional ebooks with Co-Writter. AI-powered authoring, smart formatting, and instant publishing." />
+  <meta property="og:image" content="https://co-writter.github.io/og-image.png" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://co-writter.github.io/" />
+  <meta property="twitter:title" content="Co-Writter | AI-Powered Ebook Studio" />
+  <meta property="twitter:description"
+    content="Transform your ideas into professional ebooks with Co-Writter. AI-powered authoring, smart formatting, and instant publishing." />
+  <meta property="twitter:image" content="https://co-writter.github.io/og-image.png" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
@@ -91,6 +112,7 @@
             "pulse-square": "pulse-square 2s cubic-bezier(0.4, 0, 0.6, 1) infinite",
             "slide-up": "slide-up 0.4s cubic-bezier(0.19, 1, 0.22, 1) backwards",
             "fade-in": "fade-in 0.3s ease-out forwards",
+            "pulse-slow": "pulse-slow 4s ease-in-out infinite",
           },
           keyframes: {
             "float": {
@@ -108,6 +130,10 @@
             "fade-in": {
               "0%": { opacity: "0" },
               "100%": { opacity: "1" }
+            },
+            "pulse-slow": {
+              "0%, 100%": { opacity: "1" },
+              "50%": { opacity: "0.8" }
             }
           }
         },
@@ -174,7 +200,7 @@
     }
   </style>
   <link rel="stylesheet" href="/index.css">
-  <script type="module" crossorigin src="/assets/index-Dh4C5VKX.js"></script>
+  <script type="module" crossorigin src="/assets/index-D-0oNdBH.js"></script>
 </head>
 
 <body class="selection:bg-white selection:text-black antialiased bg-black text-white">
