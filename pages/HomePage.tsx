@@ -1,9 +1,11 @@
+
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain, IconArrowRight } from '../constants';
+import * as ReactRouterDOM from 'react-router-dom';
+import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain } from '../constants';
 import MorphicEye from '../components/MorphicEye';
 import { useAppContext } from '../contexts/AppContext';
-import { getAppBaseUrl } from '../App';
+
+const { Link, useNavigate } = ReactRouterDOM as any;
 
 // Tech Stack Icons
 const TechIcon = ({ icon, label }: { icon: React.ReactNode, label: string }) => (
@@ -31,9 +33,9 @@ const LogoReact = () => (
 
 const LogoVite = () => (
     <svg viewBox="0 0 32 32" className="w-12 h-12 md:w-16 md:h-16 text-[#646CFF]">
-        <path d="M30.3 5.4L16.6 29.5 2.8 5.4h27.5z" fill="currentColor" fillOpacity="0.2" />
-        <path d="M16.6 29.5L2.8 5.4h11l2.8 17.5 2.8-17.5h10.9L16.6 29.5z" stroke="currentColor" strokeWidth="2" fill="none" />
-        <path d="M2.8 5.4h11L16.6 29.5 2.8 5.4z" fill="currentColor" fillOpacity="0.1" />
+        <path d="M30.3 5.4L16.6 29.5 2.8 5.4h27.5z" fill="currentColor" fillOpacity="0.2"/>
+        <path d="M16.6 29.5L2.8 5.4h11l2.8 17.5 2.8-17.5h10.9L16.6 29.5z" stroke="currentColor" strokeWidth="2" fill="none"/>
+        <path d="M2.8 5.4h11L16.6 29.5 2.8 5.4z" fill="currentColor" fillOpacity="0.1"/>
     </svg>
 );
 
@@ -46,271 +48,167 @@ const LogoTS = () => (
 
 const LogoTailwind = () => (
     <svg viewBox="0 0 24 24" className="w-12 h-12 md:w-16 md:h-16 fill-current text-[#38B2AC]">
-        <path d="M12.001,4.8c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 C13.666,10.618,15.027,12,18.001,12c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C16.337,6.182,14.976,4.8,12.001,4.8z M6.001,12c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 c1.177,1.194,2.538,2.576,5.512,2.576c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C10.337,13.382,8.976,12,6.001,12z" />
+        <path d="M12.001,4.8c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 C13.666,10.618,15.027,12,18.001,12c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C16.337,6.182,14.976,4.8,12.001,4.8z M6.001,12c-3.2,0-5.2,1.6-6,4.8c1.2-1.6,2.6-2.2,4.2-1.8c0.913,0.228,1.565,0.89,2.288,1.624 c1.177,1.194,2.538,2.576,5.512,2.576c3.2,0,5.2-1.6,6-4.8c-1.2,1.6-2.6,2.2-4.2,1.8c-0.913-0.228-1.565-0.89-2.288-1.624 C10.337,13.382,8.976,12,6.001,12z"/>
     </svg>
 );
 
 const LogoGoogle = () => (
     <svg viewBox="0 0 24 24" className="w-12 h-12 md:w-16 md:h-16">
-        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
     </svg>
 );
 
-// Lead Capture Component
-const LeadCaptureForm = () => {
-    const [email, setEmail] = React.useState('');
-    const [status, setStatus] = React.useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        if (!email) return;
-        setStatus('loading');
-
-        try {
-            const { db } = await import('../services/firebase');
-            const { collection, addDoc, serverTimestamp } = await import('firebase/firestore');
-
-            await addDoc(collection(db, "leads"), {
-                email,
-                source: 'landing_page',
-                createdAt: serverTimestamp()
-            });
-            setStatus('success');
-            setEmail('');
-        } catch (error) {
-            console.error("Error capturing lead:", error);
-            setStatus('error');
-        }
-    };
-
-    if (status === 'success') {
-        return (
-            <div className="p-4 bg-green-500/20 border border-green-500/50 rounded-xl text-green-400 font-medium animate-fade-in">
-                Success! You've joined the list. 🚀
-            </div>
-        );
-    }
-
-    return (
-        <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4 max-w-md mx-auto relative z-20">
-            <input
-                type="email"
-                placeholder="Enter your email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="flex-1 bg-white/5 border border-white/10 rounded-full px-6 py-4 text-white placeholder-neutral-500 focus:outline-none focus:border-white/30 transition-colors"
-                required
-            />
-            <button
-                type="submit"
-                disabled={status === 'loading'}
-                className="px-8 py-4 bg-white text-black font-bold rounded-full hover:bg-neutral-200 transition-colors disabled:opacity-50"
-            >
-                {status === 'loading' ? 'Joining...' : 'Join Now'}
-            </button>
-        </form>
-    );
-};
-
 const HomePage: React.FC = () => {
-    const navigate = useNavigate();
-    const { currentUser, handleFirebaseGoogleLogin } = useAppContext();
-    const [isLoginLoading, setIsLoginLoading] = React.useState(false);
+  const navigate = useNavigate();
+  const { currentUser } = useAppContext();
 
-    const onLoginClick = async () => {
-        setIsLoginLoading(true);
-        try {
-            await handleFirebaseGoogleLogin();
-            // If it returns, we are on the app domain and logged in
-            navigate('/dashboard');
-        } catch (err) {
-            console.error("Login failed", err);
-            setIsLoginLoading(false);
-        }
-    };
+  return (
+    <div className="min-h-screen bg-transparent text-white selection:bg-google-blue/30 overflow-x-hidden">
+        
+        {/* --- HERO SECTION --- */}
+        <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center pt-32 pb-20 z-10">
+             
+             {/* Local Hero Effects */}
+             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-google-blue/10 rounded-full blur-[100px] pointer-events-none"></div>
 
-    return (
-        <div className="min-h-screen bg-transparent text-white selection:bg-google-blue/30 overflow-x-hidden">
+             <div className="relative z-10 animate-slide-up flex flex-col items-center max-w-5xl mx-auto">
+                 
+                 <div className="mb-8 md:mb-10 scale-100 hover:scale-105 transition-transform duration-500">
+                    <MorphicEye className="w-24 h-24 md:w-40 md:h-40 bg-[#050505] shadow-[0_0_80px_rgba(255,255,255,0.15)] border border-white/30 rounded-full" />
+                 </div>
 
-            {/* --- HERO SECTION --- */}
-            <section className="relative min-h-[90vh] flex flex-col items-center justify-center px-6 text-center pt-32 pb-20 z-10 overflow-hidden">
+                 <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-[0.95] md:leading-[0.9] drop-shadow-2xl">
+                    Turn Your Ideas<br/>
+                    <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-neutral-500">Into Books.</span>
+                 </h1>
+                 
+                 <p className="text-base md:text-xl text-neutral-300 max-w-2xl mb-10 leading-relaxed px-4 drop-shadow-md">
+                    The easiest way to write, read, and sell books with AI.
+                    <br className="my-2 block"/>
+                    <span className="inline-block mt-1">Powered by <span className="text-white font-mono font-bold border-b border-white/20 pb-0.5">GOOGLE</span>.</span>
+                 </p>
 
-                {/* Background Polish */}
-                <div className="absolute inset-0 bg-grid opacity-20 pointer-events-none"></div>
-                <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black pointer-events-none"></div>
-
-                {/* Local Hero Effects */}
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/5 rounded-full blur-[120px] pointer-events-none"></div>
-
-                <div className="relative z-10 animate-slide-up flex flex-col items-center max-w-5xl mx-auto">
-
-                    <div className="mb-8 md:mb-10 scale-100 hover:scale-105 transition-transform duration-500">
-                        <MorphicEye className="w-24 h-24 md:w-32 md:h-32 bg-[#050505] shadow-[0_0_80px_rgba(255,255,255,0.15)] border border-white/30 rounded-full" />
-                    </div>
-
-                    {/* Funnel Live Ticker */}
-                    <div className="mb-12 bg-white/5 border border-white/10 rounded-2xl px-6 py-2 flex items-center gap-6 overflow-hidden relative max-w-xl mx-auto backdrop-blur-md">
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                            <span className="w-2 h-2 rounded-full bg-[#81c995] animate-pulse"></span>
-                            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-[#81c995]">Ecosystem Pulse</span>
-                        </div>
-                        <div className="h-3 w-px bg-white/10 flex-shrink-0"></div>
-                        <div className="flex gap-12 animate-marquee whitespace-nowrap text-[9px] font-bold text-neutral-500 uppercase tracking-widest">
-                            <span>New Creator Joined: @alex_writes</span>
-                            <span>Sale: "Quantum Poetry" - ₹299</span>
-                            <span>Payout: ₹1.4k sent to @dev_writer</span>
-                            <span>Nodes Online: 1,284 Operational</span>
-                        </div>
-                    </div>
-
-                    <h1 className="text-4xl sm:text-6xl md:text-8xl font-black tracking-tighter mb-6 leading-[0.95] md:leading-[0.9] drop-shadow-2xl">
-                        Turn Your Ideas<br />
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-neutral-200 to-neutral-500">Into Books.</span>
-                    </h1>
-
-                    <p className="text-base md:text-xl text-neutral-400 max-w-2xl mb-10 leading-relaxed px-4 drop-shadow-md">
-                        The professional AI authoring engine for creators.
-                        <br />
-                        Write, format, and publish ebooks instantly.
-                    </p>
-
-                    <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
-                        {currentUser ? (
-                            <a
-                                href={`${getAppBaseUrl()}/ebook-studio`}
-                                className="w-full sm:w-auto px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 group"
+                 <div className="flex flex-col sm:flex-row items-center gap-4 w-full sm:w-auto px-4">
+                    {currentUser ? (
+                         <button 
+                            onClick={() => navigate('/ebook-studio')}
+                            className="w-full sm:w-auto px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2 group"
+                        >
+                            <IconRocket className="w-5 h-5 group-hover:-translate-y-1 transition-transform" /> 
+                            Start Writing
+                        </button>
+                    ) : (
+                        <>
+                             <Link 
+                                to="/login"
+                                className="w-full sm:w-auto px-10 py-4 bg-white text-black font-bold text-lg rounded-full hover:scale-105 transition-all shadow-[0_0_30px_rgba(255,255,255,0.4)] flex items-center justify-center gap-2"
                             >
-                                <IconRocket className="w-5 h-5 group-hover:-translate-y-1 transition-transform" />
-                                Launch Studio
-                            </a>
-                        ) : (
-                            <>
-                                <button
-                                    onClick={onLoginClick}
-                                    disabled={isLoginLoading}
-                                    className="px-10 py-5 rounded-full font-black text-black bg-white hover:bg-neutral-200 transition-all shadow-[0_0_30px_rgba(255,255,255,0.3)] hover:shadow-[0_0_50px_rgba(255,255,255,0.5)] transform hover:-translate-y-1 flex items-center gap-3 disabled:opacity-50"
-                                >
-                                    {isLoginLoading ? (
-                                        <span className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin"></span>
-                                    ) : (
-                                        <>Get Started <IconArrowRight className="w-5 h-5" /></>
-                                    )}
-                                </button>
-                                <button
-                                    onClick={onLoginClick}
-                                    disabled={isLoginLoading}
-                                    className="px-10 py-5 rounded-full font-black text-white border border-white/20 hover:bg-white/10 transition-all backdrop-blur-md disabled:opacity-50"
-                                >
-                                    Login
-                                </button>
-                            </>
-                        )}
+                                Start Creating
+                            </Link>
+                            <Link 
+                                to="/login"
+                                className="w-full sm:w-auto px-10 py-4 bg-black/40 border border-white/20 text-white font-bold text-lg rounded-full hover:bg-white/10 transition-colors backdrop-blur-md"
+                            >
+                                Sign In
+                            </Link>
+                        </>
+                    )}
+                 </div>
+                 
+                 <div className="mt-12 flex flex-col md:flex-row items-center gap-4 md:gap-8 text-neutral-400 text-xs font-mono uppercase tracking-widest">
+                     <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green"/> Easy to Use</span>
+                     <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green"/> Free to Start</span>
+                     <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-google-green"/> Instant Publishing</span>
+                 </div>
+             </div>
+        </section>
+
+        {/* --- FEATURES GRID --- */}
+        <section className="py-24 px-6 border-b border-white/5 relative z-10">
+            <div className="max-w-7xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    
+                    {/* Feature 1: AI Co-Author */}
+                    <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-indigo-500/30 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
+                            <IconBrain className="w-7 h-7 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
+                        </div>
+                        
+                        <h3 className="text-2xl font-bold text-white mb-3">AI Co-Author</h3>
+                        <p className="text-neutral-400 leading-relaxed text-sm">
+                            Write with AI. Plan your chapters, write full pages, and fix grammar easily with our writing tools.
+                        </p>
                     </div>
 
-                    <div className="mt-12 flex flex-wrap justify-center items-center gap-4 md:gap-8 text-neutral-500 text-[10px] font-mono uppercase tracking-[0.3em]">
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Easy to Use</span>
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Free to Start</span>
-                        <span className="flex items-center gap-2"><IconCheck className="w-3 h-3 text-white/50" /> Instant Publishing</span>
-                    </div>
-                </div>
-            </section>
-
-            {/* --- FEATURES GRID --- */}
-            <section className="py-24 px-6 border-b border-white/5 relative z-10">
-                <div className="max-w-7xl mx-auto">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-
-                        {/* Feature 1: AI Co-Author */}
-                        <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-105 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-indigo-500/30 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 shadow-[0_0_20px_rgba(99,102,241,0.2)]">
-                                <IconBrain className="w-7 h-7 text-indigo-400 drop-shadow-[0_0_8px_rgba(129,140,248,0.5)]" />
-                            </div>
-
-                            <h3 className="text-2xl font-bold text-white mb-3">AI Co-Author</h3>
-                            <p className="text-neutral-400 leading-relaxed text-sm">
-                                Write with AI. Plan your chapters, write full pages, and fix grammar easily with our writing tools.
-                            </p>
+                    {/* Feature 2: Sell Your Books */}
+                    <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-110 transition-all duration-300 group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
+                            <IconRocket className="w-7 h-7 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
                         </div>
 
-                        {/* Feature 2: Sell Your Books */}
-                        <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-110 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <h3 className="text-2xl font-bold text-white mb-3">Sell Your Books</h3>
+                        <p className="text-neutral-400 leading-relaxed text-sm">
+                            Publish your book instantly. Get your own profile link and keep 70% of every sale you make.
+                        </p>
+                    </div>
 
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-emerald-500/30 bg-gradient-to-br from-emerald-500/20 to-teal-500/20 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                                <IconRocket className="w-7 h-7 text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                            </div>
-
-                            <h3 className="text-2xl font-bold text-white mb-3">Sell Your Books</h3>
-                            <p className="text-neutral-400 leading-relaxed text-sm">
-                                Publish your book instantly. Get your own profile link and keep 70% of every sale you make.
-                            </p>
+                    {/* Feature 3: Easy Reading */}
+                    <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-110 transition-all duration-300 group relative overflow-hidden">
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        
+                        <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-amber-500/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+                            <IconBook className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
                         </div>
 
-                        {/* Feature 3: Easy Reading */}
-                        <div className="p-8 rounded-[32px] bg-black/40 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(0,0,0,0.5)] hover:border-white/20 hover:scale-110 transition-all duration-300 group relative overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-amber-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-
-                            <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6 text-white group-hover:scale-110 transition-transform border border-amber-500/30 bg-gradient-to-br from-amber-500/20 to-orange-500/20 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
-                                <IconBook className="w-7 h-7 text-amber-400 drop-shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-                            </div>
-
-                            <h3 className="text-2xl font-bold text-white mb-3">Easy Reading</h3>
-                            <p className="text-neutral-400 leading-relaxed text-sm">
-                                Read comfortably on any device. Support for PDF uploads and a distraction-free reading mode.
-                            </p>
-                        </div>
-
+                        <h3 className="text-2xl font-bold text-white mb-3">Easy Reading</h3>
+                        <p className="text-neutral-400 leading-relaxed text-sm">
+                            Read comfortably on any device. Support for PDF uploads and a distraction-free reading mode.
+                        </p>
                     </div>
+
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {/* --- ABOUT --- */}
-            <section className="py-24 px-6 relative overflow-hidden z-10">
-                <div className="max-w-4xl mx-auto text-center bg-black/30 backdrop-blur-lg border border-white/5 p-12 rounded-[40px] shadow-2xl relative">
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+        {/* --- ABOUT --- */}
+        <section className="py-24 px-6 relative overflow-hidden z-10">
+             <div className="max-w-4xl mx-auto text-center bg-black/30 backdrop-blur-lg border border-white/5 p-12 rounded-[40px] shadow-2xl relative">
+                 <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-1 bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                 
+                 <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">Built for Everyone</h2>
+                 <p className="text-lg md:text-xl text-neutral-400 leading-relaxed mb-12 font-light">
+                     Co-Writter isn't just a tool; it's a partner. We believe that everyone has a story worth telling, 
+                     and with the right help, anyone can become an author.
+                 </p>
+                 <Link to="/store" className="inline-flex items-center gap-2 text-white font-bold border-b border-white pb-1 hover:opacity-70 transition-opacity tracking-widest uppercase text-sm">
+                     Browse the Library &rarr;
+                 </Link>
+             </div>
+        </section>
 
-                    <h2 className="text-4xl md:text-5xl font-black text-white mb-8 tracking-tight">Built for Everyone</h2>
-                    <p className="text-lg md:text-xl text-neutral-400 leading-relaxed mb-12 font-light">
-                        Co-Writter isn't just a tool; it's a partner. We believe that everyone has a story worth telling,
-                        and with the right help, anyone can become an author.
-                    </p>
-                    <Link to="/store" className="inline-flex items-center gap-2 text-white font-bold border-b border-white pb-1 hover:opacity-70 transition-opacity tracking-widest uppercase text-sm">
-                        Browse the Library &rarr;
-                    </Link>
+        {/* --- TECH STACK SHOWCASE --- */}
+        <section className="py-20 border-t border-b border-white/5 bg-black/40 backdrop-blur relative z-20">
+            <div className="max-w-7xl mx-auto px-6">
+                <p className="text-center text-xs font-bold uppercase tracking-[0.3em] text-neutral-500 mb-12">Built With Modern Architecture</p>
+                <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
+                    <TechIcon label="Google Gemini" icon={<LogoGoogle />} />
+                    <TechIcon label="React 18" icon={<LogoReact />} />
+                    <TechIcon label="TypeScript" icon={<LogoTS />} />
+                    <TechIcon label="Tailwind CSS" icon={<LogoTailwind />} />
+                    <TechIcon label="Vite" icon={<LogoVite />} />
                 </div>
-            </section>
+            </div>
+        </section>
 
-            {/* --- NEWSLETTER / LEAD CAPTURE --- */}
-            <section className="py-20 px-6 relative z-10">
-                <div className="max-w-3xl mx-auto text-center">
-                    <h2 className="text-3xl font-bold text-white mb-6">Join the Future of Publishing</h2>
-                    <p className="text-neutral-400 mb-8">Get updates on new AI features and writing tools. Only valuable content, no spam.</p>
-
-                    <LeadCaptureForm />
-                </div>
-            </section>
-
-            {/* --- TECH STACK SHOWCASE --- */}
-            <section className="py-20 border-t border-b border-white/5 bg-black/40 backdrop-blur relative z-20">
-                <div className="max-w-7xl mx-auto px-6">
-                    <p className="text-center text-xs font-bold uppercase tracking-[0.3em] text-neutral-500 mb-12">Built With Modern Architecture</p>
-                    <div className="flex flex-wrap justify-center items-center gap-8 md:gap-16">
-                        <TechIcon label="Google Gemini" icon={<LogoGoogle />} />
-                        <TechIcon label="React 18" icon={<LogoReact />} />
-                        <TechIcon label="TypeScript" icon={<LogoTS />} />
-                        <TechIcon label="Tailwind CSS" icon={<LogoTailwind />} />
-                        <TechIcon label="Vite" icon={<LogoVite />} />
-                    </div>
-                </div>
-            </section>
-
-        </div>
-    );
+    </div>
+  );
 };
 
 export default HomePage;
