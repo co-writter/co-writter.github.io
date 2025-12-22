@@ -125,65 +125,84 @@ const LoginPage: React.FC = () => {
                         <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.3em]">Studio Access</p>
                     </div>
 
-                    {/* Pro Toggle */}
-                    <div className="flex bg-white/5 p-1 rounded-2xl mb-10 border border-white/5">
-                        <button
-                            onClick={() => setLoginMode('social')}
-                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'social' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
-                        >
-                            Guest
-                        </button>
-                        <button
-                            onClick={() => setLoginMode('email')}
-                            className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'email' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
-                        >
-                            Operator
-                        </button>
-                    </div>
-
-                    {loginMode === 'social' ? (
-                        <div className="animate-fade-in">
-                            <button
-                                onClick={onFirebaseGoogleLogin}
-                                disabled={isLoading}
-                                className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all duration-500 shadow-xl"
+                    {/* Pro Toggle or Landing Info */}
+                    {(window.location.hostname.includes('github.io') || window.location.hostname === 'co-writter.github.io') ? (
+                        <div className="mb-8 text-center">
+                            <p className="text-white text-xs leading-relaxed mb-6">
+                                Co-Writter Studio is hosted on our secure application cloud.
+                                Access advanced writing tools, AI co-authoring, and your personal dashboard.
+                            </p>
+                            <a
+                                href="https://co-writter-studio.web.app/login"
+                                className="inline-flex w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.2em] text-[10px] items-center justify-center gap-2 hover:bg-neutral-200 transition-all shadow-xl"
                             >
-                                {isLoading ? (
-                                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                                ) : (
-                                    <GoogleIcon />
-                                )}
-                                <span>Link with Google</span>
-                            </button>
+                                <MorphicEye className="w-5 h-5 border border-black/10 rounded-full" isActive={false} />
+                                <span>Enter Studio</span>
+                            </a>
                         </div>
                     ) : (
-                        <form onSubmit={onEmailSubmit} className="space-y-6 animate-fade-in">
-                            <div className="space-y-4">
-                                <input
-                                    type="email"
-                                    placeholder="Operator ID"
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
-                                    required
-                                />
-                                <input
-                                    type="password"
-                                    placeholder="Access Key"
-                                    className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
-                                    required
-                                />
-                            </div>
+                        <div className="flex bg-white/5 p-1 rounded-2xl mb-10 border border-white/5">
                             <button
-                                type="submit"
-                                disabled={isLoading}
-                                className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-[10px] hover:bg-neutral-200 transition-all duration-500 shadow-2xl"
+                                onClick={() => setLoginMode('social')}
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'social' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
                             >
-                                {isLoading ? 'Verifying...' : 'Authorize Access'}
+                                Guest
                             </button>
-                        </form>
+                            <button
+                                onClick={() => setLoginMode('email')}
+                                className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-500 ${loginMode === 'email' ? 'bg-white text-black shadow-2xl' : 'text-neutral-500 hover:text-white'}`}
+                            >
+                                Operator
+                            </button>
+                        </div>
+                    )}
+
+                    {/* Login Forms - Only show if NOT on Landing Page (or if we provided a way to toggle, but for now strict separation) */}
+                    {!(window.location.hostname.includes('github.io')) && (
+                        loginMode === 'social' ? (
+                            <div className="animate-fade-in">
+                                <button
+                                    onClick={onFirebaseGoogleLogin}
+                                    disabled={isLoading}
+                                    className="w-full py-5 rounded-2xl bg-white/5 border border-white/10 text-white font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center gap-4 hover:bg-white hover:text-black transition-all duration-500 shadow-xl"
+                                >
+                                    {isLoading ? (
+                                        <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                    ) : (
+                                        <GoogleIcon />
+                                    )}
+                                    <span>Link with Google</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <form onSubmit={onEmailSubmit} className="space-y-6 animate-fade-in">
+                                <div className="space-y-4">
+                                    <input
+                                        type="email"
+                                        placeholder="Operator ID"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
+                                    />
+                                    <input
+                                        type="password"
+                                        placeholder="Access Key"
+                                        className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 text-sm text-white focus:outline-none focus:border-white/30 transition-all placeholder:text-neutral-700"
+                                        value={password}
+                                        onChange={(e) => setPassword(e.target.value)}
+                                        required
+                                    />
+                                </div>
+                                <button
+                                    type="submit"
+                                    disabled={isLoading}
+                                    className="w-full py-5 rounded-2xl bg-white text-black font-black uppercase tracking-[0.3em] text-[10px] hover:bg-neutral-200 transition-all duration-500 shadow-2xl"
+                                >
+                                    {isLoading ? 'Verifying...' : 'Authorize Access'}
+                                </button>
+                            </form>
+                        )
                     )}
 
                     {errorMsg && (

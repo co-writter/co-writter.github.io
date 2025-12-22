@@ -5,10 +5,14 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build && cp dist/index.html dist/404.html",
+    "build": "vite build",
+    "build:github": "vite build && cp dist/index.html dist/404.html",
+    "build:firebase": "vite build",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy:github": "npm run build:github && gh-pages -d dist",
+    "deploy:firebase": "npm run build:firebase && firebase deploy --only hosting",
+    "deploy:all": "npm run deploy:firebase && npm run deploy:github"
   },
   "dependencies": {
     "@google/genai": "^1.31.0",

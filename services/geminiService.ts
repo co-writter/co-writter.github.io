@@ -3,7 +3,14 @@ import { GoogleGenAI, Chat, GenerateContentResponse, FunctionDeclaration, Type, 
 import { EBook, GeneratedImage, ChapterOutline } from '../types';
 import { GEMINI_TEXT_MODEL, GEMINI_IMAGE_MODEL } from '../constants';
 
-const ai = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || "" });
+// Lazy initialization to prevent top-level crashes
+let aiInstance: GoogleGenAI | null = null;
+const getAI = () => {
+  if (!aiInstance) {
+    aiInstance = new GoogleGenAI({ apiKey: import.meta.env.VITE_API_KEY || "" });
+  }
+  return aiInstance;
+};
 
 // Helper to clean JSON strings from Markdown code blocks
 const cleanJsonString = (text: string): string => {
@@ -92,7 +99,7 @@ export const analyzePdfContent = async (pdfBase64: string): Promise<{ title?: st
 
     const prompt = `Analyze this PDF. Extract Title, Author, Genre, and a Description (100 words). Return JSON.`;
 
-    const response: GenerateContentResponse = await ai.models.generateContent({
+    const response: GenerateContentResponse = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: {
         parts: [
@@ -112,7 +119,7 @@ export const analyzePdfContent = async (pdfBase64: string): Promise<{ title?: st
 
 export const createStudioSession = (initialContext: string): Chat | null => {
   try {
-    return ai.chats.create({
+    return getAI().chats.create({
       model: GEMINI_TEXT_MODEL,
       config: {
         systemInstruction: `IDENTITY: You are Co-Author, the advanced neural engine for co-writter by OpenDev Labs.
@@ -157,7 +164,7 @@ export const suggestBookPrice = async (bookDetails: Pick<EBook, 'genre' | 'title
     const prompt = `Suggest a competitive market price in INR (Indian Rupees) for an eBook: "${bookDetails.title}" (${bookDetails.genre}). 
     CRITICAL: The price MUST be a "sacred" or numerologically significant number (e.g., 111, 222, 333, 444, 555, 777, 888, 999, 1111).
     Return ONLY the number.`;
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: prompt
     });
@@ -180,7 +187,7 @@ export const generateBookCover = async (prompt: string, style: string = 'Cinemat
     // Enhanced prompt to handle diagrams vs art
     const refinedPrompt = `Professional Book Visual. Context: ${title} by ${author}. Request: ${prompt}. Mode: ${style}. Create a high-quality, clear, and relevant image/diagram. For diagrams, ensure clear labels and structure.`;
 
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_IMAGE_MODEL,
       contents: { parts: [{ text: refinedPrompt }] },
       config: { imageConfig: { aspectRatio: '3:4' } },
@@ -204,7 +211,7 @@ export const initializeGeminiChat = async (): Promise<Chat | null> => {
 
 export const generateSpeech = async (text: string, voiceName: string = 'Kore'): Promise<string | null> => {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: "gemini-2.5-flash-preview-tts",
       contents: { parts: [{ text }] },
       config: {
@@ -228,7 +235,7 @@ export const generateSpeech = async (text: string, voiceName: string = 'Kore'): 
 
 export const transcribeAudio = async (audioBase64: string, mimeType: string): Promise<string | null> => {
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL, // gemini-2.5-flash supports audio input
       contents: {
         parts: [
@@ -255,7 +262,7 @@ export const agenticResearchTopic = async (query: string, isUrl: boolean): Promi
     : `Research this topic extensively via Google Search: "${query}". Gather key facts, statistics, and narrative angles.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: prompt,
       config: { tools: [{ googleSearch: {} }] }
@@ -290,7 +297,7 @@ export const agenticPlanBook = async (topic: string, genre: string, context?: st
   Return JSON: { "title": "String", "outline": [{ "title": "String", "summary": "String" }] }`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: prompt,
       config: { responseMimeType: 'application/json' }
@@ -318,7 +325,7 @@ export const agenticWritePageStream = async (bookTitle: string, chapterTitle: st
   Output ONLY the markdown content. Start immediately.`;
 
   try {
-    const stream = await ai.models.generateContentStream({
+    const stream = await getAI().models.generateContentStream({
       model: GEMINI_TEXT_MODEL,
       contents: prompt,
       // No tools for faster pure text generation
@@ -346,7 +353,7 @@ export const agenticWritePage = async (bookTitle: string, chapterTitle: string, 
   Output ONLY the markdown content.`;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: prompt
     });
@@ -369,7 +376,7 @@ export const agenticRefinePage = async (content: string, genre: string): Promise
     `;
 
   try {
-    const response = await ai.models.generateContent({
+    const response = await getAI().models.generateContent({
       model: GEMINI_TEXT_MODEL,
       contents: prompt
     });

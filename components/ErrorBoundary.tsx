@@ -57,7 +57,7 @@ class ErrorBoundary extends React.Component<Props, State> {
                             </button>
                         </div>
 
-                        {process.env.NODE_ENV === 'development' && this.state.error && (
+                        {import.meta.env.DEV && this.state.error && (
                             <div className="mt-12 p-6 bg-black/40 border border-red-500/20 rounded-2xl text-left max-w-2xl overflow-auto custom-scrollbar">
                                 <p className="text-red-400 font-mono text-[10px] whitespace-pre-wrap">
                                     {this.state.error.stack}

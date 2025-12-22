@@ -77,10 +77,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
 
   // 2. Initial Setup Effect
   useEffect(() => {
-    // Simulate initial loading time for a premium feel or wait for actual checks
+    // Safety timeout: Ensure app never hangs on "black screen" loading state
     const timer = setTimeout(() => {
+      console.log("Forcing loading false after timeout");
       setLoading(false);
-    }, 800);
+    }, 1500);
     return () => clearTimeout(timer);
   }, []);
 
@@ -284,7 +285,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const handleFirebaseGoogleLogin = async () => {
     // Redundancy check for Landing Page users
     if (window.location.hostname.includes('github.io')) {
-      const redirectUrl = `https://co-writter-51007753.web.app/login`;
+      const redirectUrl = `https://co-writter-studio.web.app/login`;
       console.log("Redirecting to production app for auth:", redirectUrl);
       window.location.href = redirectUrl;
       return;

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { BrowserRouter, Routes, Route, useLocation, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
@@ -17,6 +17,7 @@ import EbookReaderPage from './pages/EbookReaderPage';
 import HostingPreviewPage from './pages/HostingPreviewPage';
 import { initGA } from './services/analyticsService';
 import StudioLandingPage from './pages/StudioLandingPage';
+import MorphicEye from './components/MorphicEye';
 
 // Policy Pages
 import ContactPage from './pages/ContactPage';
@@ -26,10 +27,6 @@ import TermsPage from './pages/TermsPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import NotFoundPage from './pages/NotFoundPage';
 
-// Reverting to HashRouter for stability in cloud/preview environments
-// Reverting to HashRouter for stability in cloud/preview environments
-const { BrowserRouter, Routes, Route, useLocation, Navigate } = ReactRouterDOM as any;
-
 export const getAppBaseUrl = () => {
   const hostname = window.location.hostname;
 
@@ -38,9 +35,9 @@ export const getAppBaseUrl = () => {
     return `https://${hostname}`;
   }
 
-  // 2. Localhost/Dev - Point to self
+  // 2. Localhost/Dev - Point to Production Studio (as requested)
   if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('localhost')) {
-    return ''; // Relative path works for local dev
+    return 'https://co-writter-studio.web.app';
   }
 
   // 3. Studio/App Domain (Firebase) - Point to self
@@ -50,14 +47,14 @@ export const getAppBaseUrl = () => {
 
   // 4. Landing Page (GitHub Pages) - Point to Production App (Firebase)
   if (hostname.includes('github.io')) {
-    return 'https://co-writter-51007753.web.app';
+    return 'https://co-writter-studio.web.app';
   }
 
   // Fallback
-  return 'https://co-writter-51007753.web.app';
+  return 'https://co-writter-studio.web.app';
 };
 
-const STUDIO_URL = "https://co-writter-51007753.web.app";
+const STUDIO_URL = "https://co-writter-studio.web.app";
 const MAIN_SITE_URL = "https://co-writter.github.io";
 
 const ExternalRedirect = ({ to }: { to: string }) => {
@@ -82,6 +79,9 @@ const AnimatedRoutes = () => {
     <div key={location.pathname} className="flex-grow flex flex-col animate-page-enter will-change-transform origin-top">
       <Routes location={location}>
         <Route path="/" element={<HomePage />} />
+        {/* On Landing, Login should theoretically redirect to Studio, but if we are here, we show the page. 
+            However, on GitHub Pages, the Navbar link points to external studio. 
+            If someone manually navigates to /login here, we render safe LoginPage. */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/store" element={<StorePage />} />
         <Route path="/pricing" element={<PricingPage />} />
@@ -128,7 +128,6 @@ const RequireAuth = ({ children }: { children: React.ReactElement }) => {
 
   if (!currentUser) {
     // Redirect to login, remembering where they tried to go
-    // If on Studio domain, show local login. If on Landing, it will redirect anyway.
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
@@ -142,58 +141,84 @@ const StudioProtectedRoutes = () => {
       <Route path="/ebook-studio" element={<RequireAuth><EbookStudioPage /></RequireAuth>} />
       <Route path="/dashboard" element={<RequireAuth><DashboardPage /></RequireAuth>} />
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/edit-ebook/:bookId" element={<RequireAuth><EditEBookPage /></RequireAuth>} />
+      <Route path="/read/:bookId" element={<RequireAuth><EbookReaderPage /></RequireAuth>} />
+      {/* 
+          IMPORTANT: For Studio, strict routing. 
+          If path is not found in Studio routes, we could fallback to NotFound or redirect to dashboard 
+       */}
       <Route path="*" element={<RequireAuth><EbookStudioPage /></RequireAuth>} />
     </Routes>
   )
 }
 
-const App: React.FC = () => {
+const AppContent = () => {
+  const location = useLocation();
+  const hostname = window.location.hostname;
 
-  // Logic to identify if we are on the "Studio" (Application) Domain
-  const isStudioDomain =
-    window.location.hostname.includes('firebaseapp.com') ||
-    window.location.hostname.includes('web.app') ||
-    window.location.hostname.includes('localhost') ||
-    window.location.hostname === '127.0.0.1';
-  // Note: Localhost is treated as Landing/Dev by default unless manually toggled, 
-  // but for safety we can treat localhost as 'hybrid' or dev mirror. 
-  // To test Studio locally, one might need to toggle this variable manually or use specific port.
+  // Domain Detection
+  const isProductionStudio = hostname.includes('firebaseapp.com') || hostname.includes('web.app');
+  const isLocalhost = hostname.includes('localhost') || hostname === '127.0.0.1';
 
+  // Hybrid Routing Logic for Localhost
+  // If we are on localhost, we check the PATH to decide if we are in "Studio Mode" or "Landing Mode".
+  // This allows simulateing both environments on one port.
+  const isStudioPath =
+    location.pathname.startsWith('/dashboard') ||
+    location.pathname.startsWith('/login') ||
+    location.pathname.startsWith('/ebook-studio') ||
+    location.pathname.startsWith('/edit-ebook') ||
+    location.pathname.startsWith('/read') ||
+    (isProductionStudio && location.pathname === '/'); // Always studio root on production studio
+
+  const isStudio = isProductionStudio || (isLocalhost && isStudioPath);
 
   React.useEffect(() => {
     initGA();
   }, []);
 
   return (
+    <div className="flex flex-col min-h-screen bg-black font-sans text-foreground overflow-x-hidden relative">
+
+      {/* === GLOBAL ANTIGRAVITY THEME BACKGROUND === */}
+      {/* 
+          Only show full marketing background on Landing Page mode. 
+          Studio has its own background handling in its components usually, 
+          but sharing it is fine if it doesn't conflict. 
+          Let's keep it global for consistency but maybe tone it down for studio later.
+      */}
+      <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,30,1)_0%,rgba(0,0,0,1)_100%)]"></div>
+        <div className="absolute top-[20%] left-[15%] w-32 h-32 border border-white/5 rounded-full animate-float opacity-30 blur-[1px]"></div>
+        <div className="absolute bottom-[25%] right-[20%] w-64 h-64 border border-white/5 rotate-45 animate-float-delayed opacity-20"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[grid-flow_8s_linear_infinite]"></div>
+      </div>
+
+      {/* === Foreground Content === */}
+      <div className="flex-grow relative z-10 flex flex-col w-full">
+        {!isStudio && <Navbar />}
+
+        <main className="flex-grow flex flex-col">
+          {isStudio ? (
+            <StudioProtectedRoutes />
+          ) : (
+            <AnimatedRoutes />
+          )}
+        </main>
+
+        {!isStudio && <Footer />}
+      </div>
+
+    </div>
+  );
+}
+
+const App: React.FC = () => {
+  return (
     <AppProvider>
       <BrowserRouter>
-        <div className="flex flex-col min-h-screen bg-black font-sans text-foreground overflow-x-hidden relative">
-
-          {/* === GLOBAL ANTIGRAVITY THEME BACKGROUND === */}
-          <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(20,20,30,1)_0%,rgba(0,0,0,1)_100%)]"></div>
-            <div className="absolute top-[20%] left-[15%] w-32 h-32 border border-white/5 rounded-full animate-float opacity-30 blur-[1px]"></div>
-            <div className="absolute bottom-[25%] right-[20%] w-64 h-64 border border-white/5 rotate-45 animate-float-delayed opacity-20"></div>
-            <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 pointer-events-none"></div>
-            <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent animate-[grid-flow_8s_linear_infinite]"></div>
-          </div>
-
-          {/* === Foreground Content === */}
-          <div className="flex-grow relative z-10 flex flex-col w-full">
-            {!isStudioDomain && <Navbar />}
-
-            <main className="flex-grow flex flex-col">
-              {isStudioDomain ? (
-                <StudioProtectedRoutes />
-              ) : (
-                <AnimatedRoutes />
-              )}
-            </main>
-
-            {!isStudioDomain && <Footer />}
-          </div>
-
-        </div>
+        <AppContent />
       </BrowserRouter>
     </AppProvider>
   );

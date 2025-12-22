@@ -6,7 +6,7 @@
 export const initGA = () => {
   const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
 
-  if (gaMeasurementId && process.env.NODE_ENV === 'production') {
+  if (gaMeasurementId && import.meta.env.PROD) {
     // Inject the GTM Script dynamically
     const script = document.createElement('script');
     script.async = true;
@@ -27,7 +27,7 @@ export const initGA = () => {
  */
 export const sendPageview = (path: string) => {
   const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (process.env.NODE_ENV === 'production' && gaMeasurementId) {
+  if (import.meta.env.PROD && gaMeasurementId) {
     // @ts-ignore
     window.gtag('event', 'page_view', {
       page_path: path,
@@ -42,7 +42,7 @@ export const sendPageview = (path: string) => {
  */
 export const sendEvent = (eventName: string, eventParams?: { [key: string]: any }) => {
   const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID;
-  if (process.env.NODE_ENV === 'production' && gaMeasurementId) {
+  if (import.meta.env.PROD && gaMeasurementId) {
     // @ts-ignore
     window.gtag('event', eventName, eventParams);
   }

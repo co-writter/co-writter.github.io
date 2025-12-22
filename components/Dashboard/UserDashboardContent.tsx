@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '../../contexts/AppContext';
 import { UserType, User } from '../../types';
 import {
@@ -14,7 +14,8 @@ const { useNavigate } = ReactRouterDOM as any;
 import StudioHeader from '../StudioHeader';
 
 const UserDashboardContent: React.FC = () => {
-    const { currentUser, setCurrentUser, books, wishlist } = useAppContext();
+    // Correctly get currentUser. wishlist is NOT in the top-level context, it's on the user object.
+    const { currentUser, setCurrentUser, books, updateBook, deleteBook } = useAppContext();
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState<'library' | 'wishlist' | 'settings'>('library');
     const [searchQuery, setSearchQuery] = useState('');
@@ -25,6 +26,10 @@ const UserDashboardContent: React.FC = () => {
     };
 
     if (!currentUser) return null;
+
+    // Cast to User to access reader-specific fields like purchaseHistory/wishlist
+    // Even if it's a seller, they have compatible fields in this context or we can fallback safely.
+    const user = currentUser as User;
 
     const SidebarItem = ({ id, label, icon: Icon }: { id: any, label: string, icon: any }) => (
         <button
@@ -50,14 +55,18 @@ const UserDashboardContent: React.FC = () => {
         </button>
     );
 
-    const booksToDisplay = activeTab === 'library' ? books.filter(b => b.sellerId === currentUser.id) : wishlist;
+    // FIX: Readers want to see their PURCHASED books in "My Library", not books they authored (which would be 0).
+    const booksToDisplay = activeTab === 'library'
+        ? (user.purchaseHistory || [])
+        : (user.wishlist || []);
+
     const filteredBooks = booksToDisplay?.filter(b => b.title.toLowerCase().includes(searchQuery.toLowerCase()));
 
     return (
         <div className="h-screen w-full bg-[#0b0b0b] font-sans text-white flex flex-col overflow-hidden">
 
+            {/* Header is sticky and z-indexed in its own component, but we ensure it's rendered here */}
             <StudioHeader />
-
 
             <div className="flex-1 flex overflow-hidden">
 
@@ -118,7 +127,7 @@ const UserDashboardContent: React.FC = () => {
                                     {activeTab === 'settings' && 'Settings'}
                                 </h1>
                                 <p className="text-neutral-500 text-sm md:text-base font-medium">
-                                    {activeTab === 'library' && `Managing ${booksToDisplay.length} books in your digital shelf.`}
+                                    {activeTab === 'library' && `You have ${booksToDisplay.length} books in your digital shelf.`}
                                     {activeTab === 'wishlist' && `You have ${booksToDisplay.length} items on your radar.`}
                                     {activeTab === 'settings' && 'Customize your reader profile and preferences.'}
                                 </p>
@@ -148,10 +157,12 @@ const UserDashboardContent: React.FC = () => {
                                 ) : (
                                     <div className="col-span-full py-20 flex flex-col items-center justify-center text-center opacity-50">
                                         <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mb-4">
-                                            <IconBook className="w-8 h-8" />
+                                            <IconBook className="w-8 h-8 text-neutral-500" />
                                         </div>
-                                        <p className="font-bold text-lg">No books found.</p>
-                                        <p className="text-sm">Try a different search or browse the store.</p>
+                                        <p className="font-bold text-lg text-white">No books found.</p>
+                                        <p className="text-sm text-neutral-500">
+                                            {activeTab === 'library' ? "You haven't purchased any books yet." : "Your wishlist is empty."}
+                                        </p>
                                     </div>
                                 )
                             )}
@@ -179,11 +190,11 @@ const UserDashboardContent: React.FC = () => {
                                     <div className="grid gap-6">
                                         <div>
                                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-3">Full Name</label>
-                                            <input type="text" defaultValue={currentUser.name} className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:border-white/30 transition-all" />
+                                            <input type="text" defaultValue={currentUser.name} className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl p-4 text-sm focus:outline-none focus:border-white/30 transition-all text-white" />
                                         </div>
                                         <div>
                                             <label className="block text-[10px] font-bold text-neutral-500 uppercase tracking-[0.2em] mb-3">Email Address</label>
-                                            <input type="email" defaultValue={currentUser.email} disabled className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl p-4 text-sm opacity-50 cursor-not-allowed" />
+                                            <input type="email" defaultValue={currentUser.email} disabled className="w-full bg-[#0b0b0b] border border-white/10 rounded-xl p-4 text-sm opacity-50 cursor-not-allowed text-white" />
                                         </div>
                                     </div>
 

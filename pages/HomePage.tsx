@@ -1,11 +1,9 @@
 import React from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { IconSparkles, IconBook, IconRocket, IconStore, IconCheck, IconBrain, IconArrowRight } from '../constants';
 import MorphicEye from '../components/MorphicEye';
 import { useAppContext } from '../contexts/AppContext';
 import { getAppBaseUrl } from '../App';
-
-const { Link, useNavigate } = ReactRouterDOM as any;
 
 // Tech Stack Icons
 const TechIcon = ({ icon, label }: { icon: React.ReactNode, label: string }) => (

@@ -1,13 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
-import * as ReactRouterDOM from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAppContext } from '../contexts/AppContext';
 import { getAppBaseUrl } from '../App';
 import { UserType } from '../types';
 import { IconShoppingCart, IconRocket, IconMenu, IconX, IconStore, IconHome, IconBook } from '../constants';
 import MorphicEye from './MorphicEye';
-
-const { Link, useNavigate, useLocation } = ReactRouterDOM as any;
 
 const Navbar: React.FC = () => {
     const { currentUser, userType, setCurrentUser, cart } = useAppContext();
