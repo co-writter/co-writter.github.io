@@ -36,10 +36,10 @@ jobs:
           folder: dist
           branch: gh-pages
 
-      - name: Deploy to Firebase Hosting
-        uses: FirebaseExtended/action-hosting-deploy@v0
-        with:
-          repoToken: ${{ secrets.GITHUB_TOKEN }}
-          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CO_WRITTER_51007753 }}
-          channelId: live
-          projectId: co-writter-51007753
+#      - name: Deploy to Firebase Hosting
+#        uses: FirebaseExtended/action-hosting-deploy@v0
+#        with:
+#          repoToken: ${{ secrets.GITHUB_TOKEN }}
+#          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_CO_WRITTER_51007753 }}
+#          channelId: live
+#          projectId: co-writter-51007753
